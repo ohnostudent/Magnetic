@@ -1,3 +1,18 @@
+setlocal
+
+set name=%1
+
+if %name% == 49 (
+    set target=snap49
+) else if %name% == 77 (
+    set target=snap77
+) else (
+    set target=snap497
+)
+
+mkdir .\snaps\%target%
+cd .\snaps\%target%
+
 mkdir density
 mkdir density\00
 mkdir density\01
@@ -142,3 +157,5 @@ mkdir enstrophy\11
 mkdir enstrophy\12
 mkdir enstrophy\13
 mkdir enstrophy\14
+
+endlocal
