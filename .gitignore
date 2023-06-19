@@ -1,5 +1,11 @@
+# ディレクトリ
 data/
 snap/
 snaps/snap*
-*.zip
 pra/
+*__pycache__
+
+# 各ファイル
+*.zip
+*.ipynb
+
