@@ -1,4 +1,5 @@
 data/
-snap/snap*
+snap/
+snaps/snap*
 *.zip
 pra/

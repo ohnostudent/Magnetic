@@ -2,8 +2,8 @@ setlocal
 
 set name=%1
 
-if %name% == 49 (
-    set target=snap49
+if %name% == 4949 (
+    set target=snap4949
 ) else if %name% == 77 (
     set target=snap77
 ) else (

@@ -4,47 +4,70 @@ import subprocess
 import glob
 
 
-root_dir = os.getcwd() + "\\data"
-out_dir = os.getcwd() + "\\snaps"
-items1 = ["density", "enstrophy", "pressure","magfieldx", "magfieldy", "magfieldz", "velocityx","velocityy", "velocityz"]
-items2 = ["magfield1", "magfield2", "magfield3", "velocity1","velocity2", "velocity3"]
-xyz = {1:"x",2:"y",3:"z"}
+def data_processing(root_dir, out_dir):
+    items1 = ["density", "enstrophy", "pressure","magfieldx", "magfieldy", "magfieldz", "velocityx","velocityy", "velocityz"]
+    items2 = ["magfield1", "magfield2", "magfield3", "velocity1","velocity2", "velocity3"]
+    xyz = {1: "x", 2: "y", 3: "z"}
 
+    for target in [4949, 77, 497]:
+        if target == 4949:
+            i, j = 49, 49
+        elif target == 77:
+            i, j = 7, 7
+        elif target == 497:
+            i, j = 49, 7
+        else:
+            raise "Value Error"
 
-for targ in [49, 77, 497]:
-    if targ == 49:
-        i, j = 49, 49
-    elif targ == 77:
-        i, j = 7, 7
-    elif targ == 497:
-        i, j = 49, 7
-    else:
-        raise "Value Error"
+        # bat ファイルの実行
+        # 基本的に加工したデータの保存先のフォルダの作成
+        subprocess.run([out_dir + "\\mkdirs.bat", str(target)])
+        files = glob.glob(root_dir + "\\*\\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0\\Snapshots\\*".format(i=i, j=j))
 
-    subprocess.run([out_dir + "\\mkdirs.bat", str(targ)])
-    files = glob.glob(root_dir + "\\*\\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0\\Snapshots\\*".format(i=i, j=j))
+        # ログの保存先
+        f = open(out_dir + f'\\snap{target}\\myfile.txt', 'w')
+        f.write(f"[start] snap{target}")
 
-    for file in files:
-        subprocess.run([root_dir + "\\..\\cln\\separator.exe", f"{file}"])
-        _, _, _, para, job = os.path.basename(file).split(".")
-        para = int(para)
-        job = int(job)
-        f = open(out_dir+'\\myfile.txt', 'w')
+        for file in files:
+            # 元データの分割処理の実行
+            subprocess.run([root_dir + "\\..\\cln\\separator.exe", f"{file}"])
+            _, _, _, param, job = os.path.basename(file).split(".")
+            param = int(param)
+            job = int(job)
 
-        for item2 in items2:
-            try:
-                os.rename(item2, f"{item2[:-1]}{xyz[int(item2[-1])]}")
-            except FileNotFoundError:
-                f.write(f"Filenot Found: {item2}.{'{0:02d}'.format(para)}.{'{0:02d}'.format(job)}\n")
+            for item2 in items2:
+                try:
+                    # ファイル名の変更
+                    # magfield1 -> magfieldx
+                    os.rename(item2, f"{item2[:-1]}{xyz[int(item2[-1])]}") # separater.exe をもとに分割したファイル名を変換する
+                except FileNotFoundError:
+                    f.write(f"Filenot Found: {item2}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}\n")
 
-        f.write("\n")
+            f.write("\n")
 
-        for item in items1:
-            try:
-                newname = f"{item}.{'{0:02d}'.format(para)}.{'{0:02d}'.format(job)}"
-                os.rename(item, newname)
-                shutil.move(newname, out_dir+f'/{item}/{"{0:02d}".format(job)}/')
-            except FileNotFoundError:
-                f.write(f"Filenot Found: {item2}.{'{0:02d}'.format(para)}.{'{0:02d}'.format(job)}\n")
+            for item in items1:
+                try:
+                    # ファイル名の変更
+                    # magfieldx -> magfieldx.01.00
+                    newname = f"{item}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"
+                    os.rename(item, newname)
+
+                    # ファイルの移動
+                    # separater.exe で出力されたファイルは親ディレクトリに生成されるため、逐一移動させる
+                    shutil.move(newname, out_dir+f'\\snap{target}\\{item}\\{"{0:02d}".format(job)}\\')
+
+                except FileNotFoundError:
+                    f.write(f"Filenot Found: {item2}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}\n")
+
+        # coordn を最後に移動させる
+        for i in range(1, 4):
+            shutil.move("coord"+xyz[i], out_dir+f'\\snap{target}')
+
+        f.write("[end]")
         f.close()
-        
+
+
+if __name__ == "__main__":
+    root_dir = os.getcwd() + "\\data"
+    out_dir = os.getcwd() + "\\snaps"
+    data_processing(root_dir, out_dir)
