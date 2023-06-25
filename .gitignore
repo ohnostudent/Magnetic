@@ -4,8 +4,9 @@ snap/
 snaps/snap*
 pra/
 *__pycache__
+imgout/
 
 # 各ファイル
 *.zip
 *.ipynb
-
+.env

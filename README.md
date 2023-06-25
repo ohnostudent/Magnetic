@@ -12,7 +12,7 @@ data\20220624.CITM\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.
 
 
 ## 2. データの加工
-src/processing/ 配下にある `separater.py` を実行する  
+親ディレクトリを作業場とし、src/processing/ 配下にある `separater.py` を実行する  
 
 1. .bat にてディレクトリの生成を一括で行っている
 2. 各データの処理毎に、生成したファイルを移動している
@@ -30,7 +30,6 @@ src/processing/ 配下にある `separater.py` を実行する
 
 ## ディレクトリ構造
 research/
-
     ├cln/  c言語のツール(著大野先生)
     ├data/  元データ
     ├imgout/  画像,そのほかの出力先
@@ -51,6 +50,7 @@ research/
     .   .
     .   .
     |   └velocityz
+    |
     ├src/  ipynbやモジュール
     |   ├mymodule/
     |   |     ├LIC/　きれいに出てくる流線可視化
@@ -59,6 +59,7 @@ research/
     |   |     └myfunc.py　諸々の関数。
     |   .   
     |   .   
+    |
     ├MLres/ 学習結果の保存先
     ├README.md
     ├.gitignore
