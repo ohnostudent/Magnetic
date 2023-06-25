@@ -5,6 +5,7 @@ snaps/snap*
 pra/
 *__pycache__
 imgout/
+src_def/
 
 # 各ファイル
 *.zip
