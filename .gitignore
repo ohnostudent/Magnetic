@@ -1,4 +1,5 @@
 # ディレクトリ
+.vscode/
 data/
 snap/
 snaps/snap*

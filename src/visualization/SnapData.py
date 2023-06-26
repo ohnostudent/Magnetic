@@ -1,28 +1,17 @@
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import cv2
 import os
-import subprocess
 from glob import glob
-from dotenv import load_dotenv
-# load_dotenv()
+from params import ROOT_DIR, IMGOUT
+
 
 class SnapData():
-    ROOT_DIR = os.getcwd()
-    SNANP_PATH = ROOT_DIR + "\\snaps"
-    imgout = ROOT_DIR + "\\imgout\\visualize"
-
     def __init__(self) -> None:
-        if not os.path.exists(self.ROOT_DIR+"\\heatmaps"):
-            os.makedirs(self.ROOT_DIR+"\\heatmaps")
+        pass
 
-        if not os.path.exists(self.ROOT_DIR+"\\edges"):
-            os.makedirs(self.ROOT_DIR+"\\edges")
-
-        if not os.path.exists(self.ROOT_DIR+"\\energies"):
-            os.makedirs(self.ROOT_DIR+"\\energies")
-    
     @classmethod
     def setSnapData(cls, file_path, z=3):
         # データのインポート
@@ -46,10 +35,11 @@ class SnapData():
 
 
     def drawHeatmap(self, viz, saveimg=False, bar_range=None):
+        self._makedir()
         # フォルダの作成
-        if not os.path.exists(self.imgout + f"\\{viz}\\{self.target}\\{self.job :02d}"):
-            os.makedirs(self.imgout + f"\\{viz}\\{self.target}\\{self.job :02d}")
-            # print(self.imgout + f"\\{viz}\\{self.target}\\{self.job :02d}")
+        if not os.path.exists(IMGOUT + f"\\{viz}\\{self.target}\\{self.job :02d}"):
+            os.makedirs(IMGOUT + f"\\{viz}\\{self.target}\\{self.job :02d}")
+            # print(IMGOUT + f"\\{viz}\\{self.target}\\{self.job :02d}")
 
         # 描画
         if bar_range:
@@ -58,9 +48,13 @@ class SnapData():
             sns.heatmap(self.snap_data)
         # 保存
         if saveimg:
-            plt.savefig(self.imgout + f"\\{viz}\\{self.target}\\{self.job :02d}\\{self.target}.{self.param :02d}.{self.job :02d}.png")
+            plt.savefig(IMGOUT + f"\\{viz}\\{self.target}\\{self.job :02d}\\{self.target}.{self.param :02d}.{self.job :02d}.png")
 
         # メモリの開放
         # plt.clf()
         # plt.close() 
 
+    def _makedir(self, target) -> None:
+        if not os.path.exists(ROOT_DIR + f"\\{target}"):
+            os.makedirs(ROOT_DIR + f"\\{target}")
+    

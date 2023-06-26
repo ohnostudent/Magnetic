@@ -9,19 +9,12 @@ from dotenv import load_dotenv
 # load_dotenv()
 
 from SnapData import SnapData
+from params import ROOT_DIR, IMGOUT, SNANP_PATH
 
 
 class Visualize(SnapData):
-    ROOT_DIR = os.getcwd()
-    SNANP_PATH = ROOT_DIR + "\\snaps"
-    imgout = ROOT_DIR + "\\imgout\\visualize"
-
     def __init__(self) -> None:
         super().__init__(self)
-    
-    def plt_reset(self) -> None:
-        plt.clf()
-        plt.close()
     
     def drawEdge(self):
         #cv2で扱える0-255の整数に整形
@@ -32,7 +25,7 @@ class Visualize(SnapData):
 
         edges = cv2.Canny(data, threshold1=150, threshold2=200)
         plt.imshow(cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB))
-        cv2.imwrite(self.imgout + f"\\edges\\{self.target}\\{self.job :02d}\\{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
+        cv2.imwrite(IMGOUT + f"\\edges\\{self.target}\\{self.job :02d}\\{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
     
 
     def drawStream(self, X, Y, compress=0):
@@ -86,7 +79,7 @@ class Visualize(SnapData):
         # strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
         
         #fig.colorbar(strm.lines)
-        # plt.savefig(f"{imgout}1111/{number}.png")
+        # plt.savefig(IMGOUT}1111/{number}.png")
         # plt.show()
     
 
@@ -253,7 +246,7 @@ class Viz(SnapData):
         ax2 = plt.subplot(2,1,2)
         ax2.pcolor(dataX1, vmax = 0.03)            
 
-        #plt.savefig(f"{imgout}1114/{i}_magfield_paraline{os.path.basename(magx[i])[10:]}.png")
+        #plt.savefig(IMGOUT}1114/{i}_magfield_paraline{os.path.basename(magx[i])[10:]}.png")
 
 
 
@@ -262,7 +255,7 @@ def main():
 
     viz = Visualize()
     for target in ["density"]:#["velocityy", "magfieldy", "density", "enstrophy"]:
-        files = glob(os.getcwd() + f"\\snaps\\snap77\\{target}\\*\\*")
+        files = glob(ROOT_DIR + f"\\snaps\\snap77\\{target}\\*\\*")
         for file in files:
             viz.setSnapData(file)
             viz.drawHeatmap(saveimg=True) # Heatmap
