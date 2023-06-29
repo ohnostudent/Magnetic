@@ -1,7 +1,9 @@
-import shutil
+# -*- coding: utf-8 -*-
+
 import os
+import shutil
 import subprocess
-import glob
+from glob import glob
 
 
 def data_processing(input_dir, out_dir):
@@ -22,7 +24,7 @@ def data_processing(input_dir, out_dir):
         # bat ファイルの実行
         # 基本的に加工したデータの保存先のフォルダの作成
         subprocess.run([out_dir + "\\mkdirs.bat", str(target)])
-        files = glob.glob(input_dir + "\\*\\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0\\Snapshots\\*".format(i=i, j=j))
+        files = glob(input_dir + "\\*\\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0\\Snapshots\\*".format(i=i, j=j))
 
         # ログの保存先
         f = open(out_dir + f'\\snap{target}\\myfile.txt', 'w')
