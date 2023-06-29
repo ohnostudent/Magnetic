@@ -22,7 +22,6 @@ class Visualize(SnapData):
         """
         畳み込み演算。
         """
-        
         if padding:
             print("0パディングの処理未実装  padding=0で実行します")
             padding = 0
@@ -145,7 +144,6 @@ class Visualize(SnapData):
         plt.clf()
         plt.close() 
 
-    
     # 流線の可視化
     def drawStream(self, X, Y, compress=0):
         # dataX = X[350:700]
@@ -201,8 +199,6 @@ class Visualize(SnapData):
         # plt._savefig(IMGOUT}1111/{number}.png")
         # plt.show()
     
-        # 速さと密度について
-
     # エネルギーの速さと密度について
     def drawEnergy_for_velocity(self, dens_path, vx_path, vy_path, save=True):
         dens_data = self.setSnapData(dens_path)
@@ -229,7 +225,7 @@ class Visualize(SnapData):
         path = f"\Energy_magfield"
         self._savefig(path, save)
 
-    # 
+    # das
     def drawStreamHeatmap(self, magx1, magy1, magx2, magy2, save=True):
         dataX1 = magx1[350:700, 270:590]
         dataX2 = magx2[350:700, 270:590]
@@ -240,12 +236,15 @@ class Visualize(SnapData):
 
         x = range(dataX.shape[1])
         y = range(dataY.shape[0])
+
         # X,Y方向それぞれのベクトルに対して座標の行列を設定
         X, Y = np.meshgrid(x, y)
+
         # X,Y方向それぞれのベクトルの強さ
         u = dataX
         v = dataY
-        ######### rotの計算途中の微分でデータの端っこが削れる
+
+        # rotの計算途中の微分でデータの端っこが削れる
         # rot1 = _rot2d(dataX1, dataY1)
         # rot2 = _rot2d(dataX2, dataY2)
         # rot = rot2 - rot1
@@ -253,23 +252,22 @@ class Visualize(SnapData):
         # v = v[2:-2,2:-2]
         # X = X[2:-2,2:-2]
         # Y = Y[2:-2,2:-2]
-        ##########
         
         rad1 = self._calc_radian(dataX1, dataY1)
         rad2 = self._calc_radian(dataX2, dataY2)
         rad = rad2 - rad1
         
-        ax1 = plt.subplot(2,1,1)
+        ax1 = plt.subplot(2, 1, 1)
         ax1.pcolor(rad, cmap="brg", vmax=0.1, vmin=-0.1)
-        ax2 = plt.subplot(2,1,2)
+
+        ax2 = plt.subplot(2, 1, 2)
         ax2.pcolor(dataX1, vmax = 0.03)
 
-        path = "\StreamHeatmap"
+        path = "\StreamHeatmap\snap{i}"
         self._savefig(path, save)
 
-
+    # 保存
     def _savefig(self, path, save=True):
-        # 保存
         # フォルダの作成
         if save:
             self.makedir(f"\\visualization\{path}\{self.job :02d}")
@@ -281,28 +279,33 @@ class Visualize(SnapData):
         plt.close() 
 
 
+
 def main():
     from glob import glob
-    files = {}
-    files["density"] = glob(SNAP_PATH + f"\\snap77\\density\\*\\*")
-    files["velocityx"] = glob(SNAP_PATH + f"\\snap77\\velocityx\\*\\*")
-    files["velocityy"] = glob(SNAP_PATH + f"\\snap77\\velocityy\\*\\*")
+
+    for i in [77, 497, 4949]:
+        target_path = SNAP_PATH + f"\\snap{i}"
+
+        files = {}
+        files["density"] = glob(target_path + f"\\density\\*\\*")
+        files["velocityx"] = glob(target_path + f"\\velocityx\\*\\*")
+        files["velocityy"] = glob(target_path + f"\\velocityy\\*\\*")
 
 
-    viz = Visualize()
-    for dens_path, vx_path, vy_path in zip(files["density"], files["velocityx"], files["velocityy"]):
-        viz.drawEnergy_for_velocity(dens_path, vx_path, vy_path)
+        viz = Visualize()
+        for dens_path, vx_path, vy_path in zip(files["density"], files["velocityx"], files["velocityy"]):
+            viz.drawEnergy_for_velocity(dens_path, vx_path, vy_path)
 
-    files["magfieldx"] = glob(SNAP_PATH + f"\\snap77\\magfieldx\\*\\*")
-    files["magfieldy"] = glob(SNAP_PATH + f"\\snap77\\magfieldy\\*\\*")
-    for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"]):
-        viz.drawEnergy_for_magfield(magx_path, magy_path)
-        
-    files["enstrophy"] = glob(SNAP_PATH + f"\\snap77\\enstrophy\\*\\*")
-    for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
-        for path in files[target]:
-            viz.drawHeatmap(path)
-            viz.drawEdge(path)
+        files["magfieldx"] = glob(target_path + f"\\magfieldx\\*\\*")
+        files["magfieldy"] = glob(target_path + f"\\magfieldy\\*\\*")
+        for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"]):
+            viz.drawEnergy_for_magfield(magx_path, magy_path)
+            
+        files["enstrophy"] = glob(target_path + f"\\enstrophy\\*\\*")
+        for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
+            for path in files[target]:
+                viz.drawHeatmap(path)
+                viz.drawEdge(path)
 
 
 if __name__ == "__main__":
