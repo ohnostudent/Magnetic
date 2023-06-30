@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import shutil
 import subprocess
 from glob import glob
 from logging import getLogger
 
 
-def data_processing(input_dir, out_dir):
+def data_processing():
+    # 各種 PATH の取得
+    sys.path.append(os.getcwd())
+    from params import ROOT_DIR, SNAP_PATH, SRC_PATH
+
     logger = getLogger("res_root").getChild(__name__)
 
     # パラメータの定義
@@ -30,15 +35,15 @@ def data_processing(input_dir, out_dir):
         # bat ファイルの実行
         # 基本的に加工したデータの保存先のフォルダの作成
         logger.debug("MAKE", extra={"addinfo": "ディレクトリの作成"})
-        subprocess.run([out_dir + "\\mkdirs.bat", str(target)])
+        subprocess.run([SNAP_PATH + "\mkdirs.bat", str(target)])
 
         # ログの保存先
-        files = glob(input_dir + "\\*\\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0\\Snapshots\\*".format(i=i, j=j))
+        files = glob(ROOT_DIR + f"\data\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0\Snapshots\*")
         for file in files:
-            logger.debug("OPEN", extra={"addinfo": f"File {item2}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
+            logger.debug("OPEN", extra={"addinfo": f"File snap{i}{j}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
 
             # 元データの分割処理の実行
-            subprocess.run([input_dir + "\\..\src\processing\cln\separator.exe", f"{file}"])
+            subprocess.run([SRC_PATH + "\Processing\cln\separator.exe", f"{file}"])
             _, _, _, param, job = map(lambda x: int(x) if x.isnumeric() else x,  os.path.basename(file).split("."))
 
             # 出力されたファイル名の変更
@@ -61,7 +66,7 @@ def data_processing(input_dir, out_dir):
 
                     # ファイルの移動
                     # separater.exe で出力されたファイルは親ディレクトリに生成されるため、逐一移動させる
-                    shutil.move(newname, out_dir+f'\\snap{target}\\{item1}\\{"{0:02d}".format(job)}\\')
+                    shutil.move(newname, SNAP_PATH + f'\snap{target}\{item1}\{"{0:02d}".format(job)}\\')
 
                 else: # 見つからない場合
                     logger.debug("NotFound", extra={"addinfo": f"ファイル {item1}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)} が見つかりませんでした"})
@@ -71,19 +76,14 @@ def data_processing(input_dir, out_dir):
 
         # coordn を最後に移動させる
         for i in range(1, 4):
-            shutil.move("coord" + xyz[i], out_dir+f'\\snap{target}')
+            shutil.move("coord" + xyz[i], SNAP_PATH + f'\snap{target}')
 
         logger.debug("END", extra={"addinfo": "処理終了"})
 
 
 if __name__ == "__main__":
-    import sys
-    sys.path.append(".\\")
-
-    from etc.logger import logger_conf
-    from params import ROOT_DIR
-
+    sys.path.append(os.getcwd())
+    from SetLogger import logger_conf
     logger = logger_conf()
-    input_dir = ROOT_DIR + "\\data"
-    out_dir = ROOT_DIR + "\\snaps"
-    data_processing(input_dir, out_dir)
+
+    data_processing()

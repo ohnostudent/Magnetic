@@ -19,7 +19,7 @@ data/ 配下に保存する
 2. 各データの処理毎に、生成したファイルを移動している
 3. .py　と .ipynb では作業ディレクトリの位置が違うので要注意
 
-```
+```cmd
 > pwd  
 .\GraduationResearch\Magnetic  
 
@@ -35,6 +35,7 @@ data/ 配下に保存する
 処理ファイル：`\src\Visualization`  
 ```python
 from SnapData import SnapData
+from Visualization import Visualize
 from src.params import IMGOUT, SNAP_PATH
 
 target_path = SNAP_PATH + f"\\snap{i}"
@@ -84,7 +85,7 @@ for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "e
 出力先：`\imgout\\*`
 
 
-## 5. 機械学習
+## 4. 機械学習
 ### 1. 教師データの作成
 処理ファイル：`\src\Visualization`  
 
@@ -118,43 +119,43 @@ for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "e
 
 
 ## ディレクトリ構造
-research/  
+Magnetic/  
 
-    ├.git/  
-    ├data/  元データ  
-    ├imgout/  画像データの出力先  
-    ├MLres/ 学習結果の保存先  
-    ├snaps/  分解後のデータ  
-    |   ├density/  
-    |   |     ├00/  
-    |   |     ├01/  
+    ├ .git/  
+    ├ data/  元データ  
+    ├ imgout/  画像データの出力先  
+    ├ MLres/ 学習結果の保存先  
+    ├ snaps/  分解後のデータ  
+    |   ├ density/  
+    |   |     ├ 00/  
+    |   |     ├ 01/  
     .   .     .  
     .   .     .  
     |   |     └14/  
-    |   ├enstrophy/  
-    |   |     ├00/  
-    |   |     ├01/  
+    |   ├ enstrophy/  
+    |   |     ├ 00/  
+    |   |     ├ 01/  
     .   .     .  
     .   .     .  
     |   |     └14/  
-    |   ├magfieldx/  
+    |   ├ magfieldx/  
     .   .  
     .   .  
     |   └velocityz  
     |  
-    ├src/  
-    |   ├AVS/ AVS可視化  
-    |   ├k_means/ k近傍法  
-    |   ├LIC/ LIC可視化  
-    |   ├Processing/ 元データの加工  
-    |   ├SteamLines/ Stream可視化  
-    |   ├Visualization/ 元データの可視化  
+    ├ src/  
+    |   ├ AVS/ AVS可視化  
+    |   ├ k_means/ k近傍法  
+    |   ├ LIC/ LIC可視化  
+    |   ├ Processing/ 元データの加工  
+    |   ├ SteamLines/ Stream可視化  
+    |   ├ Visualization/ 元データの可視化  
     |   └main.ipynb  
     |   .  
     |   .   
     |  
-    ├.env  
-    ├README.md  
+    ├ .env  
+    ├ README.md  
     └.gitignore  
 
 ```
@@ -165,7 +166,7 @@ avs
 -> _imgsplit.ipynb
 
 stream
--> _streamploy.ipynb
+-> _streamplot.ipynb
 
 LIC
 -> ohnolic.py (bynaly -> bmp)

@@ -2,20 +2,23 @@
 
 import os
 import sys
-sys.path.append(os.getcwd())
-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from logging import getLogger
+sys.path.append(os.getcwd() + '\src')
 
-from SnapData import SnapData
-from src.params import IMGOUT, SNAP_PATH
+from Visualization.SnapData import SnapData
+from params import IMGOUT
 
 
 class Visualize(SnapData):
-    def __init__(self) -> None:
+    logger = getLogger("res_root").getChild(__name__)
+    
+    def __init__(self, num) -> None:
         super().__init__()
+        self.num = num
     
     #畳み込み
     def _convolute(self, data: np.array, carnel: np.array, padding=0, stride=1):
@@ -137,9 +140,11 @@ class Visualize(SnapData):
         plt.imshow(cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB))
 
         if save:
-            self.makedir(f"\\visualization\\edges\{self.target}\{self.job :02d}")
+            filepath = f"\\visualization\edges\snap{self.num}\{self.target}\{self.job :02d}"
+            self.makedir(filepath)
             plt.tight_layout()
-            cv2.imwrite(IMGOUT + f"\\visualization\\edges\{self.target}\{self.job :02d}\{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
+            cv2.imwrite(IMGOUT + filepath + f"\{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
+
         # メモリの開放
         plt.clf()
         plt.close() 
@@ -198,6 +203,67 @@ class Visualize(SnapData):
         #fig.colorbar(strm.lines)
         # plt._savefig(IMGOUT}1111/{number}.png")
         # plt.show()
+
+    def stream_plt(self, X, Y, xrange=False, yrange= False, compress=0):
+        dataX = X
+        dataY = Y
+        if xrange:
+            # dataX = X[350:700, 304:384]
+            # dataY = Y[350:700, 304:384]
+            dataX = dataX[:,xrange[0]:xrange[1]]
+            dataY = dataY[:,xrange[0]:xrange[1]]
+
+        if yrange:
+            dataX = dataX[yrange[0]:yrange[1],:]
+            dataY = dataY[yrange[0]:yrange[1],:]
+
+        #計算が重いので平滑化フィルターの畳み込みで圧縮
+        if compress:
+            carnel1 = self._ave_carnel(compress)
+            carnel2 = carnel1.T
+            dataX = self._convolute(dataX, carnel2,stride=compress)
+            dataY = self._convolute(dataY, carnel1,stride=compress)
+        x = range(dataX.shape[1])
+        y = range(dataY.shape[0])
+        #X,Y方向それぞれのベクトルに対して座標の行列を設定
+        X, Y = np.meshgrid(x, y)
+        #X,Y方向それぞれのベクトルの強さ
+        u = dataX
+        v = dataY
+        color = u**2 + v**2
+        color = color*2/max(color.flat)
+        #########rotの計算途中の微分でデータの端っこが削れる
+        rot = self._rot2d(u, v)
+        u = u[2:-2,2:-2]
+        v = v[2:-2,2:-2]
+        X = X[2:-2,2:-2]
+        Y = Y[2:-2,2:-2]
+        ##########
+        rad = np.arccos(u/np.sqrt(u**2+v**2))
+        color2 = np.array(v) / np.array(u)
+        color2 = color2 - min(color2.flat)
+        color2 = color2/max(color2.flat)
+        speed = np.sqrt(u**2 + v**2)
+        lw = 7*speed / speed.max()
+
+        fig = plt.figure(figsize=[24,14])
+        ax = fig.add_subplot()
+        ax.set_title(f"x:{xrange},y:{yrange}")
+        # plt.contour(X,Y,rad)
+        # mf.show(rad)#,bar_range=[-0.05,0.05])
+        sns.heatmap(rad, cmap="bwr")
+        # sns.heatmap(dataY)
+        # plot = plt.pcolor(rad, cmap="bwr")
+        #strm = plt.streamplot(X, Y, u, v, density=[5], color=color, arrowstyle='-', linewidth=1,cmap="rainbow")
+        # strm = plt.streamplot(X, Y, u, v, density=[3], color=rot, arrowstyle='-', linewidth=lw,cmap="rainbow")
+        strm = plt.streamplot(X, Y, u, v, density=[5], color="black", arrowstyle='-', linewidth=1.5,cmap="bwr", minlength=0.001)
+
+
+        #strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
+        
+        #fig.colorbar(strm.lines)
+        # plt.show()
+
     
     # エネルギーの速さと密度について
     def drawEnergy_for_velocity(self, dens_path, vx_path, vy_path, save=True):
@@ -263,49 +329,55 @@ class Visualize(SnapData):
         ax2 = plt.subplot(2, 1, 2)
         ax2.pcolor(dataX1, vmax = 0.03)
 
-        path = "\StreamHeatmap\snap{i}"
+        path = "\StreamHeatmap"
         self._savefig(path, save)
 
     # 保存
     def _savefig(self, path, save=True):
         # フォルダの作成
+        file_path = f"\\visualization\{path}\snap{self.num}\{self.job :02d}"
         if save:
-            self.makedir(f"\\visualization\{path}\{self.job :02d}")
+            self.makedir(file_path)
             plt.tight_layout()
-            plt.savefig(IMGOUT + f"\\visualization\{path}\{self.job :02d}\{self.target}.{self.param :02d}.{self.job :02d}.png")
+            plt.savefig(IMGOUT + file_path + f"\{self.target}.{self.param :02d}.{self.job :02d}.png")
 
         # メモリの開放
         plt.clf()
-        plt.close() 
+        plt.close()
 
 
 
 def main():
     from glob import glob
+    from src.params import SNAP_PATH
+    from src.SetLogger import logger_conf
+
+    logger = logger_conf()
 
     for i in [77, 497, 4949]:
-        target_path = SNAP_PATH + f"\\snap{i}"
+        logger.debug("START", extra={"addinfon": f"snap{i}"})
+        target_path = SNAP_PATH + f"\snap{i}"
+        viz = Visualize(i)
 
         files = {}
-        files["density"] = glob(target_path + f"\\density\\*\\*")
-        files["velocityx"] = glob(target_path + f"\\velocityx\\*\\*")
-        files["velocityy"] = glob(target_path + f"\\velocityy\\*\\*")
-
-
-        viz = Visualize()
+        files["density"] = glob(target_path + f"\density\*\*")
+        files["velocityx"] = glob(target_path + f"\\velocityx\*\*")
+        files["velocityy"] = glob(target_path + f"\\velocityy\*\*")
         for dens_path, vx_path, vy_path in zip(files["density"], files["velocityx"], files["velocityy"]):
             viz.drawEnergy_for_velocity(dens_path, vx_path, vy_path)
 
-        files["magfieldx"] = glob(target_path + f"\\magfieldx\\*\\*")
-        files["magfieldy"] = glob(target_path + f"\\magfieldy\\*\\*")
+        files["magfieldx"] = glob(target_path + f"\magfieldx\*\*")
+        files["magfieldy"] = glob(target_path + f"\magfieldy\*\*")
         for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"]):
             viz.drawEnergy_for_magfield(magx_path, magy_path)
             
-        files["enstrophy"] = glob(target_path + f"\\enstrophy\\*\\*")
+        files["enstrophy"] = glob(target_path + f"\enstrophy\*\*")
         for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
             for path in files[target]:
                 viz.drawHeatmap(path)
                 viz.drawEdge(path)
+
+        logger.debug("END", extra={"addinfon": f"snap{i}"})
 
 
 if __name__ == "__main__":

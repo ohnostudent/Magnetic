@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 from logging import getLogger
 from logging import StreamHandler, FileHandler, Formatter
@@ -7,8 +8,8 @@ from logging import DEBUG
 # from logging import WARNING, ERROR, CRITICAL, config
 from datetime import datetime, timedelta
 
-sys.path.append(".\\")
-from src.params import LOG_DIR
+sys.path.append(os.getcwd()+"\src")
+from params import LOG_DIR
 
 
 def logger_conf():

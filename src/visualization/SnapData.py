@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-
 import os
 import sys
-sys.path.append(os.getcwd())
 import numpy as np
+sys.path.append(os.getcwd())
+
 from src.params import IMGOUT
 
 
@@ -28,10 +28,5 @@ class SnapData():
         return snap_data
 
     def makedir(self, path) -> None:
-        if not os.path.exists(IMGOUT + f"\\{path}"):
-            os.makedirs(IMGOUT + f"\\{path}")
-
-
-if __name__ == "__main__":
-    print(IMGOUT)
-    
+        if not os.path.exists(IMGOUT + f"\{path}"):
+            os.makedirs(IMGOUT + f"\{path}")
