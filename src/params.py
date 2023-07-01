@@ -1,3 +1,5 @@
+# -*- coding utf-8, LF -*-
+
 import os
 
 ROOT_DIR = os.getcwd()

@@ -1,4 +1,4 @@
-# -*- encoding utf-8, LF -*-
+# -*- coding utf-8, LF -*-
 
 import shutil
 import os

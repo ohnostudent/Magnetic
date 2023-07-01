@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding utf-8, LF -*-
 
 import os
 import sys
