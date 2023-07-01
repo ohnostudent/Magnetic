@@ -2,14 +2,19 @@
 .vscode/
 data/
 snap/
+snaps/half*
 snaps/snap*
 pra/
 *__pycache__
 imgout/
 src_def/
 log/
+MLdata/
+MLres/
 
 # 各ファイル
 *.zip
 *.ipynb
 .env
+
+tree.txt
