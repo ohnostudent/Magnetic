@@ -9,7 +9,7 @@ from src.params import IMGOUT
 
 
 class SnapData():
-    def setSnapData(self, file_path, z=3):
+    def loadSnapData(self, file_path, z=3):
         # データのインポート
         # r : 読み込み, b : バイナリモード
         # if os.path.splitext(file_path)[1] == "npy": # 拡張子の判定
@@ -30,3 +30,4 @@ class SnapData():
     def makedir(self, path) -> None:
         if not os.path.exists(IMGOUT + f"\{path}"):
             os.makedirs(IMGOUT + f"\{path}")
+        
