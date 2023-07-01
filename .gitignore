@@ -2,7 +2,8 @@
 .vscode/
 data/
 snap/
-snaps/half*
+snaps/half/*
+snaps/all/*
 snaps/snap*
 pra/
 *__pycache__

@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
+# -*- coding utf-8, LF -*-
 
 import os
 import sys
 import shutil
 import subprocess
+import numpy as np
 from glob import glob
 from logging import getLogger
 sys.path.append(os.getcwd() + "\src")
@@ -24,20 +25,20 @@ def set_ij(logger, target):
 
 
 def move_file(target, param, job, item1):
-                    # ファイル名の変更
-                    # magfieldx -> magfieldx.01.00
+        # ファイル名の変更
+        # magfieldx -> magfieldx.01.00
         newname = f"{item1}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"
         os.rename(item1, newname)
 
-                    # ファイルの移動
-                    # separater.exe で出力されたファイルは親ディレクトリに生成されるため、逐一移動させる
+        # ファイルの移動
+        # separater.exe で出力されたファイルは親ディレクトリに生成されるため、逐一移動させる
         shutil.move(newname, SNAP_PATH + f'\snap{target}\{item1}\{"{0:02d}".format(job)}\\')
+
 
 def rename_file(xyz, item2):
     # ファイル名の変更
     # magfield1 -> magfieldx
     os.rename(item2, f"{item2[:-1]}{xyz[int(item2[-1])]}") # separater.exe をもとに分割したファイル名を変換する
-
 
 
 def data_processing():
@@ -75,7 +76,7 @@ def data_processing():
 
             # 出力されたファイルの移動
             for item1 in items1:
-                if os.path.exists(item2):
+                if os.path.exists(item1):
                     move_file(target, item1)
 
                 else: # 見つからない場合

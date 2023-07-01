@@ -36,8 +36,9 @@
 <br>
 
 ## 2. データの加工
-1. `separater.py` を実行する
-    - \src\Processing 配下にある、元データをそれぞれのデータに分割するプログラム
+1.  元データを各種パラメータに分割する
+    - \src\Processing 配下にある`separater.py` を実行する
+    - 元データをそれぞれのデータに分割するプログラム
     - `mkdirs.bat` にてディレクトリの生成を一括で行っている
     - 各データファイルの生成処理毎に、生成したファイルを移動している
     - `.py`　と `.ipynb` では作業ディレクトリの位置が違うので要注意
@@ -48,6 +49,14 @@
     ```
     - 出力先：`\snaps\snap{i}{j}\*\*`
 
+2. binary を .npy に変換
+    - `\src\Processing\snap2npy.py` を実行する
+    - numpy に変換し、教師データの元にする
+    - それなりに時間がかかる
+    ```cmd
+    .\Magnetic> python .\src\Processing\snap2npy.py
+
+    ```
 
 <br>
 <br>
