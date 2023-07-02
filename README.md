@@ -122,8 +122,37 @@ for magx_path, magy_path in zip(magfieldx, magfieldy):
 ### 4. LIC
 処理ファイル：`\src\LIC`  
 
+```python
+from LIC.LIC import LIC
 
-出力先：`\imgout\\*`
+logger.debug("START", extra={"addinfo": "処理開始"})
+
+lic = LIC()
+numbers  = [77, 497, 4949]
+out_dir = IMGOUT + "\LIC"
+lic.makedir("\LIC")
+
+for i in numbers:
+    indir = SNAP_PATH + f"\half\snap{i}"
+    dir_basename = os.path.basename(indir) # snap77
+    base_out_path = out_dir + "\\" + os.path.basename(indir) # .\imgout\LIC\snap77
+    lic.makedir(f"\LIC\snap{i}")
+
+    binary_paths = glob(indir+"\magfieldx\*\*.npy")
+    # ファイルが無い場合
+    if binary_paths == []:
+        raise "Error File not Found"
+    
+    for xfile in binary_paths[-1:]:
+        yfile = xfile.replace("magfieldx", "magfieldy")
+        out_path = base_out_path + f"\lic_{dir_basename}.{os.path.splitext(os.path.basename(xfile))[0]}.bmp"
+        # print(out_path) # .\imgout\LIC\snap77\lic_snap77.magfieldx.01.14.bmp
+        
+        command = lic.set_command(xfile, yfile, out_path)
+        lic.LIC(command)
+
+```
+出力先：`\imgout\LIC\*`
 
 <br>
 <br>
@@ -219,23 +248,17 @@ Magnetic/
 
 _visvec.ipynb
 
-avs
--> _imgsplit.ipynb
-
-stream
--> _streamplot.ipynb
-
 LIC
 -> ohnolic.py (bynaly -> bmp)
 
 make2data
 -> makeviewer2.py, writer.py (bmp -> bmp)
--> _clustering.ipynb (bmp -> csv)(k-means)
 -> makesepnpy.ipynb (csv -> npy)
 -> fusionnpy.ipynb (fusion npy)
 
 ML
+-> _clustering.ipynb (k-means)
 -> MLs.py
 -> doML.py
--> XGBoost.ipynb
+-> XGtune.ipynb
 ```

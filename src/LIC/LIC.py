@@ -1,76 +1,95 @@
+# -*- coding utf-8, LF -*-
+
 import os
+import sys
 import subprocess
 import random
-# import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 from glob import glob
-# from PIL import Image
 from struct import pack
-from dotenv import load_dotenv
+from logging import getLogger
+sys.path.append(os.getcwd() + "\src")
+
+from params import SRC_PATH, SNAP_PATH, IMGOUT
+from Visualization.SnapData import SnapData
 
 
+class LIC(SnapData):
+    logger = getLogger("res_root").getChild(__name__)
 
-def ohno_lic(root_dir, xfile: str, yfile: str, outname: str, x = False, y = False):
-    command = [f"{root_dir}\\src\\LIC\\LIC.exe", xfile, yfile, outname]
-
-    if xfile[-3:] == "npy":
-        xdata = np.load(xfile)
-        ydata = np.load(yfile)
-        command += list(map(str, list(reversed(xdata.shape))))
-
-        #npy1次元のファイルを作って無理やり読み込ます。そして消す。名前はランダムにして
-        xtempfile = f"xtemp_ohnostrm_reading{random.randint(10000, 99999)}"
-        with open(xtempfile, "ab") as f:
-            for val in list(xdata.flat)*3:#*3は元のデータがz軸方向に3重なっているのを表現
-                b = pack('f', val)
-                f.write(b)
-            f.close()
-
-        ytempfile = f"ytemp_ohnostrm_reading{random.randint(10000, 99999)}"
-        with open(ytempfile, "ab") as f:
-            for val in list(ydata.flat)*3:#*3は元のデータがz軸方向に3重なっているのを表現
-                b = pack('f', val)
-                f.write(b)
-            f.close()
-
-        command[1], command[2] = xtempfile, ytempfile
-        os.remove(xtempfile)
-        os.remove(ytempfile)
-
-    elif (x and y) == True:
-        command += list(map(str, [x, y]))
-
-    res = subprocess.run(command)
-    print(command)
-    return res
+    def LIC(self, command):
+        self.logger.debug("START", extra={"addinfo": f"execute command {command[0]}"})
+        res = subprocess.run(command)
+        self.logger.debug("End", extra={"addinfo": f"execute command"})
+        return res
 
 
-def LIC():
-    load_dotenv(".env")
-    root_dir = os.getcwd()
-    ipt_dir = root_dir + "\\snaps"
-    indirs  = [ipt_dir+"\\half\\snap77", ipt_dir+"\\half\\snap49", ipt_dir+"\\half\\snap497"]
-    out_dir = root_dir + "\\imgout\\ohnolic"
+    def set_command(self, xfile: str, yfile: str, outname: str, x = False, y = False):
+        command = [SRC_PATH + f"\\LIC\\LIC.exe", xfile, yfile, outname]
+        self.logger.debug("START", extra={"addinfo": f"make command"})
+        
+        if xfile[-3:] == "npy":
+            xdata = np.load(xfile)
+            ydata = np.load(yfile)
+            command += list(map(str, list(reversed(xdata.shape))))
 
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+            # npy1次元のファイルを作って無理やり読み込ます。そして消す。名前はランダムにして
+            xtempfile = f"xtemp_ohnostrm_reading{random.randint(10000, 99999)}"
+            with open(xtempfile, "ab") as f:
+                for val in list(xdata.flat)*3: # *3は元のデータがz軸方向に3重なっているのを表現
+                    b = pack('f', val)
+                    f.write(b)
+                f.close()
 
-    #snap49split1\\magfieldx\\1\\
-    for indir in indirs[-1:]:
-        basename = os.path.basename(os.path.dirname(indir))
-        newoutdir = out_dir+os.path.basename(os.path.dirname(indir))+"\\" #"..\\imgout\\ohnolic\\snap77\\"
-        if not os.path.exists(newoutdir):
-            os.mkdir(newoutdir)
+            ytempfile = f"ytemp_ohnostrm_reading{random.randint(10000, 99999)}"
+            with open(ytempfile, "ab") as f:
+                for val in list(ydata.flat)*3: # *3は元のデータがz軸方向に3重なっているのを表現
+                    b = pack('f', val)
+                    f.write(b)
+                f.close()
 
-        binarypaths = glob(indir+"\\magfieldx\\*\\*.npy")
-        for xfile in binarypaths[-1:]:
+            command[1], command[2] = xtempfile, ytempfile
+            os.remove(xtempfile)
+            os.remove(ytempfile)
+
+        elif x and y:
+            command += list(map(str, [x, y]))
+
+        self.logger.debug("COMP", extra={"addinfo": f"make command"})
+        return command
+
+
+def main():
+    from src.SetLogger import logger_conf
+
+    logger = logger_conf()
+    logger.debug("START", extra={"addinfo": "処理開始"})
+
+    lic = LIC()
+    numbers  = [77, 497, 4949]
+    out_dir = IMGOUT + "\LIC"
+    lic.makedir("\LIC")
+
+    for i in numbers:
+        indir = SNAP_PATH + f"\half\snap{i}"
+        dir_basename = os.path.basename(indir) # snap77
+        base_out_path = out_dir + "\\" + os.path.basename(indir) # .\imgout\LIC\snap77
+        lic.makedir(f"\LIC\snap{i}")
+
+        binary_paths = glob(indir+"\magfieldx\*\*.npy")
+        # ファイルが無い場合
+        if binary_paths == []:
+            print("Error File not Found")
+            return
+        
+        for xfile in binary_paths[-1:]:
             yfile = xfile.replace("magfieldx", "magfieldy")
-            out = f"{newoutdir}lic_{basename}.{xfile[-9:-4]}.bmp"
+            out_path = base_out_path + f"\lic_{dir_basename}.{os.path.splitext(os.path.basename(xfile))[0]}.bmp"
+            # print(out_path) # .\imgout\LIC\snap77\lic_snap77.magfieldx.01.14.bmp
             
-            if not os.path.exists(out):
-                ohno_lic(xfile, yfile, out)
-            print(out)
+            command = lic.set_command(xfile, yfile, out_path)
+            lic.LIC(command)
+
 
 if __name__ == "__main__":
-    LIC()
+    main()
