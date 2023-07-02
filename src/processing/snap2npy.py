@@ -42,16 +42,16 @@ if __name__ == "__main__":
     sp = SnapData()
     logger = logger_conf()
 
-    for i in [77, 497, 4949]:
-        logger.debug("START", extra={"addinfo": f"Snap{i}"})
+    for dataset in [77, 497, 4949]:
+        logger.debug("START", extra={"addinfo": f"Snap{dataset}"})
 
         for target in ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]:
             logger.debug("START", extra={"addinfo": f"{target}"})
 
-            for path in glob(SNAP_PATH + f"\snap{i}\{target}\*\*"):
+            for path in glob(SNAP_PATH + f"\snap{dataset}\{target}\*\*"):
                 # print(path)
-                snap2npy(sp, path, i)
+                snap2npy(sp, path, dataset)
 
             logger.debug("END", extra={"addinfo": f"{target}"})
-        logger.debug("END", extra={"addinfo": f"Snap{i}"})
+        logger.debug("END", extra={"addinfo": f"Snap{dataset}"})
 

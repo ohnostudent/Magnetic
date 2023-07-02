@@ -248,11 +248,10 @@ Magnetic/
 
 _visvec.ipynb
 
-LIC
--> ohnolic.py (bynaly -> bmp)
-
 make2data
--> makeviewer2.py, writer.py (bmp -> bmp)
+-> makeviewer2.py (html の作成)
+-> writer.py (bmp の分割)
+-> labeling (bmp -> csv)
 -> makesepnpy.ipynb (csv -> npy)
 -> fusionnpy.ipynb (fusion npy)
 
