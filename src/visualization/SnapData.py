@@ -9,6 +9,11 @@ from src.params import IMGOUT
 
 
 class SnapData():
+    """
+    _convolute, _ave_carnel, _calc -> Visualize.py, \k-means\Clustering.py にて使用
+
+    """
+    
     def loadSnapData(self, file_path, z=3):
         # データのインポート
         # r : 読み込み, b : バイナリモード
@@ -31,3 +36,44 @@ class SnapData():
         if not os.path.exists(IMGOUT + f"\{path}"):
             os.makedirs(IMGOUT + f"\{path}")
         
+
+    #畳み込み
+    def _convolute(self, data: np.array, carnel: np.array, padding=0, stride=1):
+        """
+        畳み込み演算。
+        """
+        if padding:
+            print("0パディングの処理未実装  padding=0で実行します")
+            padding = 0
+        
+        c_width = carnel.shape[1]
+        c_height = carnel.shape[0]
+        result_width = int((data.shape[1] + 2*padding - carnel.shape[1]) / stride + 1)
+        result_height = int((data.shape[0] + 2*padding - carnel.shape[0]) / stride + 1)
+        convoluted = np.zeros((result_height, result_width))
+
+        orgY = 0
+        for resultY in range(result_height):
+            orgX = 0
+            for resultX in range(result_width):
+                array = data[orgY : orgY + c_height, orgX : orgX + c_width]
+                # a = convoluted[resultY]
+                convoluted[resultY][resultX] = self._calc(array, carnel)
+                orgX += stride
+            orgY += stride
+
+        return convoluted
+    
+    
+    def _ave_carnel(self, size:int):
+        """
+        畳み込みにおける平滑化のカーネル作成
+        """
+        ones = np.ones((size,size))
+        res = ones / (size**2)
+        return res
+    
+    def _calc(self, array, carnel):
+        result = sum(array * carnel)
+        result = sum(result.flat)
+        return result

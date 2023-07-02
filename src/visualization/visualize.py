@@ -13,52 +13,13 @@ from Visualization.SnapData import SnapData
 from params import IMGOUT
 
 
-class Visualize(SnapData):
+class VisualizeMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
     
     def __init__(self, num) -> None:
         super().__init__()
         self.num = num
     
-    #畳み込み
-    def _convolute(self, data: np.array, carnel: np.array, padding=0, stride=1):
-        """
-        畳み込み演算。
-        """
-        if padding:
-            print("0パディングの処理未実装  padding=0で実行します")
-            padding = 0
-        
-        c_width = carnel.shape[1]
-        c_height = carnel.shape[0]
-        result_width = int((data.shape[1] + 2*padding - carnel.shape[1]) / stride + 1)
-        result_height = int((data.shape[0] + 2*padding - carnel.shape[0]) / stride + 1)
-        convoluted = np.zeros((result_height, result_width))
-
-        orgX = 0
-        orgY = 0
-        for resultY in range(result_height):
-            for resultX in range(result_width):
-                array = data[orgY : orgY + c_height, orgX : orgX + c_width]
-                # a = convoluted[resultY]
-                convoluted[resultY][resultX] = self._calc(array)
-                orgX += stride
-            orgX = 0
-            orgY += stride
-        return convoluted
-    
-    def _calc(self, array, carnel):
-        result = sum(array * carnel)
-        result = sum(result.flat)
-        return result
-
-    def _ave_carnel(self, size:int):
-        """
-        畳み込みにおける平滑化のカーネル作成
-        """
-        ones = np.ones((size,size))
-        res = ones / (size**2)
-        return res
 
     #離散データの微分
     def _diff(self, x, h):
@@ -357,7 +318,7 @@ def main():
     for i in [77, 497, 4949]:
         logger.debug("START", extra={"addinfon": f"snap{i}"})
         target_path = SNAP_PATH + f"\snap{i}"
-        viz = Visualize(i)
+        viz = VisualizeMethod(i)
 
         files = {}
         files["density"] = glob(target_path + f"\density\*\*")

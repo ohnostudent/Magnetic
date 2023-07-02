@@ -11,3 +11,5 @@ SRC_PATH = ROOT_DIR + "\src"
 AVS_IN_DIR = IMGOUT + "\AVS"
 AVS_OUT_DIR = IMGOUT + "\AVSsplit"
 
+ML_DATA_DIR = ROOT_DIR + "\MLdata"
+ML_RESULT_DIR = ROOT_DIR + "\MLres"
