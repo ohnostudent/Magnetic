@@ -13,7 +13,6 @@ sys.path.append(os.getcwd() + "\src")
 from params import SRC_PATH, SNAP_PATH, IMGOUT
 from Visualization.SnapData import SnapData
 
-
 class LicMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
 
@@ -25,7 +24,7 @@ class LicMethod(SnapData):
 
 
     def set_command(self, xfile: str, yfile: str, outname: str, x = False, y = False):
-        command = [SRC_PATH + f"\\LIC\\LIC.exe", xfile, yfile, outname]
+        command = [SRC_PATH + f"\LIC\\LIC.exe", xfile, yfile, outname]
         self.logger.debug("START", extra={"addinfo": f"make command"})
         
         if xfile[-3:] == "npy":
@@ -34,14 +33,14 @@ class LicMethod(SnapData):
             command += list(map(str, list(reversed(xdata.shape))))
 
             # npy1次元のファイルを作って無理やり読み込ます。そして消す。名前はランダムにして
-            xtempfile = f"xtemp_ohnostrm_reading{random.randint(10000, 99999)}"
+            xtempfile = SRC_PATH + f"\LIC\\xtemp_ohnostrm_reading{random.randint(10000, 99999)}"
             with open(xtempfile, "ab") as f:
                 for val in list(xdata.flat)*3: # *3は元のデータがz軸方向に3重なっているのを表現
                     b = pack('f', val)
                     f.write(b)
                 f.close()
 
-            ytempfile = f"ytemp_ohnostrm_reading{random.randint(10000, 99999)}"
+            ytempfile = SRC_PATH + f"\LIC\ytemp_ohnostrm_reading{random.randint(10000, 99999)}"
             with open(ytempfile, "ab") as f:
                 for val in list(ydata.flat)*3: # *3は元のデータがz軸方向に3重なっているのを表現
                     b = pack('f', val)
@@ -49,14 +48,17 @@ class LicMethod(SnapData):
                 f.close()
 
             command[1], command[2] = xtempfile, ytempfile
-            os.remove(xtempfile)
-            os.remove(ytempfile)
 
         elif x and y:
             command += list(map(str, [x, y]))
 
         self.logger.debug("COMP", extra={"addinfo": f"make command"})
         return command
+
+    def delete_tempfile(self, xtempfile, ytempfile):
+        os.remove(xtempfile)
+        os.remove(ytempfile)
+
 
 
 def main():
@@ -89,6 +91,7 @@ def main():
             
             command = lic.set_command(xfile, yfile, out_path)
             lic.LIC(command)
+            lic.delete_tempfile(xfile, yfile)
 
 
 if __name__ == "__main__":

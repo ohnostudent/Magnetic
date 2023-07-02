@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <random>
+#include <bits/stdc++.h>
 
 #include "lineintegralconv.h"
 
@@ -115,14 +116,14 @@ void LineIntegralConv :: writeBmp(char *filename)
 void LineIntegralConv :: loadData(char *filex, char *filey){
   FILE *fp;
   if ((fp=fopen(filex, "rb"))==NULL){
-    printf("File Open for fx (%s)  failed\n",filex);
+    printf("File Open for fx (%s)  failed\n", filex);
     exit(1);
   }
   fread(fx, sizeof(float), dat_size[0]*dat_size[1], fp);
   fclose(fp);
 
   if ((fp=fopen(filey, "rb"))==NULL){
-    printf("File Open for fy (%s) failed\n",filey);
+    printf("File Open for fy (%s) failed\n", filey);
     exit(1);
   }
   fread(fy, sizeof(float), dat_size[0]*dat_size[1], fp);
