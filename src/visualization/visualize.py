@@ -16,9 +16,9 @@ from params import IMGOUT
 class VisualizeMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
     
-    def __init__(self, num) -> None:
+    def __init__(self, dataset) -> None:
         super().__init__()
-        self.num = num
+        self.dataset = dataset
     
 
     #離散データの微分
@@ -101,7 +101,7 @@ class VisualizeMethod(SnapData):
         plt.imshow(cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB))
 
         if save:
-            filepath = f"\\visualization\edges\snap{self.num}\{self.target}\{self.job :02d}"
+            filepath = f"\\visualization\edges\snap{self.dataset}\{self.target}\{self.job :02d}"
             self.makedir(filepath)
             plt.tight_layout()
             cv2.imwrite(IMGOUT + filepath + f"\{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
@@ -296,7 +296,7 @@ class VisualizeMethod(SnapData):
     # 保存
     def _savefig(self, path, save=True):
         # フォルダの作成
-        file_path = f"\\visualization\{path}\snap{self.num}\{self.job :02d}"
+        file_path = f"\\visualization\{path}\snap{self.dataset}\{self.job :02d}"
         if save:
             self.makedir(file_path)
             plt.tight_layout()
@@ -313,12 +313,13 @@ def main():
     from src.params import SNAP_PATH
     from src.SetLogger import logger_conf
 
+
     logger = logger_conf()
 
-    for i in [77, 497, 4949]:
-        logger.debug("START", extra={"addinfon": f"snap{i}"})
-        target_path = SNAP_PATH + f"\snap{i}"
-        viz = VisualizeMethod(i)
+    for dataset in [77, 497, 4949]:
+        logger.debug("START", extra={"addinfon": f"snap{dataset}"})
+        target_path = SNAP_PATH + f"\snap{dataset}"
+        viz = VisualizeMethod(dataset)
 
         files = {}
         files["density"] = glob(target_path + f"\density\*\*")
@@ -338,7 +339,7 @@ def main():
                 viz.drawHeatmap(path)
                 viz.drawEdge(path)
 
-        logger.debug("END", extra={"addinfon": f"snap{i}"})
+        logger.debug("END", extra={"addinfon": f"snap{dataset}"})
 
 
 if __name__ == "__main__":

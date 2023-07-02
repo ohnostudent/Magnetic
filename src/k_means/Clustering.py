@@ -48,16 +48,16 @@ class ClusteringMethod(SnapData):
 
         return cluster
 
-    def save_result(self, cluster, path_list, save=True):
+    def save_result(self, cluster, path_list, dataset, save=True):
         index = map(os.path.basename, path_list)
         columns = ["cluster"]
         df_clustering_result = pd.DataFrame(cluster, index=index, columns=columns)
         df_clustering_result = df_clustering_result.reset_index()
-        df_clustering_result[['target', 'param', 'job']] = df_clustering_result["index"].str.split('.', expand=True)
-        df_clustering_result = df_clustering_result[['target', 'param', 'job', 'cluster']]
+        df_clustering_result[['parameter', 'param', 'job']] = df_clustering_result["index"].str.split('.', expand=True)
+        df_clustering_result = df_clustering_result[['parameter', 'param', 'job', 'cluster']]
         
         if save:
-            df_clustering_result.to_csv(ML_RESULT_DIR + f"\clustering\snap{44}{self.target}.csv", encoding="utf-8")
+            df_clustering_result.to_csv(ML_RESULT_DIR + f"\clustering\snap{dataset}{self.target}.csv", encoding="utf-8")
 
         return df_clustering_result
         
@@ -65,9 +65,9 @@ class ClusteringMethod(SnapData):
 def main():
     cluster = ClusteringMethod()
 
-    for num in [77, 497, 4949]:
+    for dataset in [77, 497, 4949]:
         for target in ["enstrophy"]:
-            path_list = glob(SNAP_PATH + f"/snap{num}/{target}/*/*")
+            path_list = glob(SNAP_PATH + f"/snap{dataset}/{target}/*/*")
             num_of_data = len(path_list) # リコネクションがない画像の枚数
 
             temp_data = cluster.compress(cluster.loadSnapData(path_list[0],z=3))
@@ -84,7 +84,7 @@ def main():
 
             X_train_pca = cluster.PCA(X_train)
             cluster_labels = cluster.KMeans(X_train_pca)
-            df_re = cluster.save_result(cluster_labels, path_list)
+            df_re = cluster.save_result(cluster_labels, path_list, dataset)
             # display(df_re)
 
 

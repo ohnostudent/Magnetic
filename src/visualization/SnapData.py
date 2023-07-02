@@ -77,3 +77,4 @@ class SnapData():
         result = sum(array * carnel)
         result = sum(result.flat)
         return result
+    

@@ -14,7 +14,7 @@ from params import SRC_PATH, SNAP_PATH, IMGOUT
 from Visualization.SnapData import SnapData
 
 
-class LIC(SnapData):
+class LicMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
 
     def LIC(self, command):
@@ -65,16 +65,16 @@ def main():
     logger = logger_conf()
     logger.debug("START", extra={"addinfo": "処理開始"})
 
-    lic = LIC()
-    numbers  = [77, 497, 4949]
+    lic = LicMethod()
+    datasets  = [77, 497, 4949]
     out_dir = IMGOUT + "\LIC"
     lic.makedir("\LIC")
 
-    for i in numbers:
-        indir = SNAP_PATH + f"\half\snap{i}"
+    for dataset in datasets:
+        indir = SNAP_PATH + f"\half\snap{dataset}"
         dir_basename = os.path.basename(indir) # snap77
         base_out_path = out_dir + "\\" + os.path.basename(indir) # .\imgout\LIC\snap77
-        lic.makedir(f"\LIC\snap{i}")
+        lic.makedir(f"\LIC\snap{dataset}")
 
         binary_paths = glob(indir+"\magfieldx\*\*.npy")
         # ファイルが無い場合
