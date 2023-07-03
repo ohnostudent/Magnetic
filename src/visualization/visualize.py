@@ -310,13 +310,13 @@ class VisualizeMethod(SnapData):
 
 def main():
     from glob import glob
-    from src.params import SNAP_PATH
+    from src.params import SNAP_PATH, datasets
     from src.SetLogger import logger_conf
 
 
     logger = logger_conf()
 
-    for dataset in [77, 497, 4949]:
+    for dataset in datasets:
         logger.debug("START", extra={"addinfon": f"snap{dataset}"})
         target_path = SNAP_PATH + f"\snap{dataset}"
         viz = VisualizeMethod(dataset)

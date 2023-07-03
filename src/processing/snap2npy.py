@@ -35,23 +35,23 @@ def _snap_all(path, dataset, data):
 
 if __name__ == "__main__":
     from glob import glob
-    from params import SNAP_PATH
+    from params import SNAP_PATH, datasets, parameter
     from SetLogger import logger_conf
 
 
     sp = SnapData()
     logger = logger_conf()
 
-    for dataset in [77, 497, 4949]:
+    for dataset in datasets:
         logger.debug("START", extra={"addinfo": f"Snap{dataset}"})
 
-        for target in ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]:
-            logger.debug("START", extra={"addinfo": f"{target}"})
+        for param in parameter:
+            logger.debug("START", extra={"addinfo": f"{param}"})
 
-            for path in glob(SNAP_PATH + f"\snap{dataset}\{target}\*\*"):
+            for path in glob(SNAP_PATH + f"\snap{dataset}\{param}\*\*"):
                 # print(path)
                 snap2npy(sp, path, dataset)
 
-            logger.debug("END", extra={"addinfo": f"{target}"})
+            logger.debug("END", extra={"addinfo": f"{param}"})
         logger.debug("END", extra={"addinfo": f"Snap{dataset}"})
 

@@ -63,10 +63,11 @@ class ClusteringMethod(SnapData):
         
 
 def main():
+    from params import datasets, parameter
     cluster = ClusteringMethod()
 
-    for dataset in [77, 497, 4949]:
-        for target in ["enstrophy"]:
+    for dataset in datasets:
+        for target in parameter:
             path_list = glob(SNAP_PATH + f"/snap{dataset}/{target}/*/*")
             num_of_data = len(path_list) # リコネクションがない画像の枚数
 

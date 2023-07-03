@@ -10,7 +10,7 @@ from struct import pack
 from logging import getLogger
 sys.path.append(os.getcwd() + "\src")
 
-from params import SRC_PATH, SNAP_PATH, IMGOUT
+from params import SRC_PATH, SNAP_PATH, IMGOUT, datasets
 from Visualization.SnapData import SnapData
 
 class LicMethod(SnapData):
@@ -68,7 +68,7 @@ def main():
     logger.debug("START", extra={"addinfo": "処理開始"})
 
     lic = LicMethod()
-    datasets  = [77, 497, 4949]
+    
     out_dir = IMGOUT + "\LIC"
     lic.makedir("\LIC")
 

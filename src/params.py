@@ -13,3 +13,6 @@ AVS_OUT_DIR = IMGOUT + "\AVSsplit"
 
 ML_DATA_DIR = ROOT_DIR + "\MLdata"
 ML_RESULT_DIR = ROOT_DIR + "\MLres"
+
+datasets  = [77, 497, 4949]
+parameter = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
