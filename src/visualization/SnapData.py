@@ -11,18 +11,29 @@ from src.params import IMGOUT
 class SnapData():
     """
     _convolute, _ave_carnel, _calc -> Visualize.py, /k-means/Clustering.py にて使用
-
     """
     
-    def loadSnapData(self, file_path, z=3):
+    def loadSnapData(self, file_path: str, z=3) -> np.ndarray:
+        """
+        データのロードを行う関数
+
+        Arg:
+            file_path (str) : ファイルパス
+            z (int) : 
+
+        Returns:
+            ndarray : 読み込んだデータをnumpy配列として読み込む
+
+        """
+
         # データのインポート
-        # r : 読み込み, b : バイナリモード
         # if os.path.splitext(file_path)[1] == "npy": # 拡張子の判定
         if file_path[-3:] == "npy": # 拡張子なしの場合を考慮するとこの形になる？
             self.val_param, self.param, self.job, _ = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split('.'))
             return np.load(file_path)
 
         self.val_param, self.param, self.job = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split('.'))
+        # r : 読み込み, b : バイナリモード
         with open(file_path, mode="rb") as f:
             if z == 1:
                 snap_data = np.fromfile(f, dtype='f', sep='').reshape(1025, 513)
@@ -32,15 +43,23 @@ class SnapData():
             f.close()
         return snap_data
 
-    def makedir(self, path) -> None:
+    def makedir(self, path: str) -> None:
+        """
+        ディレクトリの作成を行う関数
+        /ROOT_DIR/imgout 配下にのみ対応
+
+        Args:
+            path (str) : ディレクトリパス
+
+        Returns:
+            None
+        """
         if not os.path.exists(IMGOUT + f"/{path}"):
             os.makedirs(IMGOUT + f"/{path}")
-        
 
-    #畳み込み
     def _convolute(self, data: np.array, carnel: np.array, padding=0, stride=1):
         """
-        畳み込み演算。
+        畳み込み演算
         """
         if padding:
             print("0パディングの処理未実装  padding=0で実行します")
@@ -65,7 +84,7 @@ class SnapData():
         return convoluted
     
     
-    def _ave_carnel(self, size:int):
+    def _ave_carnel(self, size: int):
         """
         畳み込みにおける平滑化のカーネル作成
         """
@@ -73,7 +92,7 @@ class SnapData():
         res = ones / (size**2)
         return res
     
-    def _calc(self, array, carnel):
+    def _calc(self, array, carnel) -> int:
         result = sum(array * carnel)
         result = sum(result.flat)
         return result

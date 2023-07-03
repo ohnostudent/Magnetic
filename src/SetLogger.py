@@ -15,6 +15,13 @@ from params import LOG_DIR
 def logger_conf():
     """
     ログ取得に関する関数
+
+    Args:
+        None
+
+    Returns:
+        Logger :  
+
     """
     time = datetime.strftime(datetime.now() + timedelta(hours=9), "%Y%m%d%H%M%S%f")
     # ロガーの生成

@@ -1,5 +1,11 @@
 # -*- coding utf-8, LF -*-
 
+"""
+
+処理に関する共通のパラメータを定義するファイル
+
+"""
+
 import os
 
 ROOT_DIR = os.getcwd()
