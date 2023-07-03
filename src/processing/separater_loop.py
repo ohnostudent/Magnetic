@@ -7,7 +7,7 @@ import subprocess
 import numpy as np
 from glob import glob
 from logging import getLogger
-sys.path.append(os.getcwd() + "\src")
+sys.path.append(os.getcwd() + "/src")
 from params import ROOT_DIR, SRC_PATH, SNAP_PATH
 
 
@@ -32,7 +32,7 @@ def move_file(dataset, param, job, item1):
 
         # ファイルの移動
         # separater.exe で出力されたファイルは親ディレクトリに生成されるため、逐一移動させる
-        shutil.move(newname, SNAP_PATH + f'\snap{dataset}\{item1}\{"{0:02d}".format(job)}\\')
+        shutil.move(newname, SNAP_PATH + f'/snap{dataset}/{item1}/{"{0:02d}".format(job)}//')
 
 
 def rename_file(xyz, item2):
@@ -56,13 +56,13 @@ def data_processing():
         # bat ファイルの実行
         # 基本的に加工したデータの保存先のフォルダの作成
         logger.debug("MAKE", extra={"addinfo": "ディレクトリの作成"})
-        subprocess.run([SNAP_PATH + "\mkdirs.bat", str(dataset)])
+        subprocess.run([SNAP_PATH + "/mkdirs.bat", str(dataset)])
 
         # ログの保存先
-        files = glob(ROOT_DIR + f"\data\ICh.dataset=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0\Snapshots\*")
+        files = glob(ROOT_DIR + f"/data/ICh.dataset=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0/Snapshots/*")
         for file in files:
             # 元データの分割処理の実行
-            subprocess.run([SRC_PATH + "\Processing\cln\separator.exe", f"{file}"])
+            subprocess.run([SRC_PATH + "/Processing/cln/separator.exe", f"{file}"])
             _, _, _, param, job = map(lambda x: int(x) if x.isnumeric() else x,  os.path.basename(file).split("."))
             logger.debug("OPEN", extra={"addinfo": f"File snap{i}{j}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
 
@@ -87,7 +87,7 @@ def data_processing():
 
         # coordn を最後に移動させる
         for i in range(1, 4):
-            shutil.move("coord" + xyz[i], SNAP_PATH + f'\snap{dataset}')
+            shutil.move("coord" + xyz[i], SNAP_PATH + f'/snap{dataset}')
 
         logger.debug("END", extra={"addinfo": "処理終了"})
 

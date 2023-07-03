@@ -8,7 +8,7 @@ from logging import DEBUG
 # from logging import WARNING, ERROR, CRITICAL, config
 from datetime import datetime, timedelta
 
-sys.path.append(os.getcwd()+"\src")
+sys.path.append(os.getcwd()+"/src")
 from params import LOG_DIR
 
 

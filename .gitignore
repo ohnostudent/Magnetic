@@ -16,6 +16,7 @@ MLres/
 # 各ファイル
 *.zip
 *.ipynb
+*.exe
 .env
 tree.txt
 src/Processing/viewer/template/lic_viewer*.html

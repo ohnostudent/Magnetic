@@ -5,7 +5,7 @@ import sys
 import numpy as np
 import pandas as pd
 from glob import glob
-sys.path.append(os.getcwd() + "\src")
+sys.path.append(os.getcwd() + "/src")
 
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -57,14 +57,17 @@ class ClusteringMethod(SnapData):
         df_clustering_result = df_clustering_result[['parameter', 'param', 'job', 'cluster']]
         
         if save:
-            df_clustering_result.to_csv(ML_RESULT_DIR + f"\clustering\snap{dataset}{self.target}.csv", encoding="utf-8")
+            df_clustering_result.to_csv(ML_RESULT_DIR + f"/clustering/snap{dataset}{self.target}.csv", encoding="utf-8")
 
         return df_clustering_result
         
 
-def main():
+def doClustering():
     from params import datasets, parameter
     cluster = ClusteringMethod()
+
+    if not os.path.exists(ML_RESULT_DIR + "/clustering"):
+        os.makedirs(ML_RESULT_DIR + "/clustering")
 
     for dataset in datasets:
         for target in parameter:
@@ -90,5 +93,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    doClustering()
     

@@ -10,7 +10,7 @@ from src.params import IMGOUT
 
 class SnapData():
     """
-    _convolute, _ave_carnel, _calc -> Visualize.py, \k-means\Clustering.py にて使用
+    _convolute, _ave_carnel, _calc -> Visualize.py, /k-means/Clustering.py にて使用
 
     """
     
@@ -33,8 +33,8 @@ class SnapData():
         return snap_data
 
     def makedir(self, path) -> None:
-        if not os.path.exists(IMGOUT + f"\{path}"):
-            os.makedirs(IMGOUT + f"\{path}")
+        if not os.path.exists(IMGOUT + f"/{path}"):
+            os.makedirs(IMGOUT + f"/{path}")
         
 
     #畳み込み

@@ -22,7 +22,7 @@ def sort_paths(pathlist, paraloc=[-9,-8], jobloc=[-6,-5]):
 def make_viewer():
     dataset = input("which dataset:")
     outname = f"lic_viewer{dataset}.html"
-    paths = glob(f".\snap{dataset}\*bmp")
+    paths = glob(f"./snap{dataset}/*bmp")
     paths = sort_paths(paths) #この関数はsnapの命名規則をもとに時系列順に並び変える。
 
     with open("viewer_template.html", "r", encoding="utf8") as f:

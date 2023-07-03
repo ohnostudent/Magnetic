@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from logging import getLogger
-sys.path.append(os.getcwd() + '\src')
+sys.path.append(os.getcwd() + '/src')
 
 from Visualization.SnapData import SnapData
 from params import IMGOUT
@@ -87,7 +87,7 @@ class VisualizeMethod(SnapData):
         else:
             sns.heatmap(snap_data)
         
-        self._savefig(f"\heatmap\{self.target}", saveimg)
+        self._savefig(f"/heatmap/{self.target}", saveimg)
 
     # エッジの表示
     def drawEdge(self, path, save=True):
@@ -101,10 +101,10 @@ class VisualizeMethod(SnapData):
         plt.imshow(cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB))
 
         if save:
-            filepath = f"\\visualization\edges\snap{self.dataset}\{self.target}\{self.job :02d}"
+            filepath = f"/visualization/edges/snap{self.dataset}/{self.target}/{self.job :02d}"
             self.makedir(filepath)
             plt.tight_layout()
-            cv2.imwrite(IMGOUT + filepath + f"\{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
+            cv2.imwrite(IMGOUT + filepath + f"/{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
 
         # メモリの開放
         plt.clf()
@@ -236,7 +236,7 @@ class VisualizeMethod(SnapData):
         energy = dens_data * (vx_data ** 2 + vy_data ** 2) / 2
         sns.heatmap(energy)
 
-        path = f"\Energy_velocity"
+        path = f"/Energy_velocity"
         self._savefig(path, save)
 
     # エネルギーの磁場について
@@ -249,7 +249,7 @@ class VisualizeMethod(SnapData):
         bhoge = (magx_data ** 2 + magy_data ** 2) / 2
         sns.heatmap(bhoge)
 
-        path = f"\Energy_magfield"
+        path = f"/Energy_magfield"
         self._savefig(path, save)
 
     # das
@@ -290,17 +290,17 @@ class VisualizeMethod(SnapData):
         ax2 = plt.subplot(2, 1, 2)
         ax2.pcolor(dataX1, vmax = 0.03)
 
-        path = "\StreamHeatmap"
+        path = "/StreamHeatmap"
         self._savefig(path, save)
 
     # 保存
     def _savefig(self, path, save=True):
         # フォルダの作成
-        file_path = f"\\visualization\{path}\snap{self.dataset}\{self.job :02d}"
+        file_path = f"/visualization/{path}/snap{self.dataset}/{self.job :02d}"
         if save:
             self.makedir(file_path)
             plt.tight_layout()
-            plt.savefig(IMGOUT + file_path + f"\{self.target}.{self.param :02d}.{self.job :02d}.png")
+            plt.savefig(IMGOUT + file_path + f"/{self.target}.{self.param :02d}.{self.job :02d}.png")
 
         # メモリの開放
         plt.clf()
@@ -318,22 +318,22 @@ def main():
 
     for dataset in datasets:
         logger.debug("START", extra={"addinfon": f"snap{dataset}"})
-        target_path = SNAP_PATH + f"\snap{dataset}"
+        target_path = SNAP_PATH + f"/snap{dataset}"
         viz = VisualizeMethod(dataset)
 
         files = {}
-        files["density"] = glob(target_path + f"\density\*\*")
-        files["velocityx"] = glob(target_path + f"\\velocityx\*\*")
-        files["velocityy"] = glob(target_path + f"\\velocityy\*\*")
+        files["density"] = glob(target_path + f"/density/*/*")
+        files["velocityx"] = glob(target_path + f"/velocityx/*/*")
+        files["velocityy"] = glob(target_path + f"/velocityy/*/*")
         for dens_path, vx_path, vy_path in zip(files["density"], files["velocityx"], files["velocityy"]):
             viz.drawEnergy_for_velocity(dens_path, vx_path, vy_path)
 
-        files["magfieldx"] = glob(target_path + f"\magfieldx\*\*")
-        files["magfieldy"] = glob(target_path + f"\magfieldy\*\*")
+        files["magfieldx"] = glob(target_path + f"/magfieldx/*/*")
+        files["magfieldy"] = glob(target_path + f"/magfieldy/*/*")
         for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"]):
             viz.drawEnergy_for_magfield(magx_path, magy_path)
             
-        files["enstrophy"] = glob(target_path + f"\enstrophy\*\*")
+        files["enstrophy"] = glob(target_path + f"/enstrophy/*/*")
         for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
             for path in files[target]:
                 viz.drawHeatmap(path)
