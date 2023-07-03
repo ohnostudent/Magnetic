@@ -1,1 +1,1 @@
-g++ -o LIC.exe LIC.cpp lineintegralconv.cpp
+cl LIC.cpp lineintegralconv.cpp

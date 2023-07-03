@@ -34,7 +34,7 @@ def _snap_all(path, dataset, data):
 
 def dosnap2npy():
     from glob import glob
-    from params import SNAP_PATH, datasets, parameter
+    from params import SNAP_PATH, datasets, variable_parameters
     from SetLogger import logger_conf
 
 
@@ -44,7 +44,7 @@ def dosnap2npy():
     for dataset in datasets:
         logger.debug("START", extra={"addinfo": f"Snap{dataset}"})
 
-        for param in parameter:
+        for param in variable_parameters:
             logger.debug("START", extra={"addinfo": f"{param}"})
 
             for path in glob(SNAP_PATH + f"/snap{dataset}/{param}/*/*"):

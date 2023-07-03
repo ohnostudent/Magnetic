@@ -2,7 +2,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <random>
-#include <bits/stdc++.h>
 
 #include "lineintegralconv.h"
 

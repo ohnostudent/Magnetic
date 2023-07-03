@@ -57,21 +57,21 @@ class ClusteringMethod(SnapData):
         df_clustering_result = df_clustering_result[['parameter', 'param', 'job', 'cluster']]
         
         if save:
-            df_clustering_result.to_csv(ML_RESULT_DIR + f"/clustering/snap{dataset}{self.target}.csv", encoding="utf-8")
+            df_clustering_result.to_csv(ML_RESULT_DIR + f"/clustering/snap{dataset}{self.val_param}.csv", encoding="utf-8")
 
         return df_clustering_result
         
 
 def doClustering():
-    from params import datasets, parameter
+    from params import datasets, variable_parameters
     cluster = ClusteringMethod()
 
     if not os.path.exists(ML_RESULT_DIR + "/clustering"):
         os.makedirs(ML_RESULT_DIR + "/clustering")
 
     for dataset in datasets:
-        for target in parameter:
-            path_list = glob(SNAP_PATH + f"/snap{dataset}/{target}/*/*")
+        for val_param in variable_parameters:
+            path_list = glob(SNAP_PATH + f"/snap{dataset}/{val_param}/*/*")
             num_of_data = len(path_list) # リコネクションがない画像の枚数
 
             temp_data = cluster.compress(cluster.loadSnapData(path_list[0],z=3))

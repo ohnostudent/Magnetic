@@ -80,19 +80,19 @@ class VisualizeMethod(SnapData):
     # 
     def drawHeatmap(self, path, saveimg=True, bar_range=None):
         # 描画
-        snap_data = self.setSnapData(path)
+        snap_data = self.loadSnapData(path)
         plt.figure(figsize=(10, 15))
         if bar_range:
             sns.heatmap(snap_data, vmin=bar_range[0], vmax=bar_range[1])
         else:
             sns.heatmap(snap_data)
         
-        self._savefig(f"/heatmap/{self.target}", saveimg)
+        self._savefig(f"/heatmap/{self.val_param}", saveimg)
 
     # エッジの表示
     def drawEdge(self, path, save=True):
         #cv2で扱える0-255の整数に整形
-        snap_data = self.setSnapData(path)
+        snap_data = self.loadSnapData(path)
         snap_data = (snap_data - min(snap_data.flat))*254 / max(snap_data.flat)
         snap_data = snap_data.astype("uint8")
 
@@ -101,10 +101,10 @@ class VisualizeMethod(SnapData):
         plt.imshow(cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB))
 
         if save:
-            filepath = f"/visualization/edges/snap{self.dataset}/{self.target}/{self.job :02d}"
+            filepath = f"/visualization/edges/snap{self.dataset}/{self.val_param}/{self.job :02d}"
             self.makedir(filepath)
             plt.tight_layout()
-            cv2.imwrite(IMGOUT + filepath + f"/{self.target}.{self.param :02d}.{self.job :02d}.png", edges)
+            cv2.imwrite(IMGOUT + filepath + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png", edges)
 
         # メモリの開放
         plt.clf()
@@ -228,9 +228,9 @@ class VisualizeMethod(SnapData):
     
     # エネルギーの速さと密度について
     def drawEnergy_for_velocity(self, dens_path, vx_path, vy_path, save=True):
-        dens_data = self.setSnapData(dens_path)
-        vx_data = self.setSnapData(vx_path)
-        vy_data = self.setSnapData(vy_path)
+        dens_data = self.loadSnapData(dens_path)
+        vx_data = self.loadSnapData(vx_path)
+        vy_data = self.loadSnapData(vy_path)
 
         plt.figure(figsize=(40, 20))
         energy = dens_data * (vx_data ** 2 + vy_data ** 2) / 2
@@ -241,8 +241,8 @@ class VisualizeMethod(SnapData):
 
     # エネルギーの磁場について
     def drawEnergy_for_magfield(self, magx_path, magy_path, save=True):
-        magx_data = self.setSnapData(magx_path)
-        magy_data = self.setSnapData(magy_path)
+        magx_data = self.loadSnapData(magx_path)
+        magy_data = self.loadSnapData(magy_path)
 
         plt.figure(figsize=(40, 20))
         
@@ -300,7 +300,7 @@ class VisualizeMethod(SnapData):
         if save:
             self.makedir(file_path)
             plt.tight_layout()
-            plt.savefig(IMGOUT + file_path + f"/{self.target}.{self.param :02d}.{self.job :02d}.png")
+            plt.savefig(IMGOUT + file_path + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png")
 
         # メモリの開放
         plt.clf()
@@ -334,8 +334,8 @@ def main():
             viz.drawEnergy_for_magfield(magx_path, magy_path)
             
         files["enstrophy"] = glob(target_path + f"/enstrophy/*/*")
-        for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
-            for path in files[target]:
+        for val_param in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
+            for path in files[val_param]:
                 viz.drawHeatmap(path)
                 viz.drawEdge(path)
 
