@@ -9,18 +9,30 @@
 .\Magnetic  
 
 ```
+※ 場合によっては以下のコードを追記してください
+```python
+import os
+import sys
+sys.path.append(os.getcwd() + "/src")
+
+```
 <br>
 
 ## 1. 元データ
-1. `.\etc\mkdir.bat` を実行する  
-
-2. 元データを `.\data` 配下に保存する  
+1. コマンドラインにて以下のコードを実行する
     ```
-    \data\20220624.CITM\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0
+    pip install -r requirements.txt
+    ```
+
+2. `.\etc\mkdir.bat` を実行する  
+
+3. 元データを `.\data` 配下に保存する  
+    ```
+    \data\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0
     ```
     となっているフォルダが3つ存在するため、`i`, `j` からフォルダ名を`snap+{i+j}`とした
 
-3. 元データの中身
+4. 元データの中身
     - 縦1025 * 横513 のデータ
     - 各種パラメータ
         1. density : 密度
@@ -48,14 +60,30 @@
 
     ```
     - 出力先：`\snaps\snap{i}{j}\*\*`
+<br>
+<br>
 
 2. binary を .npy に変換
     - `\src\Processing\snap2npy.py` を実行する
     - numpy に変換し、教師データの元にする
     - それなりに時間がかかる
+<br>
+<br>
     ```cmd
     .\Magnetic> python .\src\Processing\snap2npy.py
 
+    ```
+    ```python
+    from params import SNAP_PATH, datasets, variable_parameters
+    from Processing.snap2npy import snap2npy
+
+    sp = SnapData()
+
+    for dataset in datasets:
+        for val_param in variable_parameters:
+            for path in glob(SNAP_PATH + f"/snap{dataset}/{val_param}/*/*"):
+                # print(path)
+                snap2npy(sp, path, dataset)
     ```
 
 <br>
@@ -63,34 +91,54 @@
 
 ## 3. 流線の可視化
 ### 1. Heatmap
-処理ファイル：`\src\Visualization`  
-```python
-from SnapData import SnapData
-from Visualization import Visualize
-from src.params import IMGOUT, SNAP_PATH
+- 使用メソッド
+    - plt.streamplot
+    - plt.contour
+    - sns.heatmap
+    - cv2.cvtColor
+<br>
+<br>
 
-target_path = SNAP_PATH + f"\\snap{i}"
-density_files = glob(target_path + f"\\density\\*\\*")
-velocityx_files = glob(target_path + f"\\velocityx\\*\\*")
-velocityy_files = glob(target_path + f"\\velocityy\\*\\*")
-magfieldx_files = glob(target_path + f"\\magfieldx\\*\\*")
-magfieldy_files = glob(target_path + f"\\magfieldy\\*\\*")
-enstrophy_files = glob(target_path + f"\\enstrophy\\*\\*")
+    ```python：\src\Visualization
+    from glob import glob
+    from src.params import SNAP_PATH, datasets
+    from src.SetLogger import logger_conf
 
+    # ログ取得の開始
+    logger = logger_conf()
 
-viz = Visualize()    
-for target in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
-    for path in enstrophy_files:
-        viz.drawHeatmap(path)
-        viz.drawEdge(path)
+    for dataset in datasets:
+        logger.debug("START", extra={"addinfon": f"snap{dataset}"})
+        target_path = SNAP_PATH + f"/snap{dataset}"
 
-for dens_path, vx_path, vy_path in zip(density_files, velocityx_files, velocityy_files):
-    viz.drawEnergy_for_velocity(dens_path, vx_path, vy_path)
+        # インスタンスの生成
+        viz = VisualizeMethod(dataset)
 
-for magx_path, magy_path in zip(magfieldx, magfieldy):
-    viz.drawEnergy_for_magfield(magx_path, magy_path)
+        files = {} # glob した path の保存
 
-```
+        # エネルギーの速さと密度の可視化
+        files["density"] = glob(target_path + f"/density/*/*")
+        files["velocityx"] = glob(target_path + f"/velocityx/*/*")
+        files["velocityy"] = glob(target_path + f"/velocityy/*/*")
+        for dens_path, vx_path, vy_path in zip(files["density"], files["velocityx"], files["velocityy"]):
+            viz.drawEnergy_for_velocity(dens_path, vx_path, vy_path)
+
+        # エネルギーの磁場の可視化
+        files["magfieldx"] = glob(target_path + f"/magfieldx/*/*")
+        files["magfieldy"] = glob(target_path + f"/magfieldy/*/*")
+        for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"]):
+            viz.drawEnergy_for_magfield(magx_path, magy_path)
+        
+        # Heatmap と edge の可視化
+        files["enstrophy"] = glob(target_path + f"/enstrophy/*/*")
+        for val_param in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
+            for path in files[val_param]:
+                viz.drawHeatmap(path)
+                viz.drawEdge(path)
+
+        logger.debug("END", extra={"addinfon": f"snap{dataset}"})
+
+    ```
 
 出力先：
 - `\imgout\visualization\heatmap`
@@ -105,7 +153,8 @@ for magx_path, magy_path in zip(magfieldx, magfieldy):
 処理ファイル：`\src\AVS`  
 
 
-出力先：`\imgout\\*`
+出力先
+- `\imgout\\*`
 
 <br>
 <br>
@@ -114,45 +163,49 @@ for magx_path, magy_path in zip(magfieldx, magfieldy):
 処理ファイル：`\src\StreamLines`  
 
 
-出力先：`\imgout\\*`
+出力先
+- `\imgout\\*`
 
 <br>
 <br>
 
 ### 4. LIC
-処理ファイル：`\src\LIC`  
+- a
 
-```python
-from LIC.LIC import LIC
+    処理ファイル：`\src\LIC`  
 
-logger.debug("START", extra={"addinfo": "処理開始"})
+    ```python
+    from params import SNAP_PATH, IMG_PATH, datasets
+    from LIC.LIC import LIC
 
-lic = LIC()
-numbers  = [77, 497, 4949]
-out_dir = IMGOUT + "\LIC"
-lic.makedir("\LIC")
+    logger.debug("START", extra={"addinfo": "処理開始"})
 
-for i in numbers:
-    indir = SNAP_PATH + f"\half\snap{i}"
-    dir_basename = os.path.basename(indir) # snap77
-    base_out_path = out_dir + "\\" + os.path.basename(indir) # .\imgout\LIC\snap77
-    lic.makedir(f"\LIC\snap{i}")
+    lic = LIC()
+    out_dir = IMGOUT + "\LIC"
+    lic.makedir("\LIC")
 
-    binary_paths = glob(indir+"\magfieldx\*\*.npy")
-    # ファイルが無い場合
-    if binary_paths == []:
-        raise "Error File not Found"
-    
-    for xfile in binary_paths[-1:]:
-        yfile = xfile.replace("magfieldx", "magfieldy")
-        out_path = base_out_path + f"\lic_{dir_basename}.{os.path.splitext(os.path.basename(xfile))[0]}.bmp"
-        # print(out_path) # .\imgout\LIC\snap77\lic_snap77.magfieldx.01.14.bmp
+    for dataset in datasets:
+        indir = SNAP_PATH + f"\half\snap{dataset}"
+        dir_basename = os.path.basename(indir) # snap77
+        base_out_path = out_dir + "\\" + os.path.basename(indir) # .\imgout\LIC\snap77
+        lic.makedir(f"\LIC\snap{dataset}")
+
+        binary_paths = glob(indir+"\magfieldx\*\*.npy")
+        # ファイルが無い場合
+        if binary_paths == []:
+            raise "Error File not Found"
         
-        command = lic.set_command(xfile, yfile, out_path)
-        lic.LIC(command)
+        for xfile in binary_paths[-1:]:
+            yfile = xfile.replace("magfieldx", "magfieldy")
+            out_path = base_out_path + f"\lic_{dir_basename}.{os.path.splitext(os.path.basename(xfile))[0]}.bmp"
+            # print(out_path) # .\imgout\LIC\snap77\lic_snap77.magfieldx.01.14.bmp
+            
+            command = lic.set_command(xfile, yfile, out_path)
+            lic.LIC(command)
 
-```
-出力先：`\imgout\LIC\*`
+    ```
+    出力先
+    - `\imgout\LIC\*`
 
 <br>
 <br>
@@ -162,42 +215,48 @@ for i in numbers:
 処理ファイル：`\src\Visualization`  
 
 
-出力先：`\MLdata\\*`
+出力先
+- `\MLdata\\*`
 
 <br>
 <br>
 
 ### 2. SVM
 
-出力先：`\MLres\\*`
+出力先
+- `\MLres\\*`
 
 <br>
 <br>
 
 ### 3. 非線形SVM
 
-出力先：`\MLres\\*`
+出力先
+- `\MLres\\*`
 
 <br>
 <br>
 
 ### 4. k-Means
 
-出力先：`\MLres\\*`
+出力先
+- `\MLres\\*`
 
 <br>
 <br>
 
 ### 5. XGBoost
 
-出力先：`\MLres\\*`
+出力先
+- `\MLres\\*`
 
 <br>
 <br>
 
 ### 6. CNN
 
-出力先：`\MLres\\*`
+出力先
+- `\MLres\\*`
 
 <br>
 <br>
