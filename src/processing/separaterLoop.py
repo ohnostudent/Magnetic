@@ -10,7 +10,7 @@ sys.path.append(os.getcwd() + "/src")
 from params import ROOT_DIR, SRC_PATH, SNAP_PATH, ETC_PATH
 
 
-def set_ij(logger, dataset):
+def _set_ij(logger, dataset):
     if dataset == 4949:
         i, j = 49, 49
     elif dataset == 77:
@@ -23,7 +23,7 @@ def set_ij(logger, dataset):
     return i, j
 
 
-def move_file(dataset, param, job, item1):
+def _move_file(dataset, param, job, item1):
         # ファイル名の変更
         # magfieldx -> magfieldx.01.00
         newname = f"{item1}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"
@@ -34,13 +34,13 @@ def move_file(dataset, param, job, item1):
         shutil.move(newname, SNAP_PATH + f'/snap{dataset}/{item1}/{"{0:02d}".format(job)}//')
 
 
-def rename_file(xyz, item2):
+def _rename_file(xyz, item2):
     # ファイル名の変更
     # magfield1 -> magfieldx
     os.rename(item2, f"{item2[:-1]}{xyz[int(item2[-1])]}") # separater.exe をもとに分割したファイル名を変換する
 
 
-def data_processing():
+def dataProcessing():
     logger = getLogger("res_root").getChild(__name__)
 
     # パラメータの定義
@@ -50,7 +50,7 @@ def data_processing():
 
     for dataset in [4949, 77, 497]:
         logger.debug("Process Start", extra={"addinfo": f"snap{dataset}"})
-        i, j = set_ij(logger, dataset)
+        i, j = _set_ij(logger, dataset)
 
         # bat ファイルの実行
         # 基本的に加工したデータの保存先のフォルダの作成
@@ -68,7 +68,7 @@ def data_processing():
             # 出力されたファイル名の変更
             for item2 in items2:
                 if os.path.exists(item1):
-                    rename_file(xyz, param, job, item2)
+                    _rename_file(xyz, param, job, item2)
 
                 else: # 見つからない場合
                     logger.debug("NotFound", extra={"addinfo": f"ファイル {item1}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
@@ -76,7 +76,7 @@ def data_processing():
             # 出力されたファイルの移動
             for item1 in items1:
                 if os.path.exists(item1):
-                    move_file(dataset, item1)
+                    _move_file(dataset, item1)
 
                 else: # 見つからない場合
                     logger.debug("NotFound", extra={"addinfo": f"ファイル {item2}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
@@ -96,4 +96,4 @@ if __name__ == "__main__":
     from SetLogger import logger_conf
     logger = logger_conf()
 
-    data_processing()
+    dataProcessing()

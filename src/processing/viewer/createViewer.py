@@ -42,9 +42,5 @@ def createViewer(dataset):
 
 
 if __name__ == '__main__':
-    dataset = input("使用するデータセットを入力してください(77/497/4949) : ")
-
-    if dataset not in datasets:
-        sys.exit()
-
-    createViewer(dataset)
+    for dataset in datasets:
+        createViewer(dataset)
