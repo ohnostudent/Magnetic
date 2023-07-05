@@ -29,13 +29,15 @@ def writedata():
             xup = int(req["locnumx2"]) + int(req["rangenumx"])
             ylow = req["locnumy2"]
             yup = int(req["locnumy2"]) + int(req["rangenumy"])
-            doc = f"{req['snappath']},{dataset},{para},{job},{centerx},{centery},{xlow},{xup},{ylow},{yup}\n"
+            label = req["label"]
+            doc = f"{req['snappath']},{dataset},{para},{job},{centerx},{centery},{xlow},{xup},{ylow},{yup},{label}\n"
             global predoc
             
             if int(req["rangenumx"]) == 0 or int(req["rangenumy"]) == 0:
                 # return "error:range is 0"
                 response["message"] = "error:range is 0"
                 response["status"] = "error"
+                
             elif doc != predoc:
                 predoc = doc
                 f.write(doc)

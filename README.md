@@ -212,11 +212,17 @@ sys.path.append(os.getcwd() + "/src")
 
 ## 4. 機械学習
 ### 1. 教師データの作成
+
+#### 1-1 ビューワの作成
 処理ファイル：`/src/Visualization`  
-
-
 出力先
 - `/MLdata/*`
+
+#### 1-2 画像の分割
+
+
+#### 1-3
+
 
 <br>
 <br>
@@ -303,8 +309,8 @@ Magnetic/
     ├ README.md  
     └.gitignore  
 
-```
 
+```
 make_data
 -> makeviewer2.py (html の作成)
 -> writer.py (bmp の分割)

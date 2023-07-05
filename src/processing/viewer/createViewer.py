@@ -6,10 +6,10 @@ import sys
 from glob import glob
 sys.path.append(os.getcwd() + "\src")
 
-from params import SRC_PATH, IMGOUT
+from params import SRC_PATH, IMGOUT, datasets
 
 
-def sort_paths(pathlist):
+def _sort_paths(pathlist):
     """
     pathlistはglob等で取得したlist。
     locはそれぞれのpath上での位置。
@@ -22,18 +22,19 @@ def sort_paths(pathlist):
 
 
 def createViewer(dataset):
+    # paths = _sort_paths(paths) # snapの命名規則をもとに時系列順に並び変える。
     paths = glob(IMGOUT + f"/LIC/snap{dataset}/*.bmp")
-    # paths = sort_paths(paths) # snapの命名規則をもとに時系列順に並び変える。
-    paths = sort_paths(paths)
+    paths_sorted = _sort_paths(paths)
 
+    # viewer用のファイル列を作成する
     pathliststr = "\n"
-    for p in paths:
-        p = p.replace("\\", "/")
-        pathliststr += f"\t\t\t'{p}', \n"
+    for path in paths_sorted:
+        path = path.replace("\\", "/")
+        pathliststr += f"\t\t\t'{path}', \n"
 
     with open(SRC_PATH + "/Processing/viewer/template/viewer_template.html", 'r', encoding="utf-8") as f:
         html = f.read()
-    html = html.replace("{replaceblock}", pathliststr)
+    html = html.replace("{ replaceblock }", pathliststr)
 
     outname = SRC_PATH + f"/Processing/viewer/template/lic_viewer{dataset}.html"
     with open(outname, "w", encoding="utf8") as f:
@@ -41,5 +42,9 @@ def createViewer(dataset):
 
 
 if __name__ == '__main__':
-    createViewer(77)
-    
+    dataset = input("使用するデータセットを入力してください(77/497/4949) : ")
+
+    if dataset not in datasets:
+        sys.exit()
+
+    createViewer(dataset)

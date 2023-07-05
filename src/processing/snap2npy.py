@@ -20,7 +20,7 @@ def _snap_half(path, dataset, data):
     if not os.path.exists(os.path.dirname(out_path_half)):
         os.makedirs(os.path.dirname(out_path_half))
 
-    half = data[:, :257]
+    half = data[256: 1025-256, :]
     np.save(out_path_half, half)
 
 
@@ -32,7 +32,7 @@ def _snap_all(path, dataset, data):
     np.save(out_path_all, data)
 
 
-def dosnap2npy():
+def doSnap2npy():
     from glob import glob
     from params import SNAP_PATH, datasets, variable_parameters
     from SetLogger import logger_conf
@@ -58,15 +58,16 @@ def dosnap2npy():
     
     except KeyboardInterrupt:
         logger.debug("END", extra={"addinfo": f"{param} 中断"})
-        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
+        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断\n"})
     
     except Exception as e:
+        logger.debug(str(e), extra={"addinfo": "\n"})
         logger.debug("END", extra={"addinfo": f"{param} 中断"})
-        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
+        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断\n"})
     
     finally:
         logger.debug("END", extra={"addinfo": f"処理終了"})
 
 
 if __name__ == "__main__":
-    dosnap2npy()
+    doSnap2npy()
