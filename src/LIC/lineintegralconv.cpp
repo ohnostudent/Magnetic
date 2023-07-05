@@ -23,27 +23,27 @@ void LineIntegralConv :: writeBmp(char *filename)
   int i, j, k, l, m;
   int filesize, width, height, cwidth;
   int val = 255;
-  const int MaxC=255;
+  const int MaxC = 255;
   const int OFFSET = 54;
   char val1, val2, val3, val4;
   char *imageUC;
   int red, green, blue;
 
   width = pic_w;  height = pic_h;
-  filesize = (width*3 + width%4)*height+OFFSET;
+  filesize = (width * 3 + width % 4) * height + OFFSET;
   //imageUC = (char *)malloc(filesize);
   imageUC = new char[filesize];
   /* BMP Header*/
   /* ---------File Header --------- */
      imageUC[0] = 'B'; imageUC[1] = 'M'; 
      /* File size 4 bytes*/
-     val1 = (char)(val&filesize); val2 = (char)(val&(filesize>>8));
-     val3 = (char)(val & (filesize>>16));  val4 = (char)(val&(filesize>>24));
+     val1 = (char)(val & filesize); val2 = (char)(val & (filesize>>8));
+     val3 = (char)(val & (filesize>>16));  val4 = (char)(val & (filesize>>24));
 
     imageUC[2] = val1;  imageUC[3] = val2;
     imageUC[4] = val3;  imageUC[5] = val4;
 
-    for(i=6;i<=9;i++) imageUC[i] = (char)0; /* reserved area*/
+    for(i=6; i<=9; i++) imageUC[i] = (char)0; /* reserved area*/
 
     /* offset to image data*/
      imageUC[10] = (char)54; imageUC[11] = (char)0;
@@ -53,15 +53,15 @@ void LineIntegralConv :: writeBmp(char *filename)
      imageUC[14] = (char)40; imageUC[15] = (char)0;
      imageUC[16] = (char)0; imageUC[17] = (char)0;
     /* width size */
-     val1 = (char)(val&width); val2 = (char)(val&(width >>8));
-     val3 = (char)(val &(width >>16));  val4 = (char)(val&(width>>24));
+     val1 = (char)(val & width); val2 = (char)(val & (width >>8));
+     val3 = (char)(val & (width >>16));  val4 = (char)(val & (width>>24));
 
     imageUC[18] = val1;  imageUC[19] = val2;
     imageUC[20] = val3;  imageUC[21] = val4;
 
      /* Height size*/
-     val1 = (char)(val&height); val2 = (char)(val&(height>>8));
-     val3 = (char)(val&(height>>16));  val4 = (char)(val&(height>>24));
+     val1 = (char)(val & height); val2 = (char)(val & (height>>8));
+     val3 = (char)(val & (height>>16));  val4 = (char)(val & (height>>24));
 
      imageUC[22] = val1;  imageUC[23] = val2;
      imageUC[24] = val3;  imageUC[25] = val4;
@@ -74,17 +74,17 @@ void LineIntegralConv :: writeBmp(char *filename)
      imageUC[34] = (char)0; imageUC[35] = (char)0;
      imageUC[36] = (char)0; imageUC[37] = (char)0;
 
-     for(i=38;i<=53;i++) imageUC[i] = (char)0; /* reserved area*/
+     for(i=38; i<=53; i++) imageUC[i] = (char)0; /* reserved area*/
 
-    cwidth = 3*width + (width%4);
+    cwidth = 3 * width + (width % 4);
 
-    for(j=0;j<height;j++){
-      for(i=0;i<width;i++){
-         l = 3*i+j*cwidth+OFFSET;
-         m = 3*(i+j*width);
-         red = 256*rgb[m];
-         green = 256*rgb[m+1];
-         blue = 256*rgb[m+2];
+    for(j=0; j<height; j++){
+      for(i=0; i<width; i++){
+         l = 3 * i + j * cwidth + OFFSET;
+         m = 3 * (i + j * width);
+         red = 256 * rgb[m];
+         green = 256 * rgb[m+1];
+         blue = 256 * rgb[m+2];
          if(red < 0) red = 0;
          if(red > 255) red = 255;
 
@@ -125,7 +125,7 @@ void LineIntegralConv :: loadData(char *filex, char *filey){
     printf("File Open for fy (%s) failed\n", filey);
     exit(1);
   }
-  fread(fy, sizeof(float), dat_size[0]*dat_size[1], fp);
+  fread(fy, sizeof(float), dat_size[0] * dat_size[1], fp);
   fclose(fp);
 
 }
@@ -133,7 +133,7 @@ void LineIntegralConv :: loadData(char *filex, char *filey){
 void LineIntegralConv :: setDatsize(int x, int y){
   dat_size[0] = x;
   dat_size[1] = y;
-  if(debug) printf("datasize = %d, %d\n",dat_size[0], dat_size[1]);
+  if(debug) printf("datasize = %d, %d\n", dat_size[0], dat_size[1]);
 }
 
 void LineIntegralConv :: setLen(int l){
@@ -150,47 +150,47 @@ void LineIntegralConv :: setAxisMin(double x, double y){
 void LineIntegralConv :: setDelta(double dx, double dy){
   axis_delta[0] = dx;
   axis_delta[1] = dy;
-  if(debug) printf("delta = %f, %f\n",axis_delta[0],axis_delta[1]);
+  if(debug) printf("delta = %f, %f\n", axis_delta[0], axis_delta[1]);
 
   region_min[0] = axis_min[0];
   region_min[1] = axis_min[1];
-  if(debug) printf("regionmin = %f, %f\n",region_min[0], region_min[1]);
+  if(debug) printf("regionmin = %f, %f\n", region_min[0], region_min[1]);
 
-  region_max[0] = axis_min[0] + (dat_size[0]-1)*axis_delta[0];
-  region_max[1] = axis_min[1] + (dat_size[1]-1)*axis_delta[1];
-  if(debug) printf("regionmax = %f, %f\n",region_max[0], region_max[1]);
+  region_max[0] = axis_min[0] + (dat_size[0]-1) * axis_delta[0];
+  region_max[1] = axis_min[1] + (dat_size[1]-1) * axis_delta[1];
+  if(debug) printf("regionmax = %f, %f\n", region_max[0], region_max[1]);
 }
 
 void LineIntegralConv :: setwh(int x, int y, int m){
   mag = m;
-  pic_w = x*mag;
-  pic_h = y*mag*axis_delta[1]/axis_delta[0];
+  pic_w = x * mag;
+  pic_h = y * mag * axis_delta[1] / axis_delta[0];
 
-  if(debug) printf("pic width, height = %d, %d\n",pic_w, pic_h);
-  if(debug) printf("pic mag = %d\n",mag);
+  if(debug) printf("pic width, height = %d, %d\n", pic_w, pic_h);
+  if(debug) printf("pic mag = %d\n", mag);
 
-  mag_delta[0] = (region_max[0]-region_min[0])/(pic_w-1);
-  mag_delta[1] = (region_max[1]-region_min[1])/(pic_h-1);
+  mag_delta[0] = (region_max[0] - region_min[0]) / (pic_w - 1);
+  mag_delta[1] = (region_max[1] - region_min[1]) / (pic_h - 1);
   
-  if(debug) printf("pic mag delta= %f, %f\n",mag_delta[0], mag_delta[1]);
+  if(debug) printf("pic mag delta= %f, %f\n", mag_delta[0], mag_delta[1]);
 }
 
 void LineIntegralConv :: setStreamParam(double div, int rs){
  stream_div = div;
  rungekutta_step = rs;
-  if(debug) printf("LineIntegralConv, div, rungekutta max step = %f, %d\n",stream_div, rungekutta_step);
+  if(debug) printf("LineIntegralConv, div, rungekutta max step = %f, %d\n", stream_div, rungekutta_step);
 }
 
 void LineIntegralConv :: allocMem(){
- if(debug) printf("allocMem numlicpxl=%d\n",numlicpxl);
+ if(debug) printf("allocMem numlicpxl=%d\n", numlicpxl);
  int x = dat_size[0];
  int y = dat_size[1];
- fx = new float[x*y];
- fy = new float[x*y];
- rgb = new float[pic_w*pic_h*3];
- whitenoise = new float[pic_w*pic_h];
- for(int j=0;j<2;j++)
-  for(int i=0;i<2;i++)
+ fx = new float[x * y];
+ fy = new float[x * y];
+ rgb = new float[pic_w * pic_h * 3];
+ whitenoise = new float[pic_w * pic_h];
+ for(int j=0; j<2; j++)
+  for(int i=0; i<2; i++)
     licpxl[j][i] = new int [numlicpxl];
 }
 
@@ -198,8 +198,8 @@ void LineIntegralConv :: freeMem(){
  if(debug) printf("freeMem\n");
  delete [] fx; delete [] fy;
  delete [] rgb; delete [] whitenoise;
- for(int j=0;j<2;j++)
-  for(int i=0;i<2;i++)
+ for(int j=0; j<2; j++)
+  for(int i=0; i<2; i++)
    delete [] licpxl[j][i];
 
 }
@@ -259,15 +259,15 @@ vect_amp(float vec[])
 void
 LineIntegralConv::pos2pxl (double *pos, int *pxl)
 {
-  pxl[0] = (pos[0]-region_min[0])/mag_delta[0];
-  pxl[1] = (pos[1]-region_min[1])/mag_delta[1];
+  pxl[0] = (pos[0] - region_min[0]) / mag_delta[0];
+  pxl[1] = (pos[1] - region_min[1]) / mag_delta[1];
 }
 
 void
 LineIntegralConv::pxl2pos (int *pxl, double *pos)
 {
-  pos[0] = (region_min[0] + pxl[0]*mag_delta[0]);
-  pos[1] = (region_min[1] + pxl[1]*mag_delta[1]);
+  pos[0] = (region_min[0] + pxl[0] * mag_delta[0]);
+  pos[1] = (region_min[1] + pxl[1] * mag_delta[1]);
 }
   
 void
@@ -284,7 +284,7 @@ LineIntegralConv::preproc ()
 	  rgb[(i + j * pic_w) * 3 + 1] = 0.0;
 	  rgb[(i + j * pic_w) * 3 + 2] = 0.0;
 	  
-	  whitenoise[i + j * pic_w] = intRand(mt)/(float)255;
+	  whitenoise[i + j * pic_w] = intRand(mt) / (float)255;
 	  //if(debug)printf("%f ",whitenoise[i + j * pic_w]);
 	}
     }
@@ -643,16 +643,16 @@ LineIntegralConv:: stream_line(int x0[2])
     }// direction
     float pxcolor = 0.0f;
     //printf("(%d,%d):%d, %d \n",x0[0],x0[1],rnlicpxl[0],rnlicpxl[1]);
-    for(int dir=0;dir<2;dir++)
-      for(int i=0;i<rnlicpxl[dir];i++){
+    for(int dir=0; dir<2; dir++)
+      for(int i=0; i<rnlicpxl[dir]; i++){
         int px, py;
         px = licpxl[dir][0][i];
         py = licpxl[dir][1][i];
         //printf("color = %f, %f, %f\n",sin(PI*(i+numlicpxl)/(2*numlicpxl)),whitenoise[px+py*pic_w],sin(PI*(i+numlicpxl)/(2*numlicpxl))*whitenoise[px+py*pic_w]);
         //pxcolor += sin(PI*(i+numlicpxl)/(2*numlicpxl))
         //  *whitenoise[px+py*pic_w]*(PI/(2*numlicpxl))/2.0; 
-        pxcolor += (1.0+cos(PI*i/(numlicpxl-1.0)))
-          *whitenoise[px+py*pic_w]*(PI/numlicpxl)/2.0/PI; 
+        pxcolor += (1.0 + cos(PI*i / (numlicpxl - 1.0)))
+          *whitenoise[px + py * pic_w] * (PI / numlicpxl) / 2.0 / PI; 
       }
     //printf("color = %f\n",pxcolor);
     return pxcolor;

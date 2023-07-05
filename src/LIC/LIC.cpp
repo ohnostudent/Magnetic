@@ -35,10 +35,10 @@ int main(int argc, char **argv) {
     }
     else{
         gridx = 513;
-        gridy=1025;
+        gridy = 1025;
     }
-    double dx = lengx/(gridx-1);
-    double dy = lengy/(gridy-1);
+    double dx = lengx / (gridx - 1);
+    double dy = lengy / (gridy - 1);
 
     lic = new LineIntegralConv;
     lic->setDebug(true);
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     lic->setDelta(dx, dy);
     lic->setwh(gridx, gridy, mag);
 
-    double div = dy*0.2;
+    double div = dy * 0.2;
     int rs = 15000;
     lic->setStreamParam(div, rs);
 

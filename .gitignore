@@ -18,7 +18,11 @@ MLres/
 *.ipynb
 *.exe
 *.obj
-.env
+*.pyx
+*.pxd
+*.pyi
+*.env
+*.temp
 
 tree.txt
 src/Processing/viewer/template/lic_viewer*.html
