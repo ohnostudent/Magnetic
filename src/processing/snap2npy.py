@@ -40,20 +40,32 @@ def dosnap2npy():
 
     sp = SnapData()
     logger = logger_conf()
+    logger.debug("START", extra={"addinfo": f"処理開始"})
 
-    for dataset in datasets:
-        logger.debug("START", extra={"addinfo": f"Snap{dataset}"})
+    try:
+        for dataset in datasets:
+            logger.debug("START", extra={"addinfo": f"Snap{dataset} 開始"})
 
-        for param in variable_parameters:
-            logger.debug("START", extra={"addinfo": f"{param}"})
+            for param in variable_parameters:
+                logger.debug("START", extra={"addinfo": f"{param} 開始"})
 
-            for path in glob(SNAP_PATH + f"/snap{dataset}/{param}/*/*"):
-                # print(path)
-                snap2npy(sp, path, dataset)
+                for path in glob(SNAP_PATH + f"/snap{dataset}/{param}/*/*"):
+                    # print(path)
+                    snap2npy(sp, path, dataset)
 
-            logger.debug("END", extra={"addinfo": f"{param}"})
-        logger.debug("END", extra={"addinfo": f"Snap{dataset}"})
-
+                logger.debug("END", extra={"addinfo": f"{param} 終了"})
+            logger.debug("END", extra={"addinfo": f"Snap{dataset} 終了"})
+    
+    except KeyboardInterrupt:
+        logger.debug("END", extra={"addinfo": f"{param} 中断"})
+        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
+    
+    except Exception as e:
+        logger.debug("END", extra={"addinfo": f"{param} 中断"})
+        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
+    
+    finally:
+        logger.debug("END", extra={"addinfo": f"処理終了"})
 
 
 if __name__ == "__main__":

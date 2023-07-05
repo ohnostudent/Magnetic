@@ -3,10 +3,10 @@
 
 23卒の先輩方が行った研究のデータをもとに、リファクタリングを行ったもの
 
-※ \Magnetic を作業ディレクトリとしてください
+※ /Magnetic を作業ディレクトリとしてください
 ```
 > pwd  
-.\Magnetic  
+./Magnetic  
 
 ```
 ※ 場合によっては以下のコードを追記してください
@@ -24,11 +24,11 @@ sys.path.append(os.getcwd() + "/src")
     pip install -r requirements.txt
     ```
 
-2. `.\etc\mkdir.bat` を実行する  
+2. `/etc/mkdir.bat` を実行する  
 
-3. 元データを `.\data` 配下に保存する  
+3. 元データを `./data` 配下に保存する  
     ```
-    \data\ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0
+    /data/ICh.target=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0
     ```
     となっているフォルダが3つ存在するため、`i`, `j` からフォルダ名を`snap+{i+j}`とした
 
@@ -49,28 +49,28 @@ sys.path.append(os.getcwd() + "/src")
 
 ## 2. データの加工
 1.  元データを各種パラメータに分割する
-    - \src\Processing 配下にある`separater.py` を実行する
+    - /src/Processing 配下にある`separater.py` を実行する
     - 元データをそれぞれのデータに分割するプログラム
     - `mkdirs.bat` にてディレクトリの生成を一括で行っている
     - 各データファイルの生成処理毎に、生成したファイルを移動している
     - `.py`　と `.ipynb` では作業ディレクトリの位置が違うので要注意
 
     ```cmd
-    .\Magnetic> python .\src\Processing\separater.py
+    ./Magnetic> python ./src/Processing/separater.py
 
     ```
-    - 出力先：`\snaps\snap{i}{j}\*\*`
+    - 出力先：`/snaps/snap{i}{j}/*/*`
 <br>
 <br>
 
 2. binary を .npy に変換
-    - `\src\Processing\snap2npy.py` を実行する
+    - `/src/Processing/snap2npy.py` を実行する
     - numpy に変換し、教師データの元にする
     - それなりに時間がかかる
 <br>
 <br>
     ```cmd
-    .\Magnetic> python .\src\Processing\snap2npy.py
+    ./Magnetic> python ./src/Processing/snap2npy.py
 
     ```
     ```python
@@ -99,7 +99,7 @@ sys.path.append(os.getcwd() + "/src")
 <br>
 <br>
 
-    ```python：\src\Visualization
+    ```python：/src/Visualization
     from glob import glob
     from src.params import SNAP_PATH, datasets
     from src.SetLogger import logger_conf
@@ -141,30 +141,30 @@ sys.path.append(os.getcwd() + "/src")
     ```
 
 出力先：
-- `\imgout\visualization\heatmap`
-- `\imgout\visualization\edges`
-- `\imgout\visualization\Energy_magfield`
-- `\imgout\visualization\Energy_vectory`
+- `/imgout/visualization/heatmap`
+- `/imgout/visualization/edges`
+- `/imgout/visualization/Energy_magfield`
+- `/imgout/visualization/Energy_vectory`
 
 <br>
 <br>
 
 ### 2. AVS
-処理ファイル：`\src\AVS`  
+処理ファイル：`/src/AVS`  
 
 
 出力先
-- `\imgout\\*`
+- `/imgout/*`
 
 <br>
 <br>
 
 ### 3. StreamLine
-処理ファイル：`\src\StreamLines`  
+処理ファイル：`/src/StreamLines`  
 
 
 出力先
-- `\imgout\\*`
+- `/imgout/*`
 
 <br>
 <br>
@@ -172,7 +172,7 @@ sys.path.append(os.getcwd() + "/src")
 ### 4. LIC
 - a
 
-    処理ファイル：`\src\LIC`  
+    処理ファイル：`/src/LIC`  
 
     ```python
     from params import SNAP_PATH, IMG_PATH, datasets
@@ -181,42 +181,42 @@ sys.path.append(os.getcwd() + "/src")
     logger.debug("START", extra={"addinfo": "処理開始"})
 
     lic = LIC()
-    out_dir = IMGOUT + "\LIC"
-    lic.makedir("\LIC")
+    out_dir = IMGOUT + "/LIC"
+    lic.makedir("/LIC")
 
     for dataset in datasets:
-        indir = SNAP_PATH + f"\half\snap{dataset}"
+        indir = SNAP_PATH + f"/half/snap{dataset}"
         dir_basename = os.path.basename(indir) # snap77
-        base_out_path = out_dir + "\\" + os.path.basename(indir) # .\imgout\LIC\snap77
-        lic.makedir(f"\LIC\snap{dataset}")
+        base_out_path = out_dir + "/" + os.path.basename(indir) # ./imgout/LIC/snap77
+        lic.makedir(f"/LIC/snap{dataset}")
 
-        binary_paths = glob(indir+"\magfieldx\*\*.npy")
+        binary_paths = glob(indir+"/magfieldx/*/*.npy")
         # ファイルが無い場合
         if binary_paths == []:
             raise "Error File not Found"
         
         for xfile in binary_paths[-1:]:
             yfile = xfile.replace("magfieldx", "magfieldy")
-            out_path = base_out_path + f"\lic_{dir_basename}.{os.path.splitext(os.path.basename(xfile))[0]}.bmp"
-            # print(out_path) # .\imgout\LIC\snap77\lic_snap77.magfieldx.01.14.bmp
+            out_path = base_out_path + f"/lic_{dir_basename}.{os.path.splitext(os.path.basename(xfile))[0]}.bmp"
+            # print(out_path) # ./imgout/LIC/snap77/lic_snap77.magfieldx.01.14.bmp
             
             command = lic.set_command(xfile, yfile, out_path)
             lic.LIC(command)
 
     ```
     出力先
-    - `\imgout\LIC\*`
+    - `/imgout/LIC/*`
 
 <br>
 <br>
 
 ## 4. 機械学習
 ### 1. 教師データの作成
-処理ファイル：`\src\Visualization`  
+処理ファイル：`/src/Visualization`  
 
 
 出力先
-- `\MLdata\\*`
+- `/MLdata/*`
 
 <br>
 <br>
@@ -224,7 +224,7 @@ sys.path.append(os.getcwd() + "/src")
 ### 2. SVM
 
 出力先
-- `\MLres\\*`
+- `/MLres/*`
 
 <br>
 <br>
@@ -232,7 +232,7 @@ sys.path.append(os.getcwd() + "/src")
 ### 3. 非線形SVM
 
 出力先
-- `\MLres\\*`
+- `/MLres/*`
 
 <br>
 <br>
@@ -240,7 +240,7 @@ sys.path.append(os.getcwd() + "/src")
 ### 4. k-Means
 
 出力先
-- `\MLres\\*`
+- `/MLres/*`
 
 <br>
 <br>
@@ -248,7 +248,7 @@ sys.path.append(os.getcwd() + "/src")
 ### 5. XGBoost
 
 出力先
-- `\MLres\\*`
+- `/MLres/*`
 
 <br>
 <br>
@@ -256,7 +256,7 @@ sys.path.append(os.getcwd() + "/src")
 ### 6. CNN
 
 出力先
-- `\MLres\\*`
+- `/MLres/*`
 
 <br>
 <br>
@@ -305,9 +305,7 @@ Magnetic/
 
 ```
 
-_visvec.ipynb
-
-make2data
+make_data
 -> makeviewer2.py (html の作成)
 -> writer.py (bmp の分割)
 -> labeling (bmp -> csv)
