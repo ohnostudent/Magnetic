@@ -44,23 +44,18 @@
         <p class="discribe">Y:</p><input class="textinput" id="dyinput" type="text" name="text" value="30">
         <p>元データのピクセルに準拠</p>
         <p>(ctrl+p)キーで黄色の情報送信</p>
-        <p>送信先ファイルパス</p><input id="filepath" type="text" value="./test.csv"></input>
+        <p>送信先ファイルパス</p><input id="filepath" type="text" value="./MLdata/LIC_labels/test.csv.csv"></input>
 
     </body>
 </html>
 
 <script language="javascript" type="text/javascript">
-    var path_index = 0
-    var paths =[{replaceblock}]
-
     function update(){
         target = document.getElementById("output");
         target.setAttribute("src", paths[path_index]);
         document.getElementById("currentpath").innerHTML = paths[path_index];
         // document.getElementById(currentpath).setAttribute("txt",paths[path_index]);
     }
-    update()
-
     function move(num){
         temp = path_index +num;
         if (0 <= temp && temp < paths.length) {
@@ -73,27 +68,6 @@
             return Math.round(value * Math.pow(10, n) ) / Math.pow(10, n);
     }
 
-    var cvsx = document.getElementById("cvx");
-    var cvsy = document.getElementById("cvy");
-    var boxs = document.getElementById("box")
-    var boxs2 = document.getElementById("secondbox")
-    const imgXlen = 1799;
-    const imgYlen = 570;
-
-    cvsx.setAttribute( "width" , imgXlen);
-    cvsx.setAttribute( "height" , imgYlen);
-    cvsy.setAttribute( "width" , imgXlen);
-    cvsy.setAttribute( "height" , imgYlen);
-    boxs.setAttribute( "width" , imgXlen);
-    boxs.setAttribute( "height" , imgYlen);
-    boxs2.setAttribute( "width" , imgXlen);
-    boxs2.setAttribute( "height" , imgYlen);
-
-    var ctxx = cvsx.getContext("2d");
-    var ctxy = cvsy.getContext("2d");
-    var boxct = boxs.getContext("2d");
-    var boxct2 = boxs2.getContext("2d");
-    
     function drawlinex(startx,starty,endx,endy){
         ctxx.beginPath();
         ctxx.lineWidth = 0.8;
@@ -111,11 +85,6 @@
         ctxy.lineTo(endx,endy);
         ctxy.stroke()
     }
-
-    const orgx = 257;
-    const orgy = 1025;
-    const inputx = document.getElementById("dxinput");
-
     function drawglidx(){
         ctxx.clearRect(0,0,imgXlen,imgYlen)
         inputdx = Number(document.getElementById("dxinput").value);
@@ -127,10 +96,6 @@
             drawlinex(index*dx, 0,index*dx, imgXlen)
         }
     }
-
-    // 
-    const inputy = document.getElementById("dyinput");
-
     function drawglidy(){
         ctxy.clearRect(0,0,imgXlen,imgYlen)
         inputdy = Number(document.getElementById("dyinput").value);
@@ -142,17 +107,6 @@
         drawliney(0,index*dy, imgXlen,index*dy);
         }
     }
-
-    drawglidx()
-    drawglidy()
-    inputx.addEventListener("input", drawglidx);
-    inputy.addEventListener("input", drawglidy);
-    // 
-    const box1 = document.getElementById("box1");
-    const box2 = document.getElementById("box2");
-    const box3 = document.getElementById("box3");
-    const box4 = document.getElementById("box4");
-
     function drawbox(){
         boxct.clearRect(0,0,imgXlen,imgYlen)
         boxct.lineWidth = 2;
@@ -170,22 +124,6 @@
         boxct.closePath()
         boxct.stroke()
     }
-
-    box1.addEventListener("input", drawbox);
-    box2.addEventListener("input", drawbox);
-    box3.addEventListener("input", drawbox);
-    box4.addEventListener("input", drawbox);
-
-    const locx = document.getElementById("locx");
-    const locy = document.getElementById("locy");
-    const rangex = document.getElementById("rangex");
-    const rangey = document.getElementById("rangey");
-    var locnumx = Number(locx.value)*imgXlen/orgx
-    var locnumy = Number(locy.value)*imgYlen/orgy
-    var rangenumx = Number(rangex.value)*imgXlen/orgx
-    var rangenumy = Number(rangey.value)*imgYlen/orgy
-    var locnumx2 = locnumx - (rangenumx/2)
-    var locnumy2 = locnumy - (rangenumy/2)
 
     function calclecs(){
         locnumx = Number(locx.value)*imgXlen/orgx
@@ -214,33 +152,6 @@
         roundDecimal(locnumx2+rangenumy,0)+","+
         roundDecimal(locnumy2+rangenumy,0))
     }
-
-    locx.addEventListener("input", drawbox2);
-    locy.addEventListener("input", drawbox2);
-    rangex.addEventListener("input", drawbox2);
-    rangey.addEventListener("input", drawbox2);
-
-
-
-    // 
-    document.getElementById( "secondbox" ).addEventListener( "click", function( event ) {
-        var clickX = event.pageX ;
-        var clickY = event.pageY ;
-
-        // 要素の位置を取得
-        var clientRect = this.getBoundingClientRect() ;
-        var positionX = clientRect.left + window.pageXOffset ;
-        var positionY = clientRect.top + window.pageYOffset ;
-
-        // 要素内におけるクリック位置を計算
-        var x = clickX - positionX ;
-        var y = clickY - positionY ;
-        // locx = document.getElementById("locx")
-        // locy = document.getElementById("locy")
-        document.getElementById("locx").value = roundDecimal(x*orgx/imgXlen, 0)
-        document.getElementById("locy").value = roundDecimal(y*orgy/imgYlen, 0)
-        drawbox2()
-    } ) ;
 
     //post json
     function sendData() {
@@ -298,17 +209,6 @@
         } //alertの非表示
     }
 
-    var focused = false
-    filepath = document.getElementById("filepath")
-    filepath.addEventListener('focus',function(e){
-        focused = true
-        console.log("focusing")
-    });
-    filepath.addEventListener('blur',function(e){
-        focused = false;
-    });
-    document.addEventListener("keypress", keypress_ivent);
-
     function keypress_ivent(e) {
         if(focused === false){
             if(e.key === "a" || e.key === "A"){
@@ -329,5 +229,104 @@
         }
         return false; 
     }
+
+
+
+    var path_index = 0
+    var paths =[{replaceblock}]
+    update()
+
+    var cvsx = document.getElementById("cvx");
+    var cvsy = document.getElementById("cvy");
+    var boxs = document.getElementById("box")
+    var boxs2 = document.getElementById("secondbox")
+
+    const imgXlen = 1799;
+    const imgYlen = 570;
+
+    cvsx.setAttribute( "width" , imgXlen);
+    cvsx.setAttribute( "height" , imgYlen);
+    cvsy.setAttribute( "width" , imgXlen);
+    cvsy.setAttribute( "height" , imgYlen);
+    boxs.setAttribute( "width" , imgXlen);
+    boxs.setAttribute( "height" , imgYlen);
+    boxs2.setAttribute( "width" , imgXlen);
+    boxs2.setAttribute( "height" , imgYlen);
+
+    var ctxx = cvsx.getContext("2d");
+    var ctxy = cvsy.getContext("2d");
+    var boxct = boxs.getContext("2d");
+    var boxct2 = boxs2.getContext("2d");
+    
+    const orgx = 257;
+    const orgy = 1025;
+    const inputx = document.getElementById("dxinput");
+
+
+    // 
+    const inputy = document.getElementById("dyinput");
+
+    drawglidx()
+    drawglidy()
+    inputx.addEventListener("input", drawglidx);
+    inputy.addEventListener("input", drawglidy);
+
+    // 
+    const box1 = document.getElementById("box1");
+    const box2 = document.getElementById("box2");
+    const box3 = document.getElementById("box3");
+    const box4 = document.getElementById("box4");
+
+    box1.addEventListener("input", drawbox);
+    box2.addEventListener("input", drawbox);
+    box3.addEventListener("input", drawbox);
+    box4.addEventListener("input", drawbox);
+
+    const locx = document.getElementById("locx");
+    const locy = document.getElementById("locy");
+    const rangex = document.getElementById("rangex");
+    const rangey = document.getElementById("rangey");
+    var locnumx = Number(locx.value)*imgXlen/orgx
+    var locnumy = Number(locy.value)*imgYlen/orgy
+    var rangenumx = Number(rangex.value)*imgXlen/orgx
+    var rangenumy = Number(rangey.value)*imgYlen/orgy
+    var locnumx2 = locnumx - (rangenumx/2)
+    var locnumy2 = locnumy - (rangenumy/2)
+
+    locx.addEventListener("input", drawbox2);
+    locy.addEventListener("input", drawbox2);
+    rangex.addEventListener("input", drawbox2);
+    rangey.addEventListener("input", drawbox2);
+
+    // 
+    document.getElementById( "secondbox" ).addEventListener( "click", function( event ) {
+        var clickX = event.pageX ;
+        var clickY = event.pageY ;
+
+        // 要素の位置を取得
+        var clientRect = this.getBoundingClientRect() ;
+        var positionX = clientRect.left + window.pageXOffset ;
+        var positionY = clientRect.top + window.pageYOffset ;
+
+        // 要素内におけるクリック位置を計算
+        var x = clickX - positionX ;
+        var y = clickY - positionY ;
+        // locx = document.getElementById("locx")
+        // locy = document.getElementById("locy")
+        document.getElementById("locx").value = roundDecimal(x*orgx/imgXlen, 0)
+        document.getElementById("locy").value = roundDecimal(y*orgy/imgYlen, 0)
+        drawbox2()
+    } ) ;
+
+    var focused = false
+    filepath = document.getElementById("filepath")
+    filepath.addEventListener('focus',function(e){
+        focused = true
+        console.log("focusing")
+    });
+    filepath.addEventListener('blur',function(e){
+        focused = false;
+    });
+    document.addEventListener("keypress", keypress_ivent);
 
 </script>
