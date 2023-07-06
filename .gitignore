@@ -1,8 +1,10 @@
 # ディレクトリ
 .vscode/
 data/
-snap/
+snaps/
 snaps/half/*
+snaps/half_right/*
+snaps/half_left/*
 snaps/all/*
 snaps/snap*/
 pra/
@@ -23,6 +25,7 @@ MLres/
 *.pyi
 *.env
 *.temp
+*.cmd
 
 tree.txt
 src/Processing/viewer/template/lic_viewer*.html

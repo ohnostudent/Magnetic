@@ -113,8 +113,8 @@ def mainProcess(logger, lic: LicMethod, dir_basename: str, base_out_path: str, b
             logger.debug("START", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 開始\n"})
             yfile = xfile.replace("magfieldx", "magfieldy")
             file_name = os.path.splitext(os.path.basename(xfile.replace("magfieldx", "magfield")))
-            out_path = base_out_path + f"/lic_{dir_basename}.{file_name[0]}.bmp"
-            print(out_path) # ./imgout/LIC/snap77/lic_snap77.magfieldx.01.14.bmp
+            out_path = base_out_path + f"/lic_{dir_basename}.{os.path.basename(base_out_path)}.{file_name[0]}.bmp"
+            # print(out_path) # ./imgout/LIC/snap77/lic_snap77.magfieldx.01.14.bmp
 
             if not os.path.exists(out_path):
                 # 引数の作成
@@ -125,6 +125,7 @@ def mainProcess(logger, lic: LicMethod, dir_basename: str, base_out_path: str, b
 
                 # temp ファイルの削除
                 lic.delete_tempfile(command[1], command[2])
+
             logger.debug("END", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 終了\n"})
 
         except KeyboardInterrupt:
@@ -134,8 +135,8 @@ def mainProcess(logger, lic: LicMethod, dir_basename: str, base_out_path: str, b
             logger.debug(str(e), extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 中断\n"})
 
 
-
-def LICMainProcess():
+from params import datasets
+def LICMainProcess(dataset, size):
     """
     処理時間の目安
     snap77   : 778(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
@@ -153,7 +154,6 @@ def LICMainProcess():
     """
 
     from SetLogger import logger_conf
-    from params import datasets
     from concurrent.futures import ThreadPoolExecutor
 
     try:
@@ -161,20 +161,20 @@ def LICMainProcess():
         logger = logger_conf()
         logger.debug("START", extra={"addinfo": "処理開始\n\n"})
 
-        dataset = int(input("使用するデータセットを入力してください (77/497/4949): "))
+        # dataset = int(input("使用するデータセットを入力してください (77/497/4949): "))
         if dataset not in datasets:
             logger.debug("ERROR", extra={"addinfo": "このデータセットは使用できません\n"})
             sys.exit()
 
-        logger.debug("START", extra={"addinfo": f"{dataset} 開始\n"})
+        logger.debug("START", extra={"addinfo": f"{dataset}.{size.split('_')[1]} 開始\n"})
         lic = LicMethod()
         
         # 入出力用path の作成
-        indir = SNAP_PATH + f"/half/snap{dataset}"
+        indir = SNAP_PATH + f"/{size}/snap{dataset}"
         dir_basename = os.path.basename(indir) # snap77
         out_dir = IMGOUT + "/LIC"
-        base_out_path = out_dir + "/" + os.path.basename(indir) # ./imgout/LIC/snap77
-        lic.makedir(f"/LIC/snap{dataset}")
+        base_out_path = out_dir + "/" + os.path.basename(indir) + "/" + size.split('_')[1] # ./imgout/LIC/snap77/left
+        lic.makedir(f"/LIC/snap{dataset}/{size.split('_')[1]}")
 
         # バイナリファイルの取得
         binary_paths = glob(indir+"/magfieldx/*/*.npy")
@@ -185,13 +185,17 @@ def LICMainProcess():
             return
 
         file_count = len(binary_paths)
-        with ThreadPoolExecutor(max_workers=6) as exec: # 並列処理 # max_workers は自信のCPUのコア数と相談してください
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[: file_count // 6])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 6 : file_count // 6 * 2])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 6 * 2 : file_count // 6 * 3])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 6 * 3 : file_count // 6 * 4])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 6 * 4 : file_count // 6 * 5])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 6 * 5 :])
+        with ThreadPoolExecutor() as exec: # 並列処理 # max_workers は自信のCPUのコア数と相談してください
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[: file_count // 10])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 : file_count // 10 * 2])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 2 : file_count // 10 * 3])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 3 : file_count // 10 * 4])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 4 : file_count // 10 * 5])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 5 : file_count // 10 * 6])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 6 : file_count // 10 * 7])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 7 : file_count // 10 * 8])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 8 : file_count // 10 * 9])
+            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 9 :])
         
         logger.debug("END", extra={"addinfo": f"{dataset} 終了\n"})
 
@@ -206,5 +210,7 @@ def LICMainProcess():
 
 
 if __name__ == "__main__":
-    LICMainProcess()
-
+    for dataset in datasets:
+        for size in ["half_left", "half_right"]:
+            LICMainProcess(dataset, size)
+    
