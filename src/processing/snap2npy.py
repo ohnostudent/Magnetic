@@ -17,26 +17,37 @@ def snap2npy(sp: SnapData, path: str, dataset: int):
 
 
 def _snap_half_left(path, dataset, data):
+    # 保存先のpath の作成
     out_path_half = path.replace(f"snap{dataset}", f"half_left/snap{dataset}")
     if not os.path.exists(os.path.dirname(out_path_half)):
         os.makedirs(os.path.dirname(out_path_half))
 
+    # 縦625 * 横256 に切り取る
     half = data[200: 1025-200, :257]
+
+    # numpy 配列として保存
     np.save(out_path_half, half)
 
+
 def _snap_half_right(path, dataset, data):
+    # 保存先のpath の作成
     out_path_half = path.replace(f"snap{dataset}", f"half_right/snap{dataset}")
     if not os.path.exists(os.path.dirname(out_path_half)):
         os.makedirs(os.path.dirname(out_path_half))
 
+    # 縦625 * 横256 に切り取る
     half = data[200: 1025-200, 257:]
+    # numpy 配列として保存
     np.save(out_path_half, half)
 
 
 def _snap_all(path, dataset, data):
+    # 保存先のpath の作成
     out_path_all = path.replace(f"snap{dataset}", f"all/snap{dataset}")
     if not os.path.exists(os.path.dirname(out_path_all)):
         os.makedirs(os.path.dirname(out_path_all))
+
+    # numpy 配列として保存
     np.save(out_path_all, data)
 
 
