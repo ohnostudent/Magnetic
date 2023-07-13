@@ -40,7 +40,7 @@ def logger_conf():
 
     # フォーマッタの生成（第一引数はメッセージのフォーマット文字列、第二引数は日付時刻のフォーマット文字列）
     fmt_tarminal = Formatter("%(asctime)s :【 %(name)s 】%(message)s : %(addinfo)s", "%Y-%m-%d %H:%M:%S")
-    fmt_file = Formatter("%(asctime)s 【 %(message)s 】%(addinfo)s\n", "%Y-%m-%d %H:%M:%S")
+    fmt_file = Formatter("%(asctime)s 【 %(message)s 】%(addinfo)s", "%Y-%m-%d %H:%M:%S")
 
     # フォーマッタの登録
     sh.setFormatter(fmt_tarminal)

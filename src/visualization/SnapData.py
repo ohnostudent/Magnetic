@@ -67,8 +67,8 @@ class SnapData():
         
         c_width = carnel.shape[1]
         c_height = carnel.shape[0]
-        result_width = int((data.shape[1] + 2*padding - carnel.shape[1]) / stride + 1)
-        result_height = int((data.shape[0] + 2*padding - carnel.shape[0]) / stride + 1)
+        result_width = int((data.shape[1] + 2*padding - c_width) / stride + 1)
+        result_height = int((data.shape[0] + 2*padding - c_height) / stride + 1)
         convoluted = np.zeros((result_height, result_width))
 
         orgY = 0

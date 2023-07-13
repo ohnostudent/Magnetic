@@ -54,12 +54,12 @@ sys.path.append(os.getcwd() + "/src")
     - `mkdirs.bat` にてディレクトリの生成を一括で行っている
     - 各データファイルの生成処理毎に、生成したファイルを移動している
     - `.py`　と `.ipynb` では作業ディレクトリの位置が違うので要注意
+    - 出力先：`/snaps/snap{i}{j}/*/*`
 
     ```cmd
     ./Magnetic> python ./src/Processing/separater.py
 
     ```
-    - 出力先：`/snaps/snap{i}{j}/*/*`
 <br>
 <br>
 
@@ -67,6 +67,7 @@ sys.path.append(os.getcwd() + "/src")
     - `/src/Processing/snap2npy.py` を実行する
     - numpy に変換し、教師データの元にする
     - それなりに時間がかかる
+    - 縦1025 * 横513 のデータを、縦625 (200~825)(上下200を切り取る) * 横257 (左右 保存) に加工している
 <br>
 <br>
     ```cmd
@@ -96,6 +97,12 @@ sys.path.append(os.getcwd() + "/src")
     - plt.contour
     - sns.heatmap
     - cv2.cvtColor
+
+    出力先：
+    - `/imgout/visualization/heatmap`
+    - `/imgout/visualization/edges`
+    - `/imgout/visualization/Energy_magfield`
+    - `/imgout/visualization/Energy_vectory`
 <br>
 <br>
 
@@ -140,39 +147,34 @@ sys.path.append(os.getcwd() + "/src")
 
     ```
 
-出力先：
-- `/imgout/visualization/heatmap`
-- `/imgout/visualization/edges`
-- `/imgout/visualization/Energy_magfield`
-- `/imgout/visualization/Energy_vectory`
-
 <br>
 <br>
 
 ### 2. AVS
 処理ファイル：`/src/AVS`  
-
-
 出力先
-- `/imgout/*`
+- `/imgout/AVS/*`
 
 <br>
 <br>
 
 ### 3. StreamLine
 処理ファイル：`/src/StreamLines`  
-
-
 出力先
-- `/imgout/*`
+- `/imgout/StreanLines/*`
 
 <br>
 <br>
 
 ### 4. LIC
-- a
+- LIC法にて可視化する
+- 縦625 * 横256 の加工済みnpyデータを使う
+- snaps/half_left/snap77/magdfield に保存したデータをすべて処理するために、3.9GHz, 10並列で15時間程度かかる
 
     処理ファイル：`/src/LIC`  
+    出力先
+    - `/imgout/LIC/snap{i}/left/*`
+    - `/imgout/LIC/snap{i}/right/*`
 
     ```python
     from params import SNAP_PATH, IMG_PATH, datasets
@@ -204,8 +206,6 @@ sys.path.append(os.getcwd() + "/src")
             lic.LIC(command)
 
     ```
-    出力先
-    - `/imgout/LIC/*`
 
 <br>
 <br>
@@ -214,11 +214,26 @@ sys.path.append(os.getcwd() + "/src")
 ### 1. 教師データの作成
 
 #### 1-1 ビューワの作成
-処理ファイル：`/src/Visualization`  
+処理ファイル：`/src/Processing/viewer/createViewer.py`  
 出力先
 - `/MLdata/*`
+    ```cmd
+    ./Magnetic> python ./src/Processing/snap2npy.py
+
+    ```
+    ```python
+    from Processing.viewer.createViewer import createViewer
+
+    dataset = input("使用するデータセットを入力してください(77/497/4949) : ")
+    if dataset not in datasets:
+        sys.exit()
+
+    createViewer(dataset)
+    ```
 
 #### 1-2 画像の分割
+1. `/src/Processing/viewer/writer.py` を実行
+2. 
 
 
 #### 1-3
@@ -312,8 +327,6 @@ Magnetic/
 
 ```
 make_data
--> makeviewer2.py (html の作成)
--> writer.py (bmp の分割)
 -> labeling (bmp -> csv)
 -> makesepnpy.ipynb (csv -> npy)
 -> fusionnpy.ipynb (fusion npy)

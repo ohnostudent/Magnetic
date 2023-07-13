@@ -3,8 +3,10 @@
 *__pycache__
 
 data/
-snaps/*
+snap/
 snaps/half/*
+snaps/half_right/*
+snaps/half_left/*
 snaps/all/*
 snaps/snap*/
 imgout/
@@ -24,7 +26,6 @@ src_def/
 *.pxd
 *.pyi
 *.temp
-*.zip
 
 tree.txt
 src/Processing/viewer/template/lic_viewer*.html
