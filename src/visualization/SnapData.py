@@ -29,7 +29,7 @@ class SnapData():
         # データのインポート
         # if os.path.splitext(file_path)[1] == "npy": # 拡張子の判定
         if file_path[-3:] == "npy": # 拡張子なしの場合を考慮するとこの形になる？
-            self.val_param, self.param, self.job, _ = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split('.'))
+            # self.val_param, self.param, self.job, _ = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split('.'))
             return np.load(file_path)
 
         self.val_param, self.param, self.job = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split('.'))

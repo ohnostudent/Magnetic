@@ -144,9 +144,11 @@ def mainProcess(logger, lic: LicMethod, dir_basename: str, base_out_path: str, b
             logger.debug("END", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 終了\n"})
 
         except KeyboardInterrupt:
+            lic.delete_tempfile(props[1], props[2])
             break
 
         except Exception as e:
+            lic.delete_tempfile(props[1], props[2])
             logger.debug(str(e), extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 中断\n"})
 
 

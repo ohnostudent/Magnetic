@@ -1,5 +1,6 @@
 #　教師データの作成用。ビューワと併用する。
 
+import os
 from flask import Flask, jsonify,request
 from flask_cors import CORS
 
@@ -15,14 +16,16 @@ def writedata():
     try:
         with open(req["filepath"], "a") as f:
             # f.write(str(request.json[0]))
-            #{'snappath': './snap49/lic_snap49.52.03.bmp',
+            #{'snappath': './imgout/LIC/snap77/left/lic_snap77.left.magfield.01.07.bmp',
             # 'filepath': '../txt/test.csv
             #  'locnumx': 0, 'locnumy': 0,
             #  'locnumx2': 0, 'locnumy2': 0,
             #  'rangenumx': 0, 'rangenumy': 0}
+
             doc = str(request.json[0])
-            # snappath,dataset,para,job,center[x,y],xrange[a,z], yrange[a,z]
-            dataset, para, job = req['snappath'][-12:-10], req['snappath'][-9:-7], req['snappath'][-6:-4] 
+            # snappath, dataset, para, job, side, center[x, y], xrange[a, z],  yrange[a, z]
+            file_name = os.path.basename(req['snappath']).split(".")
+            dataset, para, job, side = file_name[0].split('_')[1].replace("snap", ""), file_name[3], file_name[4], file_name[1]
             centerx = req["locnumx"]
             centery = req["locnumy"]
             xlow = req["locnumx2"]
@@ -30,7 +33,7 @@ def writedata():
             ylow = req["locnumy2"]
             yup = int(req["locnumy2"]) + int(req["rangenumy"])
             label = req["label"]
-            doc = f"{req['snappath']},{dataset},{para},{job},{centerx},{centery},{xlow},{xup},{ylow},{yup},{label}\n"
+            doc = f"{req['snappath']},{dataset},{para},{job},{side},{centerx},{centery},{xlow},{xup},{ylow},{yup},{label}\n"
             global predoc
             
             if int(req["rangenumx"]) == 0 or int(req["rangenumy"]) == 0:
