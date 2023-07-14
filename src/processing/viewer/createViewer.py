@@ -46,6 +46,10 @@ def createViewer(dataset):
 
 
 if __name__ == '__main__':
+<<<<<<< HEAD
+    for dataset in datasets:
+        createViewer(dataset)
+=======
     dataset = input("使用するデータセットを入力してください(77/497/4949) : ")
 
     if dataset.isnumeric(): # 数字以外を入力した場合
@@ -59,3 +63,4 @@ if __name__ == '__main__':
         sys.exit()
 
     createViewer(dataset)
+>>>>>>> 3fa24d1bed159144256ba696df41875b9f407700

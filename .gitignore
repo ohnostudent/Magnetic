@@ -1,31 +1,31 @@
 # ディレクトリ
 .vscode/
+*__pycache__
+
 data/
-snaps/
+snap/
 snaps/half/*
 snaps/half_right/*
 snaps/half_left/*
 snaps/all/*
 snaps/snap*/
-pra/
-*__pycache__
 imgout/
-src_def/
-log/
 MLdata/
 MLres/
+log/
+
+pra/
+src_def/
 
 # 各ファイル
-*.zip
-*.ipynb
+*.env
 *.exe
+*.ipynb
 *.obj
 *.pyx
 *.pxd
 *.pyi
-*.env
 *.temp
-*.cmd
 
 tree.txt
 src/Processing/viewer/template/lic_viewer*.html
