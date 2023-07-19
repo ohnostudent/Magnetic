@@ -7,6 +7,7 @@
 """
 
 import os
+import sys
 
 ROOT_DIR = os.getcwd()
 SNAP_PATH = ROOT_DIR + "/snaps"
@@ -23,3 +24,18 @@ ML_RESULT_DIR = ROOT_DIR + "/MLres"
 
 datasets  = [77, 497, 4949]
 variable_parameters = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
+labels = ["n", "o", "x"]
+
+
+def set_dataset(dataset: str):    
+    from params import datasets
+    
+    if dataset.isnumeric():
+        dataset = int(dataset)
+        if dataset not in datasets:
+            sys.exit()
+                
+    else:
+        sys.exit()
+
+    return dataset

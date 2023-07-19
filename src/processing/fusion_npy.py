@@ -7,7 +7,7 @@ import pandas as pd
 from glob import glob
 sys.path.append(os.getcwd() + "/src")
 
-from params import SNAP_PATH, ML_DATA_DIR, datasets, variable_parameters
+from params import SNAP_PATH, ML_DATA_DIR, labels
 from Processing.kernel import _kernel
 
 
@@ -39,66 +39,63 @@ class crateTrain(_kernel):
             np.save(base_path + f"/{val_param}_{dataset}.{para:02d}.{job:02d}_{centerx}.{centery}", separated_im)
 
 
-    def fusionnpy2val_param(self, impath, val_param1, val_param2, carnel, OUT_DIR, outbasename):
-        im1 = np.load(impath)
-        im2 = np.load(impath.replace(val_param1, val_param2))
-
-        resim = carnel(im1,im2)
-        
-        outpath = OUT_DIR + outbasename + "/" + os.path.basename(impath).replace(val_param1, outbasename)
-        np.save(outpath, resim)
-        print(outpath)
+    # 複数の変数を混合したデータを作成する
+    def loadBinaryData(self, impath, val_params):
+        im_list = []
+        for val in val_params:
+            im = np.load(impath.replace(val_params[0], val))
+            im_list.append(im)
     
+        return im_list
 
-    def fusionnpy3val_param(self, impath, val_param1, val_param2, val_param3, carnel, OUT_DIR, outbasename):
-        im1 = np.load(impath)
-        im2 = np.load(impath.replace(val_param1, val_param2))
-        im3 = np.load(impath.replace(val_param1, val_param3))
+    def saveFusionData(self, resim, outpath):
+        if  not os.path.exists(os.path.dirname(outpath)):
+            os.mkdir(os.path.dirname(outpath))
 
-        resim = carnel(im1,im2, im3)
-        
-        outpath = OUT_DIR + outbasename + "/" + os.path.basename(impath).replace(val_param1, outbasename)
         np.save(outpath, resim)
-        print(outpath)
 
 
-def makeFusionData(dataset):
+def mergeBinerys(props_params, dataset) -> None:
+    OUT_DIR = ML_DATA_DIR + f"/snap{dataset}"
+
     md = crateTrain()
-    return
-
-
-def makeTrainingData(dataset):
-    md = crateTrain()
-
-    val_param_tuples = [(["magfieldx", "magfieldy"], "mag_tupledxy", md.carnellistxy)]
-    npys0 = ML_DATA_DIR + f"/LIC_labels/label_snap{dataset}_all.csv"
-    npys1X = ML_DATA_DIR + f"/LIC_labels/label_snap{dataset}_all.csv"
-    npys1O = ML_DATA_DIR + f"/LIC_labels/label_snap{dataset}_all.csv"
-
-    outdir_ = ML_DATA_DIR
-    outdir_x = ML_DATA_DIR
-    outdir_o = ML_DATA_DIR
-
     #/imgout/0131_not/density/density_49.50.8_9.528
-    for val_param, outbasename, carnel in val_param_tuples:
-        for OUT_DIR, npys in [(outdir_, npys0), (outdir_x, npys1X), (outdir_o, npys1O)]:
-            for impath in glob(npys + val_param[0] +"/*"): 
-                if  not os.path.exists(OUT_DIR+f"{outbasename}"):
-                    os.mkdir(OUT_DIR+f"{outbasename}")
+    for val_params, outbasename, kernel in props_params:
+        for a in labels:
+            npys = OUT_DIR + f"/point_{a}"
 
-                md.fusionnpy2val_param(impath, *val_param, carnel, OUT_DIR, outbasename)
-                
+            for impath in glob(npys + "/" + val_params[0] +"/*.npy"): 
+                im_list = md.loadBinaryData(impath, val_params) # 混合データのロード
+                resim = kernel(*im_list) # データの作成
 
-    val_param_tuples = [(["velocityx", "velocityy", "density"], "energy", md.carnelEnergy)]
-    #/imgout/0131_not/density/density_49.50.8_9.528
-    for val_param, outbasename, carnel in val_param_tuples:
-        for OUT_DIR, npys in [(outdir_, npys0), (outdir_x, npys1X), (outdir_o, npys1O)]:
-            for impath in glob(npys + val_param[0] +"/*"): 
-                if  not os.path.exists(OUT_DIR+f"{outbasename}"):
-                    os.mkdir(OUT_DIR+f"{outbasename}")
-    
-                md.fusionnpy3val_param(impath, *val_param, carnel, OUT_DIR, outbasename)
+                # 保存先のパスの作成
+                # /MLdata/snap{dataset}/{outbasename}/{outbasename}_{dataset}.{param}.{job}_{centerx}.{centery}.npy
+                # /MLdata/snap77/energy/energy_77.01.03_131.543.npy
+                outpath = npys + "/" + outbasename + "/" + os.path.basename(impath).replace(val_params[0], outbasename)
+                md.saveFusionData(resim, outpath) # データの保存
+
+
+def makeTrainingData(dataset: int) -> None:
+    props_params = [
+        (["magfieldx", "magfieldy"], "mag_tupledxy", crateTrain().kernellistxy), 
+        (["velocityx", "velocityy", "density"], "energy", crateTrain().kernelEnergy)
+    ]
+
+    mergeBinerys(props_params, dataset)
 
 
 if __name__ == "__main__":
-    makeTrainingData()
+    if len(sys.argv) == 1:
+        print()
+        sys.exit()
+    else:
+        dataset = sys.argv[1]
+
+    from params import set_dataset
+    dataset = set_dataset(dataset)
+
+    # md = crateTrain()
+    # for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
+    #     md.cut_and_save(dataset, val)
+
+    makeTrainingData(dataset)

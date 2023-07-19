@@ -51,20 +51,17 @@ def _snap_all(path, dataset, data):
     np.save(out_path_all, data)
 
 
-def doSnap2npy(dataset):
+def doSnap2npy(logger, dataset):
     from glob import glob
     from params import SNAP_PATH, datasets, variable_parameters
-    from SetLogger import logger_conf
-    logger = logger_conf()
-    logger.debug("START", extra={"addinfo": f"処理開始\n"})
 
     if dataset not in datasets:
-        logger.debug("ERROR", extra={"addinfo": f"cannot use dataset{dataset}\n"})
+        logger.debug("ERROR", extra={"addinfo": f"cannot use dataset{dataset}"})
         return
 
     try:
         sp = SnapData()
-        logger.debug("START", extra={"addinfo": f"Snap{dataset} 開始\n"})
+        logger.debug("START", extra={"addinfo": f"Snap{dataset} 開始"})
 
         for param in variable_parameters:
             logger.debug("START", extra={"addinfo": f"{param} 開始"})
@@ -73,28 +70,33 @@ def doSnap2npy(dataset):
                 # print(path)
                 snap2npy(sp, path, dataset)
 
-            logger.debug("END", extra={"addinfo": f"{param} 終了\n"})
-        logger.debug("END", extra={"addinfo": f"Snap{dataset} 終了\n"})
+            logger.debug("END", extra={"addinfo": f"{param} 終了"}) 
+        logger.debug("END", extra={"addinfo": f"Snap{dataset} 終了"})
     
     except KeyboardInterrupt:
-        logger.debug("END", extra={"addinfo": f"{param} 中断\n"})
-        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断\n"})
+        logger.debug("END", extra={"addinfo": f"{param} 中断"})
+        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
     
     except Exception as e:
-        logger.debug(str(e), extra={"addinfo": "\n"})
-        logger.debug("END", extra={"addinfo": f"{param} 中断\n"})
-        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断\n"})
+        logger.debug(str(e), extra={"addinfo": ""})
+        logger.debug("END", extra={"addinfo": f"{param} 中断"})
+        logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
     
-    finally:
-        logger.debug("END", extra={"addinfo": f"処理終了"})
+
 
 def main():
     from concurrent.futures import ThreadPoolExecutor
+    from SetLogger import logger_conf
+
+    logger = logger_conf()
+    logger.debug("START", extra={"addinfo": f"処理開始"})
 
     with ThreadPoolExecutor(max_workers=6) as exec:
-        exec.submit(doSnap2npy, 77)
-        exec.submit(doSnap2npy, 497)
-        exec.submit(doSnap2npy, 4949)
+        exec.submit(doSnap2npy, logger, 77)
+        exec.submit(doSnap2npy, logger, 497)
+        exec.submit(doSnap2npy, logger, 4949)
+
+    logger.debug("END", extra={"addinfo": f"処理終了"})
 
 
 if __name__ == "__main__":
