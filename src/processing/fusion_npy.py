@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import pandas as pd
 from glob import glob
+from logging import getLogger
 sys.path.append(os.getcwd() + "/src")
 
 from params import SNAP_PATH, ML_DATA_DIR, labels
@@ -76,6 +77,8 @@ def mergeBinerys(props_params, dataset) -> None:
 
 
 def makeTrainingData(dataset: int) -> None:
+    logger = getLogger("res_root").getChild(__name__)
+
     props_params = [
         (["magfieldx", "magfieldy"], "mag_tupledxy", crateTrain().kernellistxy), 
         (["velocityx", "velocityy", "density"], "energy", crateTrain().kernelEnergy)

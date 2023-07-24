@@ -22,6 +22,9 @@ def _sort_paths(path_list):
 
 
 def createViewer(dataset):
+    from logging import getLogger
+    logger = getLogger("res_root").getChild(__name__)
+
     for size in ["left", "right"]:
         # paths = _sort_paths(paths) # snapの命名規則をもとに時系列順に並び変える。
         paths = glob(IMGOUT + f"/LIC/snap{dataset}/{size}/*.bmp")

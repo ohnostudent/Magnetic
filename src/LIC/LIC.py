@@ -123,7 +123,9 @@ class LicMethod(SnapData):
 
 
 
-def mainProcess(logger, lic: LicMethod, dir_basename: str, base_out_path: str, binary_paths: list[str]):
+def mainProcess(lic: LicMethod, dir_basename: str, base_out_path: str, binary_paths: list[str]):
+    logger = getLogger("res_root").getChild(__name__)
+
     for xfile in binary_paths:
         try:
             logger.debug("START", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 開始\n"})
@@ -153,7 +155,7 @@ def mainProcess(logger, lic: LicMethod, dir_basename: str, base_out_path: str, b
 
 
 from params import datasets
-def LICMainProcess(logger, dataset, size):
+def LICMainProcess(dataset, size):
     """
     処理時間の目安
     snap77   : 778(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
@@ -171,6 +173,7 @@ def LICMainProcess(logger, dataset, size):
     """
 
     from concurrent.futures import ThreadPoolExecutor
+    logger = getLogger("res_root").getChild(__name__)
 
     try:
         # ログ取得の開始
@@ -201,16 +204,16 @@ def LICMainProcess(logger, dataset, size):
 
         file_count = len(binary_paths)
         with ThreadPoolExecutor() as exec: # 並列処理 # max_workers は自信のCPUのコア数と相談してください
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[: file_count // 10])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 : file_count // 10 * 2])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 2 : file_count // 10 * 3])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 3 : file_count // 10 * 4])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 4 : file_count // 10 * 5])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 5 : file_count // 10 * 6])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 6 : file_count // 10 * 7])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 7 : file_count // 10 * 8])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 8 : file_count // 10 * 9])
-            exec.submit(mainProcess, logger, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 9 :])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[: file_count // 10])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 : file_count // 10 * 2])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 2 : file_count // 10 * 3])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 3 : file_count // 10 * 4])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 4 : file_count // 10 * 5])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 5 : file_count // 10 * 6])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 6 : file_count // 10 * 7])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 7 : file_count // 10 * 8])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 8 : file_count // 10 * 9])
+            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 9 :])
         
         logger.debug("END", extra={"addinfo": f"{dataset} 終了\n"})
 

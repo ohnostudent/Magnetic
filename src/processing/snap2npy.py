@@ -51,9 +51,12 @@ def _snap_all(path, dataset, data):
     np.save(out_path_all, data)
 
 
-def doSnap2npy(logger, dataset):
+def doSnap2npy(dataset):
     from glob import glob
+    from logging import getLogger
     from params import SNAP_PATH, datasets, variable_parameters
+    
+    logger = getLogger("res_root").getChild(__name__)
 
     if dataset not in datasets:
         logger.debug("ERROR", extra={"addinfo": f"cannot use dataset{dataset}"})
@@ -92,9 +95,9 @@ def main():
     logger.debug("START", extra={"addinfo": f"処理開始"})
 
     with ThreadPoolExecutor(max_workers=6) as exec:
-        exec.submit(doSnap2npy, logger, 77)
-        exec.submit(doSnap2npy, logger, 497)
-        exec.submit(doSnap2npy, logger, 4949)
+        exec.submit(doSnap2npy, 77)
+        exec.submit(doSnap2npy, 497)
+        exec.submit(doSnap2npy, 4949)
 
     logger.debug("END", extra={"addinfo": f"処理終了"})
 

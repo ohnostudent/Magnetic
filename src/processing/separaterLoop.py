@@ -63,7 +63,7 @@ def dataProcessing():
             # 元データの分割処理の実行
             subprocess.run([SRC_PATH + "/Processing/cln/separator.exe", f"{file}"])
             _, _, _, param, job = map(lambda x: int(x) if x.isnumeric() else x,  os.path.basename(file).split("."))
-            logger.debug("OPEN", extra={"addinfo": f"File snap{i}{j}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
+            logger.debug("OPEN", extra={"addinfo": f"File snap{i}{j}.{param:02d}.{job:02d}"})
 
             # 出力されたファイル名の変更
             for item2 in items2:
@@ -71,7 +71,7 @@ def dataProcessing():
                     _rename_file(xyz, param, job, item2)
 
                 else: # 見つからない場合
-                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item1}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
+                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item1}.{param:02d}.{job:02d}"})
 
             # 出力されたファイルの移動
             for item1 in items1:
@@ -79,9 +79,9 @@ def dataProcessing():
                     _move_file(dataset, item1)
 
                 else: # 見つからない場合
-                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item2}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
+                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item2}.{param:02d}.{job:02d}"})
 
-            logger.debug("CLOSE", extra={"addinfo": f"File {item2}.{'{0:02d}'.format(param)}.{'{0:02d}'.format(job)}"})
+            logger.debug("CLOSE", extra={"addinfo": f"File {item2}.{param:02d}.{job:02d}"})
 
 
         # coordn を最後に移動させる
