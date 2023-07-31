@@ -10,11 +10,10 @@ snaps/half_left/*
 snaps/all/*
 snaps/snap*/
 imgout/
+logs/
 MLdata/
 MLres/
-log/
 
-pra/
 src_def/
 
 # 各ファイル

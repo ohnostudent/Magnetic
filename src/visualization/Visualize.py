@@ -29,7 +29,7 @@ class VisualizeMethod(SnapData):
         res = x[2:] - x[:-2]
         # print(x[1:])
         # print(x[:-1])
-        return res/(2*h)
+        return res / (2 * h)
     
     def _diff4(self, x, h):
         """
@@ -39,7 +39,7 @@ class VisualizeMethod(SnapData):
         ベクトル長が4短くなる
         """
         res = -x[4:] + 8*x[3:-1] - 8*x[1:-3] + x[:-4]
-        return res/(12*h)
+        return res / (12 * h)
     
     def _diff4_xy(self, data: np.ndarray, h:float, vectol: str):
         """
@@ -56,8 +56,8 @@ class VisualizeMethod(SnapData):
                 res = np.append(res, self._diff4(vec, h))
         
         if vectol == "y":
-            return res.reshape(data.shape[0],data.shape[1]-4).T
-        return res.reshape(data.shape[0],data.shape[1]-4)
+            return res.reshape(data.shape[0], data.shape[1]-4).T
+        return res.reshape(data.shape[0], data.shape[1]-4)
 
     def _rot2d(self, vX: np.ndarray, vY: np.ndarray):
         """
@@ -71,7 +71,7 @@ class VisualizeMethod(SnapData):
         e = np.array([1,0,0])
         mylist = [[j *e for j in i ] for i in a]
         """
-        return self._diff4_xy(vY,1)[2:-2,] - self._diff4_xy(vX,1)[:,2:-2]
+        return self._diff4_xy(vY,1)[2:-2,] - self._diff4_xy(vX,1)[:, 2:-2]
 
     # 角度の計算
     def _calc_radian(self, u,v):
