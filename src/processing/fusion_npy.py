@@ -8,7 +8,7 @@ from glob import glob
 from logging import getLogger
 sys.path.append(os.getcwd() + "/src")
 
-from params import SNAP_PATH, ML_DATA_DIR, labels
+from config.params import SNAP_PATH, ML_DATA_DIR, labels
 from Processing.kernel import _kernel
 
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     else:
         dataset = sys.argv[1]
 
-    from params import set_dataset
+    from config.params import set_dataset
     dataset = set_dataset(dataset)
 
     # md = crateTrain()

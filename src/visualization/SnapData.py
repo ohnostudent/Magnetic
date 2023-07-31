@@ -5,7 +5,7 @@ import sys
 import numpy as np
 sys.path.append(os.getcwd())
 
-from src.params import IMGOUT
+from config.params import IMGOUT
 
 
 class SnapData():

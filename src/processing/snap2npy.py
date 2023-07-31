@@ -54,7 +54,7 @@ def _snap_all(path, dataset, data):
 def doSnap2npy(dataset):
     from glob import glob
     from logging import getLogger
-    from params import SNAP_PATH, datasets, variable_parameters
+    from config.params import SNAP_PATH, datasets, variable_parameters
     
     logger = getLogger("res_root").getChild(__name__)
 
@@ -89,7 +89,7 @@ def doSnap2npy(dataset):
 
 def main():
     from concurrent.futures import ThreadPoolExecutor
-    from SetLogger import logger_conf
+    from config.SetLogger import logger_conf
 
     logger = logger_conf()
     logger.debug("START", extra={"addinfo": f"処理開始"})

@@ -9,7 +9,7 @@ import seaborn as sns
 from logging import getLogger
 sys.path.append(os.getcwd() + '/src')
 
-from params import IMGOUT
+from config.params import IMGOUT
 from Visualization.SnapData import SnapData
 
 
@@ -322,8 +322,8 @@ class VisualizeMethod(SnapData):
 
 def gridHeatmao():
     from glob import glob
-    from params import SNAP_PATH, datasets
-    from SetLogger import logger_conf
+    from config.params import SNAP_PATH, datasets
+    from config.SetLogger import logger_conf
 
 
     # ログ取得の開始

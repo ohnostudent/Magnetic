@@ -8,7 +8,7 @@ from logging import getLogger
 from glob import glob
 sys.path.append(os.getcwd()+"\src")
 
-from params import AVS_IN_DIR, AVS_OUT_DIR
+from config.params import AVS_IN_DIR, AVS_OUT_DIR
 from Visualization.SnapData import SnapData
 
 

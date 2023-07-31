@@ -6,7 +6,7 @@ import sys
 from glob import glob
 sys.path.append(os.getcwd() + "\src")
 
-from params import SRC_PATH, IMGOUT, datasets
+from config.params import SRC_PATH, IMGOUT, datasets
 
 
 def _sort_paths(path_list):
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     else:
         dataset = sys.argv[1]
 
-    from params import set_dataset
+    from config.params import set_dataset
     dataset = set_dataset(dataset)
 
     createViewer(dataset)

@@ -7,7 +7,7 @@ import subprocess
 from glob import glob
 from logging import getLogger
 sys.path.append(os.getcwd() + "/src")
-from params import ROOT_DIR, SRC_PATH, SNAP_PATH, ETC_PATH
+from config.params import ROOT_DIR, SRC_PATH, SNAP_PATH, ETC_PATH
 
 
 def _set_ij(logger, dataset):
@@ -93,7 +93,7 @@ def dataProcessing():
 
 
 if __name__ == "__main__":
-    from SetLogger import logger_conf
+    from config.SetLogger import logger_conf
     logger = logger_conf()
 
     dataProcessing()

@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
 from Visualization.SnapData import SnapData
-from params import SNAP_PATH, ML_RESULT_DIR
+from config.params import SNAP_PATH, ML_RESULT_DIR
 
 
 class ClusteringMethod(SnapData):
@@ -126,8 +126,8 @@ class ClusteringMethod(SnapData):
         
 
 def doClustering():
-    from params import datasets, variable_parameters
-    from SetLogger import logger_conf
+    from config.params import datasets, variable_parameters
+    from config.SetLogger import logger_conf
 
     logger = logger_conf()
     cluster = ClusteringMethod()
