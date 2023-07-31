@@ -233,5 +233,5 @@ if __name__ == "__main__":
     logger = logger_conf()
     for dataset in datasets:
         for size in ["half_left", "half_right"]:
-            LICMainProcess(logger, dataset, size)
+            LICMainProcess(dataset, size)
     

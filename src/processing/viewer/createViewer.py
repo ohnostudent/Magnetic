@@ -39,6 +39,7 @@ def createViewer(dataset):
         # html の読み込み
         with open(SRC_PATH + "/Processing/viewer/template/viewer_template.html", 'r', encoding="utf-8") as f:
             html = f.read()
+
         # 可視化した.bmpのpathの一覧をhtml に追記
         html = html.replace("{ replaceblock }", pathliststr)
 
@@ -49,16 +50,13 @@ def createViewer(dataset):
 
 
 if __name__ == '__main__':
-    dataset = input("使用するデータセットを入力してください(77/497/4949) : ")
-
-    if dataset.isnumeric(): # 数字以外を入力した場合
-        dataset = int(dataset)
+    if len(sys.argv) == 1:
+        print()
+        sys.exit()
     else:
-        print("入力内容に間違いがあります")
-        sys.exit()
+        dataset = sys.argv[1]
 
-    if dataset not in datasets: # 使用できない場合
-        print("不明なデータセットです")
-        sys.exit()
+    from params import set_dataset
+    dataset = set_dataset(dataset)
 
     createViewer(dataset)
