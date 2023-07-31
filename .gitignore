@@ -1,5 +1,6 @@
 # ディレクトリ
 .vscode/
+.venv/
 *__pycache__
 
 data/
