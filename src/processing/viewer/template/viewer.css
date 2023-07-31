@@ -29,6 +29,7 @@ body{
 }
 .discribe{
     display: inline;
+    padding: 10px;
 }
 .textinput{
     width: 30px;
