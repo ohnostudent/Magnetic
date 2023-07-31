@@ -16,7 +16,7 @@ def snap2npy(sp: SnapData, path: str, dataset: int):
     _snap_half_right(path, dataset, data)
 
 
-def _snap_half_left(path, dataset, data):
+def _snap_half_left(path: str, dataset: int, data) -> None:
     # 保存先のpath の作成
     out_path_half = path.replace(f"snap{dataset}", f"half_left/snap{dataset}")
     if not os.path.exists(os.path.dirname(out_path_half)):
@@ -29,7 +29,7 @@ def _snap_half_left(path, dataset, data):
     np.save(out_path_half, half)
 
 
-def _snap_half_right(path, dataset, data):
+def _snap_half_right(path: str, dataset: int, data) -> None:
     # 保存先のpath の作成
     out_path_half = path.replace(f"snap{dataset}", f"half_right/snap{dataset}")
     if not os.path.exists(os.path.dirname(out_path_half)):
@@ -41,7 +41,7 @@ def _snap_half_right(path, dataset, data):
     np.save(out_path_half, half)
 
 
-def _snap_all(path, dataset, data):
+def _snap_all(path: str, dataset: int, data) -> None:
     # 保存先のpath の作成
     out_path_all = path.replace(f"snap{dataset}", f"all/snap{dataset}")
     if not os.path.exists(os.path.dirname(out_path_all)):
@@ -51,7 +51,7 @@ def _snap_all(path, dataset, data):
     np.save(out_path_all, data)
 
 
-def doSnap2npy(dataset):
+def doSnap2npy(dataset: int):
     from glob import glob
     from logging import getLogger
     from config.params import SNAP_PATH, datasets, variable_parameters

@@ -24,7 +24,7 @@ sys.path.append(os.getcwd() + "/src")
     pip install -r requirements.txt
     ```
 
-2. `/etc/mkdir.bat` を実行する  
+2. `/bin/mkdir.bat` を実行する  
 
 3. 元データを `./data` 配下に保存する  
     ```
@@ -285,44 +285,61 @@ sys.path.append(os.getcwd() + "/src")
 ## ディレクトリ構造
 Magnetic/  
 
-    ├ .git/  
-    ├ data/  元データ  
-    ├ imgout/  画像データの出力先  
-    ├ MLdata/ 教師データ  
-    ├ MLres/ 学習結果の保存先  
-    ├ snaps/  パラメータ毎に分解したデータ  
-    |   ├ density/  
-    |   |     ├ 00/  
-    |   |     ├ 01/  
-    .   .     .  
-    .   .     .  
-    |   |     └14/  
-    |   ├ enstrophy/  
-    |   |     ├ 00/  
-    |   |     ├ 01/  
-    .   .     .  
-    .   .     .  
-    |   |     └14/  
-    |   ├ magfieldx/  
-    .   .  
-    .   .  
-    |   └velocityz  
-    |  
-    ├ src/  
-    |   ├ AVS/ AVS可視化  
-    |   ├ k_means/ k近傍法  
-    |   ├ LIC/ LIC可視化  
-    |   ├ Processing/ 元データの加工  
-    |   ├ SteamLines/ Stream可視化  
-    |   └ Visualization/ 元データの可視化  
-    |   
-    |   .  
-    |   .   
-    |  
-    ├ .env  
-    ├ main.ipynb  
-    ├ README.md  
-    └.gitignore  
+    ├ .git/
+    ├ .vscode/ 	VScodeの設定情報の格納先
+    ├ .venv/ 仮想環境の格納先
+    ├ bin/ .batファイル等
+    ├ config/ 各種設定ファイルを格納
+    ├ data/  元データ
+    ├ imgout/  画像データの出力先
+    ├ logs/ ログ
+    ├ ML/ 教師データ
+    |   ├ data/ 教師データの作成先
+    |   └ result/ 学習結果の保存先
+    ├ snaps/  パラメータ毎に分解したデータ
+    |   ├ snap77/ 
+    |   |   ├ density/
+    |   |   |     ├ 00/
+    |   |   |     ├ 01/
+    |   .   .     .
+    |   .   .     .
+    |   |   |     └14/
+    |   |   ├ enstrophy/
+    |   |   |     ├ 00/
+    |   |   |     ├ 01/
+    |   .   .     .
+    |   .   .     .
+    |   |   |     └14/
+    |   |   ├ magfieldx/
+    |   .   .
+    |   .   .
+    |   |   └ velocityz
+    |   ├ half_left/ 元データの左半分の .npyファイル
+    |   ├ half_right/ 元データの右半分の .npyファイル
+    |   └ all/ 元データ全部の .npyファイル
+    |
+    ├ src/
+    |   ├ AVS/ AVS可視化
+    |   ├ k_means/ k近傍法
+    |   ├ LIC/ LIC可視化
+    |   |   ├ libs/ 各種モジュールの格納先
+    |   |   └ temp/ .tempファイルの作成先
+    |   ├ Processing/ 元データの加工
+    |   |   ├ cln/ c言語系モジュールの格納先
+    |   |   ├ libs/ 各種モジュールの格納先
+    |   |   └ viewer/ viewer作成に関するモジュールの格納先
+    |   ├ SteamLines/ Stream可視化
+    |   |   └ libs/ 各種モジュールの格納先
+    |   └ Visualization/ 元データの可視化
+    | 
+    |   .
+    |   .
+    |
+    ├ .env
+    ├ main.ipynb
+    ├ README.md
+    ├ requirement.txt
+    └.gitignore
 
 
 ```

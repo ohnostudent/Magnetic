@@ -9,7 +9,7 @@ from logging import getLogger
 sys.path.append(os.getcwd() + "/src")
 
 from config.params import SNAP_PATH, ML_DATA_DIR, labels
-from Processing.kernel import _kernel
+from Processing.libs.kernel import _kernel
 
 
 class crateTrain(_kernel):

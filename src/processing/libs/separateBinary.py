@@ -6,7 +6,7 @@ import sys
 import os
 from logging import getLogger
 sys.path.append(os.getcwd() + "/src")
-from src.Visualization.SnapData import SnapData
+from Visualization.SnapData import SnapData
 
 
 def separate_binary(indir, outdir, sep, sepy, targets):

@@ -10,17 +10,20 @@ import os
 import sys
 
 ROOT_DIR = os.getcwd()
-SNAP_PATH = ROOT_DIR + "/snaps"
+
+BIN_PATH = ROOT_DIR + "/BIN"
 IMGOUT = ROOT_DIR + "/imgout"
 LOG_DIR = ROOT_DIR + "/logs"
+SNAP_PATH = ROOT_DIR + "/snaps"
 SRC_PATH = ROOT_DIR + "/src"
-ETC_PATH = ROOT_DIR + "/etc"
 
 AVS_IN_DIR = IMGOUT + "/AVS"
 AVS_OUT_DIR = IMGOUT + "/AVSsplit"
 
-ML_DATA_DIR = ROOT_DIR + "/MLdata"
-ML_RESULT_DIR = ROOT_DIR + "/MLres"
+ML_DIR = ROOT_DIR + "/ML"
+ML_DATA_DIR = ML_DIR + "/data"
+ML_RESULT_DIR = ML_DIR + "/result"
+
 
 datasets  = [77, 497, 4949]
 variable_parameters = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]

@@ -1,5 +1,4 @@
 mkdir imgout
-mkdir log
+mkdir logs
 mkdir snaps
-mkdir MLdata
-mkdir MLres
+mkdir ML

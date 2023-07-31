@@ -11,8 +11,7 @@ snaps/all/*
 snaps/snap*/
 imgout/
 logs/
-MLdata/
-MLres/
+ML/
 
 src_def/
 

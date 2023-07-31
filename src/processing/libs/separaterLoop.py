@@ -7,7 +7,7 @@ import subprocess
 from glob import glob
 from logging import getLogger
 sys.path.append(os.getcwd() + "/src")
-from config.params import ROOT_DIR, SRC_PATH, SNAP_PATH, ETC_PATH
+from config.params import ROOT_DIR, SRC_PATH, SNAP_PATH, BIN_PATH
 
 
 def _set_ij(logger, dataset):
@@ -55,7 +55,7 @@ def dataProcessing():
         # bat ファイルの実行
         # 基本的に加工したデータの保存先のフォルダの作成
         logger.debug("MAKE", extra={"addinfo": "ディレクトリの作成"})
-        subprocess.run([ETC_PATH + "/Snaps.bat", str(dataset)])
+        subprocess.run([BIN_PATH + "/Snaps.bat", str(dataset)])
 
         # ログの保存先
         files = glob(ROOT_DIR + f"/data/ICh.dataset=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0/Snapshots/*")
