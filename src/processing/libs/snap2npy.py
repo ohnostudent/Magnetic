@@ -1,9 +1,9 @@
 # -*- coding utf-8, LF -*-
 
-import numpy as np
 import os
 import sys
-sys.path.append(os.getcwd() + "/src")
+import numpy as np
+sys.path.append(os.getcwd())
 from Visualization.SnapData import SnapData
 
 

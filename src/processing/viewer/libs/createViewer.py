@@ -4,9 +4,9 @@
 import os
 import sys
 from glob import glob
-sys.path.append(os.getcwd() + "\src")
+sys.path.append(os.getcwd())
 
-from config.params import SRC_PATH, IMGOUT, datasets
+from config.params import SRC_PATH, IMGOUT
 
 
 def _sort_paths(path_list):

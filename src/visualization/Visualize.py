@@ -7,7 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from logging import getLogger
-sys.path.append(os.getcwd() + '/src')
+sys.path.append(os.getcwd())
+sys.path.append(os.getcwd() + "/src")
 
 from config.params import IMGOUT
 from Visualization.SnapData import SnapData
@@ -320,7 +321,7 @@ class VisualizeMethod(SnapData):
 
 
 
-def gridHeatmao():
+def gridHeatmap():
     from glob import glob
     from config.params import SNAP_PATH, datasets
     from config.SetLogger import logger_conf
@@ -362,4 +363,4 @@ def gridHeatmao():
 
 
 if __name__ == "__main__":
-    gridHeatmao()
+    gridHeatmap()

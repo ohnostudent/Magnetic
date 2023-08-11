@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import pandas as pd
 from glob import glob
+sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
 from sklearn.cluster import KMeans

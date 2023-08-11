@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from glob import glob
 from logging import getLogger
+sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
 from config.params import SNAP_PATH, ML_DATA_DIR, labels
@@ -65,7 +66,7 @@ def mergeBinerys(props_params, dataset) -> None:
         for a in labels:
             npys = OUT_DIR + f"/point_{a}"
 
-            for impath in glob(npys + "/" + val_params[0] +"/*.npy"): 
+            for impath in glob(npys + "/" + val_params[0] +"/*.npy"):
                 im_list = md.loadBinaryData(impath, val_params) # 混合データのロード
                 resim = kernel(*im_list) # データの作成
 

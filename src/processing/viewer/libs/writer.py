@@ -1,7 +1,7 @@
 #　教師データの作成用。ビューワと併用する。
 
 import os
-from flask import Flask, jsonify,request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 

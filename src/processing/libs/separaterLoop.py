@@ -6,7 +6,8 @@ import shutil
 import subprocess
 from glob import glob
 from logging import getLogger
-sys.path.append(os.getcwd() + "/src")
+sys.path.append(os.getcwd())
+
 from config.params import ROOT_DIR, SRC_PATH, SNAP_PATH, BIN_PATH
 
 

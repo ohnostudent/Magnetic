@@ -22,6 +22,7 @@ AVS_OUT_DIR = IMGOUT + "/AVSsplit"
 
 ML_DIR = ROOT_DIR + "/ML"
 ML_DATA_DIR = ML_DIR + "/data"
+ML_MODEL_DIR = ML_DIR + "/models"
 ML_RESULT_DIR = ML_DIR + "/result"
 
 
