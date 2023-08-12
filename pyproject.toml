@@ -1,8 +1,16 @@
 [tool.ruff]
 # A list of rule codes or prefixes to enable
-select = ["B", "E", "F", "I", "N", "ANN", "PL"]
+# "B" : flake8-bugbear
+# "E", "W" : pycodestyle errors, warnings
+# "F" : pyflakes
+# "I" : isort
+# "N" :
+# "ANN" : flake8-annotations
+# "PL" :
+# "YTT" : flake8-2020
+select = ["B", "E", "F", "I", "N", "W", "ANN", "PL", "YTT"]
 # A list of rule codes or prefixes to ignore
-ignore = ["F401", "F841", "W505", "ARG"]
+ignore = ["F401", "F841", "W505", "ARG", "I001", "ANN001", "ANN101", "ANN102", "ANN201, "PLR2004", "N802", "N806", "N803", "ANN202", "E501"]
 
 # A list of rule codes or prefixes to consider autofixable
 fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
@@ -33,3 +41,17 @@ line-length = 150
 
 # The minimum Python version to target
 target-version = "py310"
+
+[tool.ruff.pylint]
+max-args = 10
+
+[tool.black]
+target-version = ['py310']
+line-length = 120
+
+
+[tool.mypy]
+python_version = "3.10"
+no_strict_optional = true
+ignore_missing_imports = true
+check_untyped_defs = true

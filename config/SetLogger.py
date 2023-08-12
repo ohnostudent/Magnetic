@@ -2,17 +2,16 @@
 
 import os
 import sys
-from logging import getLogger
-from logging import StreamHandler, FileHandler, Formatter
-from logging import DEBUG
 # from logging import WARNING, ERROR, CRITICAL, config
 from datetime import datetime, timedelta
+from logging import (DEBUG, FileHandler, Formatter, Logger, StreamHandler,
+                     getLogger)
 
-sys.path.append(os.getcwd()+"/src")
+sys.path.append(os.getcwd() + "/src")
 from config.params import LOG_DIR
 
 
-def logger_conf():
+def logger_conf() -> Logger:
     """
     ログ取得に関する関数
 

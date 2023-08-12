@@ -2,7 +2,7 @@
 
 import os
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -11,7 +11,7 @@ predoc = " "
 
 
 @app.route("/postdata", methods=["POST"])
-def writedata():
+def writedata() -> Response:
     req = request.json[0]
     response = {"status": "success", "message": ""}
     try:

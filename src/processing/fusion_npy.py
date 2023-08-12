@@ -15,7 +15,7 @@ sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
 
-class crateTrain(_kernel):
+class CrateTrain(_kernel):
     res = {0: "n", 1: "x", 2: "o"}
 
     def __init__(self) -> None:
@@ -43,7 +43,7 @@ class crateTrain(_kernel):
             np.save(base_path + f"/{val_param}_{dataset}.{para:02d}.{job:02d}_{centerx}.{centery}", separated_im)
 
     # 複数の変数を混合したデータを作成する
-    def loadBinaryData(self, img_path, val_params):
+    def loadBinaryData(self, img_path, val_params) -> list:
         im_list = []
         for val in val_params:
             im = np.load(img_path.replace(val_params[0], val))
@@ -51,7 +51,7 @@ class crateTrain(_kernel):
 
         return im_list
 
-    def saveFusionData(self, resim, out_path):
+    def saveFusionData(self, resim, out_path) -> None:
         if not os.path.exists(os.path.dirname(out_path)):
             os.mkdir(os.path.dirname(out_path))
 
@@ -61,13 +61,13 @@ class crateTrain(_kernel):
 def makeTrainingData(dataset: int) -> None:
     logger = getLogger("res_root").getChild(__name__)
 
+    md = CrateTrain()
     props_params = [
-        (["magfieldx", "magfieldy"], "mag_tupledxy", crateTrain().kernellistxy),
-        (["velocityx", "velocityy", "density"], "energy", crateTrain().kernelEnergy),
+        (["magfieldx", "magfieldy"], "mag_tupledxy", md.kernellistxy),
+        (["velocityx", "velocityy", "density"], "energy", md.kernelEnergy),
     ]
     OUT_DIR = ML_DATA_DIR + f"/snap{dataset}"
 
-    md = crateTrain()
     # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
         for a in labels:
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     dataset = set_dataset(dataset)
 
-    # md = crateTrain()
+    # md = CrateTrain()
     # for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
     #     md.cut_and_save(dataset, val)
 

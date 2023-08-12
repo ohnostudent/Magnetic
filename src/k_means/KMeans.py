@@ -6,13 +6,11 @@ from glob import glob
 
 import numpy as np
 import pandas as pd
-
-sys.path.append(os.getcwd())
-sys.path.append(os.getcwd() + "/src")
-
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
+sys.path.append(os.getcwd())
+sys.path.append(os.getcwd() + "/src")
 from config.params import ML_RESULT_DIR, SNAP_PATH
 from Visualization.SnapData import SnapData
 
@@ -26,21 +24,21 @@ class ClusteringMethod(SnapData):
 
     """
 
-    def compress(self, array, LEVEL=10):
+    def compress(self, array, level: int = 10) -> np.ndarray:
         """
         畳み込みを行う関数
 
         Args:
             array() : 畳み込みを行うデータ
-            LEVEL (int) : stride
+            level (int) : stride
 
         Returns:
             None
 
         """
-        return self._convolute(array, self._ave_carnel(LEVEL), stride=LEVEL)
+        return self._convolute(array, self._ave_kernel(level), stride=level)
 
-    def load_regularize(self, path: str):
+    def load_regularize(self, path: str) -> np.ndarray:
         """
         データのロードを行う関数
 
@@ -55,7 +53,7 @@ class ClusteringMethod(SnapData):
             im = np.load(path)
 
         elif type == ".npz":
-            print("npz doesnot supported")
+            print("npz does not supported")
             return
 
         else:  # バイナリの読み込み
@@ -64,7 +62,7 @@ class ClusteringMethod(SnapData):
         img_resize = self.compress(im)
         return ((img_resize - min(img_resize.flat)) / max(img_resize.flat)).flat  # 正規化
 
-    def PCA(self, X_train):
+    def PCA(self, X_train) -> np.ndarray:
         """PCA
         PCA を行う関数
 
@@ -84,7 +82,7 @@ class ClusteringMethod(SnapData):
 
         return X_train_pca
 
-    def KMeans(self, X_train_pca):
+    def KMeans(self, X_train_pca) -> np.ndarray:
         """
         KMeans を行う関数
 
@@ -100,7 +98,7 @@ class ClusteringMethod(SnapData):
 
         return cluster
 
-    def save_result(self, cluster_labels, path_list: list, dataset: int, save=True):
+    def save_result(self, cluster_labels, path_list: list, dataset: int, save=True) -> pd.DataFrame:
         """
         KMeans の結果を保存する関数
 
@@ -129,7 +127,7 @@ class ClusteringMethod(SnapData):
         return df_clustering_result
 
 
-def doClustering():
+def doClustering() -> None:
     from config.params import datasets, variable_parameters
     from config.SetLogger import logger_conf
 

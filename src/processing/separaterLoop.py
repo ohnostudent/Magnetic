@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 from config.params import BIN_PATH, ROOT_DIR, SNAP_PATH, SRC_PATH
 
 
-def _set_ij(logger, dataset):
+def _set_ij(logger, dataset) -> tuple | str:
     if dataset == 4949:
         i, j = 49, 49
     elif dataset == 77:
@@ -21,7 +21,7 @@ def _set_ij(logger, dataset):
         i, j = 49, 7
     else:
         logger.debug("Error", extra={"addinfo": ""})
-        raise "Value Error"
+        return "Value Error"
     return i, j
 
 
@@ -42,7 +42,7 @@ def _rename_file(xyz, item2):
     os.rename(item2, f"{item2[:-1]}{xyz[int(item2[-1])]}")  # separator.exe をもとに分割したファイル名を変換する
 
 
-def dataProcessing():
+def dataProcessing() -> None:
     logger = getLogger("res_root").getChild(__name__)
 
     # パラメータの定義
@@ -69,11 +69,11 @@ def dataProcessing():
 
             # 出力されたファイル名の変更
             for item2 in items2:
-                if os.path.exists(item1):
+                if os.path.exists(item2):
                     _rename_file(xyz, param, job, item2)
 
                 else:  # 見つからない場合
-                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item1}.{param:02d}.{job:02d}"})
+                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item2}.{param:02d}.{job:02d}"})
 
             # 出力されたファイルの移動
             for item1 in items1:

@@ -27,7 +27,7 @@ def _sort_paths(path_list):
     return list(map(lambda x: x[0], pjp_sorted))
 
 
-def createViewer(dataset):
+def createViewer(dataset) -> None:
     from logging import getLogger
 
     logger = getLogger("res_root").getChild(__name__)
@@ -40,8 +40,8 @@ def createViewer(dataset):
         # viewer用のファイル列を作成する
         path_list_str = "\n"
         for path in paths_sorted:
-            path = path.replace("\\", "/")
-            path_list_str += f"\t\t\t'{path}', \n"
+            path_str = path.replace("\\", "/")
+            path_list_str += f"\t\t\t'{path_str}', \n"
 
         # html の読み込み
         with open(SRC_PATH + "/Processing/viewer/template/viewer_template.html", "r", encoding="utf-8") as f:

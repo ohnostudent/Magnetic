@@ -5,7 +5,7 @@ import shutil
 from glob import glob
 
 
-def unpacking(root_dir):
+def unpacking(root_dir) -> None:
     zip_files = glob(root_dir + "\\*.zip")  # zipファイルの path の取得
     print("【 処理開始 】\n")
 

@@ -12,14 +12,14 @@ import numpy as np
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMAGES, SNAP_PATH, SRC_PATH
+from config.params import IMAGES, SNAP_PATH, SRC_PATH, datasets
 from Visualization.SnapData import SnapData
 
 
 class LicMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
 
-    def LIC(self, props: list):
+    def LIC(self, props: list) -> int:
         """
         LIC法可視化の実行
         /IMAGES/LIC 配下に .bmp を作成
@@ -51,10 +51,10 @@ class LicMethod(SnapData):
 
         """
 
-        self.logger.debug("START", extra={"addinfo": f"make props\n"})
+        self.logger.debug("START", extra={"addinfo": "make props\n"})
 
         # コマンドの作成
-        props = [SRC_PATH + f"/LIC/LIC.exe", xfile, yfile, out_name]
+        props = [SRC_PATH + "/LIC/LIC.exe", xfile, yfile, out_name]
         xfile_is_not_exist = not os.path.exists(xfile)
         yfile_is_not_exist = not os.path.exists(yfile)
 
@@ -76,7 +76,7 @@ class LicMethod(SnapData):
         # else:
         #     pass
 
-        self.logger.debug("COMP", extra={"addinfo": f"make props\n"})
+        self.logger.debug("COMP", extra={"addinfo": "make props\n"})
         return props
 
     def _create_tempfile(self, data, xy: str) -> str:
@@ -124,7 +124,7 @@ class LicMethod(SnapData):
         os.remove(ytempfile)
 
 
-def mainProcess(lic: LicMethod, dir_basename: str, base_out_path: str, binary_paths: list[str]):
+def main_process(lic: LicMethod, dir_basename: str, base_out_path: str, binary_paths: list[str]) -> None:
     logger = getLogger("res_root").getChild(__name__)
 
     for xfile in binary_paths:
@@ -155,10 +155,7 @@ def mainProcess(lic: LicMethod, dir_basename: str, base_out_path: str, binary_pa
             logger.debug(str(e), extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 中断\n"})
 
 
-from config.params import datasets
-
-
-def LICMainProcess(dataset, size):
+def LICMainProcess(dataset, size) -> None:
     """
     処理時間の目安
     snap77   : 778(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
@@ -174,7 +171,6 @@ def LICMainProcess(dataset, size):
     -> 204.58 (時間)
 
     """
-
     from concurrent.futures import ThreadPoolExecutor
 
     logger = getLogger("res_root").getChild(__name__)
@@ -203,26 +199,26 @@ def LICMainProcess(dataset, size):
 
         # ファイルが無い場合
         if binary_paths == []:
-            logger.debug("ERROR", extra={"addinfo": f"File not Found\n"})
+            logger.debug("ERROR", extra={"addinfo": "File not Found\n"})
             return
 
         file_count = len(binary_paths)
         with ThreadPoolExecutor() as exec:  # 並列処理 # max_workers は自信のCPUのコア数と相談してください
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[: file_count // 10])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 : file_count // 10 * 2])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 2 : file_count // 10 * 3])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 3 : file_count // 10 * 4])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 4 : file_count // 10 * 5])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 5 : file_count // 10 * 6])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 6 : file_count // 10 * 7])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 7 : file_count // 10 * 8])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 8 : file_count // 10 * 9])
-            exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 9 :])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[: file_count // 10])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 : file_count // 10 * 2])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 2 : file_count // 10 * 3])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 3 : file_count // 10 * 4])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 4 : file_count // 10 * 5])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 5 : file_count // 10 * 6])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 6 : file_count // 10 * 7])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 7 : file_count // 10 * 8])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 8 : file_count // 10 * 9])
+            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 9 :])
 
         logger.debug("END", extra={"addinfo": f"{dataset} 終了\n"})
 
     except KeyboardInterrupt:
-        logger.debug("ERROR", extra={"addinfo": f"処理中断\n"})
+        logger.debug("ERROR", extra={"addinfo": "処理中断\n"})
 
     except Exception as e:
         logger.debug("ERROR", extra={"addinfo": f"{e}\n"})

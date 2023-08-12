@@ -75,7 +75,7 @@ class VisualizeMethod(SnapData):
         return np.arccos(u / np.sqrt(u**2 + v**2))
 
     # ヒートマップの描画
-    def drawHeatmap(self, path, save_img=True, bar_range=None):
+    def drawHeatmap(self, path, save_img=True, bar_range=None) -> None:
         # 描画
         snap_data = self.loadSnapData(path)
         plt.figure(figsize=(10, 15))
@@ -88,7 +88,7 @@ class VisualizeMethod(SnapData):
         self._save_fig(f"/heatmap/{self.val_param}", save_img)
 
     # エッジの表示
-    def drawEdge(self, path, save=True):
+    def drawEdge(self, path, save=True) -> None:
         # cv2で扱える0-255の整数に整形
         snap_data = self.loadSnapData(path)
         snap_data = (snap_data - min(snap_data.flat)) * 254 / max(snap_data.flat)
@@ -111,7 +111,7 @@ class VisualizeMethod(SnapData):
         plt.close()
 
     # ベクトル場の可視化
-    def drawStream(self, X, Y, compress=0):
+    def drawStream(self, X, Y, compress=0) -> None:
         # dataX = X[350:700]
         # dataY = Y[350:700]
         dataX = X[350:700, 270:590]
@@ -165,7 +165,7 @@ class VisualizeMethod(SnapData):
         # plt._save_fig(IMAGES}1111/{number}.png")
         # plt.show()
 
-    def stream_plt(self, X, Y, xrange=False, yrange=False, compress=0):
+    def stream_plt(self, X, Y, xrange=False, yrange=False, compress=0) -> None:
         dataX = X
         dataY = Y
         if xrange:
@@ -225,7 +225,7 @@ class VisualizeMethod(SnapData):
         # plt.show()
 
     # 流線のヒートマップ可視化
-    def drawStreamHeatmap(self, magx1, magy1, magx2, magy2, save=True):
+    def drawStreamHeatmap(self, magx1, magy1, magx2, magy2, save=True) -> None:
         # データのロード
         dataX1 = magx1[350:700, 270:590]
         dataX2 = magx2[350:700, 270:590]
@@ -269,7 +269,7 @@ class VisualizeMethod(SnapData):
         self._save_fig(path, save)
 
     # エネルギーの速さと密度について
-    def drawEnergy_for_velocity(self, dens_path, vx_path, vy_path, save=True):
+    def drawEnergy_for_velocity(self, dens_path, vx_path, vy_path, save=True) -> None:
         # データのロード
         dens_data = self.loadSnapData(dens_path)
         vx_data = self.loadSnapData(vx_path)
@@ -281,11 +281,11 @@ class VisualizeMethod(SnapData):
         sns.heatmap(energy)
 
         # グラフの保存
-        path = f"/Energy_velocity"
+        path = "/Energy_velocity"
         self._save_fig(path, save)
 
     # エネルギーの磁場について
-    def drawEnergy_for_magfield(self, magx_path, magy_path, save=True):
+    def drawEnergy_for_magfield(self, magx_path, magy_path, save=True) -> None:
         # データのロード
         magx_data = self.loadSnapData(magx_path)
         magy_data = self.loadSnapData(magy_path)
@@ -296,11 +296,11 @@ class VisualizeMethod(SnapData):
         sns.heatmap(bhoge)
 
         # グラフの保存
-        path = f"/Energy_magfield"
+        path = "/Energy_magfield"
         self._save_fig(path, save)
 
     # 保存
-    def _save_fig(self, path, save=True):
+    def _save_fig(self, path, save=True) -> None:
         # フォルダの作成
         file_path = f"/visualization/{path}/snap{self.dataset}/{self.job :02d}"
 
@@ -315,7 +315,7 @@ class VisualizeMethod(SnapData):
         plt.close()
 
 
-def gridHeatmap():
+def gridHeatmap() -> None:
     from glob import glob
 
     from config.params import SNAP_PATH, datasets
@@ -334,20 +334,20 @@ def gridHeatmap():
         files = {}  # glob した path の保存
 
         # エネルギーの速さと密度の可視化
-        files["density"] = glob(target_path + f"/density/*/*")
-        files["velocityx"] = glob(target_path + f"/velocityx/*/*")
-        files["velocityy"] = glob(target_path + f"/velocityy/*/*")
-        for dens_path, vx_path, vy_path in zip(files["density"], files["velocityx"], files["velocityy"]):
+        files["density"] = glob(target_path + "/density/*/*")
+        files["velocityx"] = glob(target_path + "/velocityx/*/*")
+        files["velocityy"] = glob(target_path + "/velocityy/*/*")
+        for dens_path, vx_path, vy_path in zip(files["density"], files["velocityx"], files["velocityy"], strict=True):
             viz.drawEnergy_for_velocity(dens_path, vx_path, vy_path)
 
         # エネルギーの磁場の可視化
-        files["magfieldx"] = glob(target_path + f"/magfieldx/*/*")
-        files["magfieldy"] = glob(target_path + f"/magfieldy/*/*")
-        for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"]):
+        files["magfieldx"] = glob(target_path + "/magfieldx/*/*")
+        files["magfieldy"] = glob(target_path + "/magfieldy/*/*")
+        for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"], strict=True):
             viz.drawEnergy_for_magfield(magx_path, magy_path)
 
         # Heatmap と edge の可視化
-        files["enstrophy"] = glob(target_path + f"/enstrophy/*/*")
+        files["enstrophy"] = glob(target_path + "/enstrophy/*/*")
         for val_param in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:
             for path in files[val_param]:
                 viz.drawHeatmap(path)

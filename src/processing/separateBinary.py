@@ -11,7 +11,7 @@ sys.path.append(os.getcwd() + "/src")
 from Visualization.SnapData import SnapData
 
 
-def separate_binary(in_dir, out_dir, sep, sepy, targets):
+def separate_binary(in_dir, out_dir, sep, sepy, targets) -> None:
     # ログの取得
     logger = getLogger("res_root").getChild(__name__)
     logger.debug("Main Start", extra={"addinfo": ""})

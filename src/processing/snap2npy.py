@@ -9,7 +9,7 @@ sys.path.append(os.getcwd() + "/src")
 from Visualization.SnapData import SnapData
 
 
-def snap2npy(sp: SnapData, path: str, dataset: int):
+def snap2npy(sp: SnapData, path: str, dataset: int) -> None:
     data = sp.loadSnapData(path)
     # print(data.shape)
 
@@ -53,7 +53,7 @@ def _snap_all(path: str, dataset: int, data) -> None:
     np.save(out_path_all, data)
 
 
-def doSnap2npy(dataset: int):
+def doSnap2npy(dataset: int) -> None:
     from glob import glob
     from logging import getLogger
 
@@ -89,20 +89,20 @@ def doSnap2npy(dataset: int):
         logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
 
 
-def main():
+def main() -> None:
     from concurrent.futures import ThreadPoolExecutor
 
     from config.SetLogger import logger_conf
 
     logger = logger_conf()
-    logger.debug("START", extra={"addinfo": f"処理開始"})
+    logger.debug("START", extra={"addinfo": "処理開始"})
 
     with ThreadPoolExecutor(max_workers=6) as exec:
         exec.submit(doSnap2npy, 77)
         exec.submit(doSnap2npy, 497)
         exec.submit(doSnap2npy, 4949)
 
-    logger.debug("END", extra={"addinfo": f"処理終了"})
+    logger.debug("END", extra={"addinfo": "処理終了"})
 
 
 if __name__ == "__main__":
