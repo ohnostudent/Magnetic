@@ -25,6 +25,7 @@ class ClusteringMethod(SnapData):
     Returns:
 
     """
+
     def compress(self, array, LEVEL=10):
         """
         畳み込みを行う関数
@@ -37,7 +38,7 @@ class ClusteringMethod(SnapData):
             None
 
         """
-        return self._convolute(array, self._ave_carnel(LEVEL), stride = LEVEL)
+        return self._convolute(array, self._ave_carnel(LEVEL), stride=LEVEL)
 
     def load_regularize(self, path: str):
         """
@@ -57,11 +58,11 @@ class ClusteringMethod(SnapData):
             print("npz doesnot supported")
             return
 
-        else: # バイナリの読み込み
+        else:  # バイナリの読み込み
             im = self.loadSnapData(path, z=3)
 
         img_resize = self.compress(im)
-        return ((img_resize - min(img_resize.flat)) / max(img_resize.flat)).flat # 正規化
+        return ((img_resize - min(img_resize.flat)) / max(img_resize.flat)).flat  # 正規化
 
     def PCA(self, X_train):
         """PCA
@@ -76,10 +77,10 @@ class ClusteringMethod(SnapData):
         """
 
         # PCA
-        N_dim =  100 # 49152(=128×128×3)の列を100列に落とし込む
+        N_dim = 100  # 49152(=128×128×3)の列を100列に落とし込む
         pca = PCA(n_components=N_dim, random_state=0)
         X_train_pca = pca.fit_transform(X_train)
-        print('累積寄与率: {0}'.format(sum(pca.explained_variance_ratio_)))
+        print("累積寄与率: {0}".format(sum(pca.explained_variance_ratio_)))
 
         return X_train_pca
 
@@ -95,7 +96,7 @@ class ClusteringMethod(SnapData):
         """
         model = KMeans(n_clusters=4, random_state=1)
         model.fit(X_train_pca)
-        cluster = model.labels_#ラベルを返す
+        cluster = model.labels_  # ラベルを返す
 
         return cluster
 
@@ -118,8 +119,8 @@ class ClusteringMethod(SnapData):
         columns = ["cluster"]
         df_clustering_result = pd.DataFrame(cluster_labels, index=index, columns=columns)
         df_clustering_result = df_clustering_result.reset_index()
-        df_clustering_result[['parameter', 'param', 'job']] = df_clustering_result["index"].str.split('.', expand=True)
-        df_clustering_result = df_clustering_result[['parameter', 'param', 'job', 'cluster']]
+        df_clustering_result[["parameter", "param", "job"]] = df_clustering_result["index"].str.split(".", expand=True)
+        df_clustering_result = df_clustering_result[["parameter", "param", "job", "cluster"]]
 
         # 保存
         if save:
@@ -146,9 +147,9 @@ def doClustering():
             # パスの取得
             path_list = glob(SNAP_PATH + f"/snap{dataset}/{val_param}/*/*")
 
-            num_of_data = len(path_list) # リコネクションがない画像の枚数
-            temp_data = cluster.compress(cluster.loadSnapData(path_list[0],z=3))
-            IMGSHAPE = temp_data.shape # 画像サイズ
+            num_of_data = len(path_list)  # リコネクションがない画像の枚数
+            temp_data = cluster.compress(cluster.loadSnapData(path_list[0], z=3))
+            IMGSHAPE = temp_data.shape  # 画像サイズ
 
             # 行列の列数
             N_col = IMGSHAPE[0] * IMGSHAPE[1] * 1
@@ -160,7 +161,7 @@ def doClustering():
             # リコネクションがない画像を行列に読み込む
             for idx, path in enumerate(path_list[:10]):
                 X_train[idx, :] = cluster.load_regularize(path)
-                y_train[idx] = 0 # リコネクションがないことを表すラベル
+                y_train[idx] = 0  # リコネクションがないことを表すラベル
 
             # 処理の開始
             X_train_pca = cluster.PCA(X_train)

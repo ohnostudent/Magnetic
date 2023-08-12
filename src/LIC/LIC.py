@@ -58,7 +58,7 @@ class LicMethod(SnapData):
         xfile_isnot_exist = not os.path.exists(xfile)
         yfile_isnot_exist = not os.path.exists(yfile)
 
-        if xfile_isnot_exist and yfile_isnot_exist: # どちらかがない場合
+        if xfile_isnot_exist and yfile_isnot_exist:  # どちらかがない場合
             props += list(map(str, [xfile_isnot_exist, yfile_isnot_exist]))
 
         elif (xfile[-4:] == ".npy") and (yfile[-4:] == ".npy"):
@@ -68,10 +68,10 @@ class LicMethod(SnapData):
             props += list(map(str, list(reversed(xdata.shape))))
 
             # npy1次元のファイルを作って無理やり読み込ます。そして消す。名前はランダムにして
-            xtempfile = self._create_tempfile(xdata, 'x')
-            ytempfile = self._create_tempfile(ydata, 'y')
+            xtempfile = self._create_tempfile(xdata, "x")
+            ytempfile = self._create_tempfile(ydata, "y")
 
-            props[1], props[2] = xtempfile, ytempfile # 引数に指定
+            props[1], props[2] = xtempfile, ytempfile  # 引数に指定
 
         # else:
         #     pass
@@ -93,15 +93,15 @@ class LicMethod(SnapData):
         """
 
         # コマンドを保存するための.tempファイルの作成
-        while True: # 同じファイルを作成しないようにする
+        while True:  # 同じファイルを作成しないようにする
             tempfile_path = SRC_PATH + f"/LIC/temp/lic_command_{xy}_reading{random.randint(10000, 99999)}.temp"
 
             if not os.path.exists(tempfile_path):
                 break
 
-        with open(tempfile_path, "wb") as f: # .tempファイルに書き込み
-            for val in list(data.flat)*3: # *3は元のデータがz軸方向に3重なっているのを表現
-                b = pack('f', val)
+        with open(tempfile_path, "wb") as f:  # .tempファイルに書き込み
+            for val in list(data.flat) * 3:  # *3は元のデータがz軸方向に3重なっているのを表現
+                b = pack("f", val)
                 f.write(b)
             f.close()
         return tempfile_path
@@ -122,7 +122,6 @@ class LicMethod(SnapData):
         # 一時的に作成した .tempファイルの削除
         os.remove(xtempfile)
         os.remove(ytempfile)
-
 
 
 def mainProcess(lic: LicMethod, dir_basename: str, base_out_path: str, binary_paths: list[str]):
@@ -177,6 +176,7 @@ def LICMainProcess(dataset, size):
     """
 
     from concurrent.futures import ThreadPoolExecutor
+
     logger = getLogger("res_root").getChild(__name__)
 
     try:
@@ -193,13 +193,13 @@ def LICMainProcess(dataset, size):
 
         # 入出力用path の作成
         indir = SNAP_PATH + f"/{size}/snap{dataset}"
-        dir_basename = os.path.basename(indir) # snap77
+        dir_basename = os.path.basename(indir)  # snap77
         out_dir = IMGOUT + "/LIC"
-        base_out_path = out_dir + "/" + os.path.basename(indir) + "/" + size.split('_')[1] # ./imgout/LIC/snap77/left
+        base_out_path = out_dir + "/" + os.path.basename(indir) + "/" + size.split("_")[1]  # ./imgout/LIC/snap77/left
         lic.makedir(f"/LIC/snap{dataset}/{size.split('_')[1]}")
 
         # バイナリファイルの取得
-        binary_paths = glob(indir+"/magfieldx/*/*.npy")
+        binary_paths = glob(indir + "/magfieldx/*/*.npy")
 
         # ファイルが無い場合
         if binary_paths == []:
@@ -207,7 +207,7 @@ def LICMainProcess(dataset, size):
             return
 
         file_count = len(binary_paths)
-        with ThreadPoolExecutor() as exec: # 並列処理 # max_workers は自信のCPUのコア数と相談してください
+        with ThreadPoolExecutor() as exec:  # 並列処理 # max_workers は自信のCPUのコア数と相談してください
             exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[: file_count // 10])
             exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 : file_count // 10 * 2])
             exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 2 : file_count // 10 * 3])
@@ -238,4 +238,3 @@ if __name__ == "__main__":
     for dataset in datasets:
         for size in ["half_left", "half_right"]:
             LICMainProcess(dataset, size)
-

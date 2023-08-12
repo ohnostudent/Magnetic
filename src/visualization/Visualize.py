@@ -23,7 +23,6 @@ class VisualizeMethod(SnapData):
         super().__init__()
         self.dataset = dataset
 
-
     # 離散データの微分
     def _diff(self, x, h):
         """
@@ -41,10 +40,10 @@ class VisualizeMethod(SnapData):
         xは時系列データ,hはデータ間の時間(second)
         ベクトル長が4短くなる
         """
-        res = -x[4:] + 8*x[3:-1] - 8*x[1:-3] + x[:-4]
+        res = -x[4:] + 8 * x[3:-1] - 8 * x[1:-3] + x[:-4]
         return res / (12 * h)
 
-    def _diff4_xy(self, data: np.ndarray, h:float, vectol: str):
+    def _diff4_xy(self, data: np.ndarray, h: float, vectol: str):
         """
         diff4を使った行列の横方向偏微分
         """
@@ -59,8 +58,8 @@ class VisualizeMethod(SnapData):
                 res = np.append(res, self._diff4(vec, h))
 
         if vectol == "y":
-            return res.reshape(data.shape[0], data.shape[1]-4).T
-        return res.reshape(data.shape[0], data.shape[1]-4)
+            return res.reshape(data.shape[0], data.shape[1] - 4).T
+        return res.reshape(data.shape[0], data.shape[1] - 4)
 
     def _rot2d(self, vX: np.ndarray, vY: np.ndarray):
         """
@@ -74,11 +73,11 @@ class VisualizeMethod(SnapData):
         e = np.array([1,0,0])
         mylist = [[j *e for j in i ] for i in a]
         """
-        return self._diff4_xy(vY,1)[2:-2,] - self._diff4_xy(vX,1)[:, 2:-2]
+        return self._diff4_xy(vY, 1)[2:-2,] - self._diff4_xy(vX, 1)[:, 2:-2]
 
     # 角度の計算
-    def _calc_radian(self, u,v):
-        return np.arccos(u / np.sqrt(u ** 2 + v ** 2))
+    def _calc_radian(self, u, v):
+        return np.arccos(u / np.sqrt(u**2 + v**2))
 
     # ヒートマップの描画
     def drawHeatmap(self, path, saveimg=True, bar_range=None):
@@ -95,9 +94,9 @@ class VisualizeMethod(SnapData):
 
     # エッジの表示
     def drawEdge(self, path, save=True):
-        #cv2で扱える0-255の整数に整形
+        # cv2で扱える0-255の整数に整形
         snap_data = self.loadSnapData(path)
-        snap_data = (snap_data - min(snap_data.flat))*254 / max(snap_data.flat)
+        snap_data = (snap_data - min(snap_data.flat)) * 254 / max(snap_data.flat)
         snap_data = snap_data.astype("uint8")
 
         # plt 可視化
@@ -126,7 +125,7 @@ class VisualizeMethod(SnapData):
         # sep = [[270,590],[520,840],[770,1090],[1000,1320],[1320,1640],[1580,1900],[1890,2210],[2100,2420],[2360,2680]]
         # sepy = [330,650]
 
-        #計算が重いので平滑化フィルターの畳み込みで圧縮
+        # 計算が重いので平滑化フィルターの畳み込みで圧縮
         if compress:
             carnel1 = self._ave_carnel(compress)
             carnel2 = carnel1.T
@@ -135,25 +134,25 @@ class VisualizeMethod(SnapData):
 
         x = range(dataX.shape[1])
         y = range(dataY.shape[0])
-        #X,Y方向それぞれのベクトルに対して座標の行列を設定
+        # X,Y方向それぞれのベクトルに対して座標の行列を設定
         X, Y = np.meshgrid(x, y)
-        #X,Y方向それぞれのベクトルの強さ
+        # X,Y方向それぞれのベクトルの強さ
         u = dataX
         v = dataY
         #########rotの計算途中の微分でデータの端っこが削れる
         rot = self._rot2d(u, v)
-        u = u[2:-2,2:-2]
-        v = v[2:-2,2:-2]
-        X = X[2:-2,2:-2]
-        Y = Y[2:-2,2:-2]
+        u = u[2:-2, 2:-2]
+        v = v[2:-2, 2:-2]
+        X = X[2:-2, 2:-2]
+        Y = Y[2:-2, 2:-2]
         ##########
-        color = u ** 2 + v ** 2
+        color = u**2 + v**2
         color = color * 2 / max(color.flat)
-        rad = np.arccos(u / np.sqrt(u ** 2 + v ** 2))
+        rad = np.arccos(u / np.sqrt(u**2 + v**2))
         color2 = np.array(v) / np.array(u)
         color2 = color2 - min(color2.flat)
         color2 = color2 / max(color2.flat)
-        speed = np.sqrt(u ** 2 + v ** 2)
+        speed = np.sqrt(u**2 + v**2)
         lw = 7 * speed / speed.max()
 
         fig = plt.figure(1)
@@ -161,59 +160,59 @@ class VisualizeMethod(SnapData):
         # show(rot,bar_range=[-0.05,0.05])
         # sns.heatmap(dataY)
         # strm = plt.streamplot(X, Y, u, v, density=[5], color=color, arrowstyle='-', linewidth=1,cmap="rainbow")
-        strm = plt.streamplot(X, Y, u, v, density=[3], color=rot, arrowstyle='-', linewidth=lw,cmap="rainbow")
+        strm = plt.streamplot(X, Y, u, v, density=[3], color=rot, arrowstyle="-", linewidth=lw, cmap="rainbow")
         # strm = plt.streamplot(X, Y, u, v, density=[0.5], color=rad, arrowstyle='-', linewidth=1,cmap="rainbow", minlength=0.001)
-        rad2 = abs(rad - (3.1415927/2))
+        rad2 = abs(rad - (3.1415927 / 2))
         # sns.heatmap(rad2, cmap="bone")
         # strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
 
-        #fig.colorbar(strm.lines)
+        # fig.colorbar(strm.lines)
         # plt._savefig(IMGOUT}1111/{number}.png")
         # plt.show()
 
-    def stream_plt(self, X, Y, xrange=False, yrange= False, compress=0):
+    def stream_plt(self, X, Y, xrange=False, yrange=False, compress=0):
         dataX = X
         dataY = Y
         if xrange:
             # dataX = X[350:700, 304:384]
             # dataY = Y[350:700, 304:384]
-            dataX = dataX[:,xrange[0]:xrange[1]]
-            dataY = dataY[:,xrange[0]:xrange[1]]
+            dataX = dataX[:, xrange[0] : xrange[1]]
+            dataY = dataY[:, xrange[0] : xrange[1]]
 
         if yrange:
-            dataX = dataX[yrange[0]:yrange[1],:]
-            dataY = dataY[yrange[0]:yrange[1],:]
+            dataX = dataX[yrange[0] : yrange[1], :]
+            dataY = dataY[yrange[0] : yrange[1], :]
 
-        #計算が重いので平滑化フィルターの畳み込みで圧縮
+        # 計算が重いので平滑化フィルターの畳み込みで圧縮
         if compress:
             carnel1 = self._ave_carnel(compress)
             carnel2 = carnel1.T
-            dataX = self._convolute(dataX, carnel2,stride=compress)
-            dataY = self._convolute(dataY, carnel1,stride=compress)
+            dataX = self._convolute(dataX, carnel2, stride=compress)
+            dataY = self._convolute(dataY, carnel1, stride=compress)
         x = range(dataX.shape[1])
         y = range(dataY.shape[0])
-        #X,Y方向それぞれのベクトルに対して座標の行列を設定
+        # X,Y方向それぞれのベクトルに対して座標の行列を設定
         X, Y = np.meshgrid(x, y)
-        #X,Y方向それぞれのベクトルの強さ
+        # X,Y方向それぞれのベクトルの強さ
         u = dataX
         v = dataY
         color = u**2 + v**2
-        color = color*2/max(color.flat)
+        color = color * 2 / max(color.flat)
         #########rotの計算途中の微分でデータの端っこが削れる
         rot = self._rot2d(u, v)
-        u = u[2:-2,2:-2]
-        v = v[2:-2,2:-2]
-        X = X[2:-2,2:-2]
-        Y = Y[2:-2,2:-2]
+        u = u[2:-2, 2:-2]
+        v = v[2:-2, 2:-2]
+        X = X[2:-2, 2:-2]
+        Y = Y[2:-2, 2:-2]
         ##########
-        rad = np.arccos(u/np.sqrt(u**2+v**2))
+        rad = np.arccos(u / np.sqrt(u**2 + v**2))
         color2 = np.array(v) / np.array(u)
         color2 = color2 - min(color2.flat)
-        color2 = color2/max(color2.flat)
+        color2 = color2 / max(color2.flat)
         speed = np.sqrt(u**2 + v**2)
-        lw = 7*speed / speed.max()
+        lw = 7 * speed / speed.max()
 
-        fig = plt.figure(figsize=[24,14])
+        fig = plt.figure(figsize=[24, 14])
         ax = fig.add_subplot()
         ax.set_title(f"x:{xrange},y:{yrange}")
         # plt.contour(X,Y,rad)
@@ -221,14 +220,13 @@ class VisualizeMethod(SnapData):
         sns.heatmap(rad, cmap="bwr")
         # sns.heatmap(dataY)
         # plot = plt.pcolor(rad, cmap="bwr")
-        #strm = plt.streamplot(X, Y, u, v, density=[5], color=color, arrowstyle='-', linewidth=1,cmap="rainbow")
+        # strm = plt.streamplot(X, Y, u, v, density=[5], color=color, arrowstyle='-', linewidth=1,cmap="rainbow")
         # strm = plt.streamplot(X, Y, u, v, density=[3], color=rot, arrowstyle='-', linewidth=lw,cmap="rainbow")
-        strm = plt.streamplot(X, Y, u, v, density=[5], color="black", arrowstyle='-', linewidth=1.5,cmap="bwr", minlength=0.001)
+        strm = plt.streamplot(X, Y, u, v, density=[5], color="black", arrowstyle="-", linewidth=1.5, cmap="bwr", minlength=0.001)
 
+        # strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
 
-        #strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
-
-        #fig.colorbar(strm.lines)
+        # fig.colorbar(strm.lines)
         # plt.show()
 
     # 流線のヒートマップ可視化
@@ -269,7 +267,7 @@ class VisualizeMethod(SnapData):
         ax1.pcolor(rad, cmap="brg", vmax=0.1, vmin=-0.1)
 
         ax2 = plt.subplot(2, 1, 2)
-        ax2.pcolor(dataX1, vmax = 0.03)
+        ax2.pcolor(dataX1, vmax=0.03)
 
         # グラフの保存
         path = "/StreamHeatmap"
@@ -284,7 +282,7 @@ class VisualizeMethod(SnapData):
 
         # グラフの描画
         plt.figure(figsize=(40, 20))
-        energy = dens_data * (vx_data ** 2 + vy_data ** 2) / 2
+        energy = dens_data * (vx_data**2 + vy_data**2) / 2
         sns.heatmap(energy)
 
         # グラフの保存
@@ -299,7 +297,7 @@ class VisualizeMethod(SnapData):
 
         # グラフの描画
         plt.figure(figsize=(40, 20))
-        bhoge = (magx_data ** 2 + magy_data ** 2) / 2
+        bhoge = (magx_data**2 + magy_data**2) / 2
         sns.heatmap(bhoge)
 
         # グラフの保存
@@ -322,7 +320,6 @@ class VisualizeMethod(SnapData):
         plt.close()
 
 
-
 def gridHeatmap():
     from glob import glob
 
@@ -339,7 +336,7 @@ def gridHeatmap():
         # インスタンスの生成
         viz = VisualizeMethod(dataset)
 
-        files = {} # glob した path の保存
+        files = {}  # glob した path の保存
 
         # エネルギーの速さと密度の可視化
         files["density"] = glob(target_path + f"/density/*/*")

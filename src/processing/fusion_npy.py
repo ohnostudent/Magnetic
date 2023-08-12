@@ -16,7 +16,7 @@ sys.path.append(os.getcwd() + "/src")
 
 
 class crateTrain(_kernel):
-    res = {0: 'n', 1: 'x', 2: 'o'}
+    res = {0: "n", 1: "x", 2: "o"}
 
     def __init__(self) -> None:
         pass
@@ -35,13 +35,12 @@ class crateTrain(_kernel):
             label = d["label"]
 
             img = np.load(SNAP_PATH + f"/half_{side}/snap{dataset}/{val_param}/{job:02d}/{val_param}.{para:02d}.{job:02d}.npy")
-            separated_im = img[ylow: yup, xlow: xup]
+            separated_im = img[ylow:yup, xlow:xup]
 
             base_path = ML_DATA_DIR + f"/snap{dataset}/point_{self.res[label]}/{val_param}"
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
             np.save(base_path + f"/{val_param}_{dataset}.{para:02d}.{job:02d}_{centerx}.{centery}", separated_im)
-
 
     # 複数の変数を混合したデータを作成する
     def loadBinaryData(self, impath, val_params):
@@ -53,11 +52,10 @@ class crateTrain(_kernel):
         return im_list
 
     def saveFusionData(self, resim, outpath):
-        if  not os.path.exists(os.path.dirname(outpath)):
+        if not os.path.exists(os.path.dirname(outpath)):
             os.mkdir(os.path.dirname(outpath))
 
         np.save(outpath, resim)
-
 
 
 def makeTrainingData(dataset: int) -> None:
@@ -65,25 +63,25 @@ def makeTrainingData(dataset: int) -> None:
 
     props_params = [
         (["magfieldx", "magfieldy"], "mag_tupledxy", crateTrain().kernellistxy),
-        (["velocityx", "velocityy", "density"], "energy", crateTrain().kernelEnergy)
+        (["velocityx", "velocityy", "density"], "energy", crateTrain().kernelEnergy),
     ]
     OUT_DIR = ML_DATA_DIR + f"/snap{dataset}"
 
     md = crateTrain()
-    #/imgout/0131_not/density/density_49.50.8_9.528
+    # /imgout/0131_not/density/density_49.50.8_9.528
     for val_params, outbasename, kernel in props_params:
         for a in labels:
             npys = OUT_DIR + f"/point_{a}"
 
-            for impath in glob(npys + "/" + val_params[0] +"/*.npy"):
-                im_list = md.loadBinaryData(impath, val_params) # 混合データのロード
-                resim = kernel(*im_list) # データの作成
+            for impath in glob(npys + "/" + val_params[0] + "/*.npy"):
+                im_list = md.loadBinaryData(impath, val_params)  # 混合データのロード
+                resim = kernel(*im_list)  # データの作成
 
                 # 保存先のパスの作成
                 # /MLdata/snap{dataset}/{outbasename}/{outbasename}_{dataset}.{param}.{job}_{centerx}.{centery}.npy
                 # /MLdata/snap77/energy/energy_77.01.03_131.543.npy
                 outpath = npys + "/" + outbasename + "/" + os.path.basename(impath).replace(val_params[0], outbasename)
-                md.saveFusionData(resim, outpath) # データの保存
+                md.saveFusionData(resim, outpath)  # データの保存
 
 
 if __name__ == "__main__":
@@ -94,6 +92,7 @@ if __name__ == "__main__":
         dataset = sys.argv[1]
 
     from config.params import set_dataset
+
     dataset = set_dataset(dataset)
 
     # md = crateTrain()

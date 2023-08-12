@@ -10,7 +10,7 @@ sys.path.append(os.getcwd())
 from config.params import IMGOUT
 
 
-class SnapData():
+class SnapData:
     """
     _convolute, _ave_carnel, _calc -> Visualize.py, /k-means/Clustering.py にて使用
     """
@@ -30,17 +30,17 @@ class SnapData():
 
         # データのインポート
         # if os.path.splitext(file_path)[1] == "npy": # 拡張子の判定
-        if file_path[-4:] == ".npy": # 拡張子なしの場合を考慮するとこの形になる？
+        if file_path[-4:] == ".npy":  # 拡張子なしの場合を考慮するとこの形になる？
             # self.val_param, self.param, self.job, _ = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split('.'))
             return np.load(file_path)
 
-        self.val_param, self.param, self.job = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split('.'))
+        self.val_param, self.param, self.job = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file_path).split("."))
         # r : 読み込み, b : バイナリモード
         with open(file_path, mode="rb") as f:
             if z == 1:
-                snap_data = np.fromfile(f, dtype='f', sep='').reshape(1025, 513)
+                snap_data = np.fromfile(f, dtype="f", sep="").reshape(1025, 513)
             elif z == 3:
-                snap_data = np.fromfile(f, dtype='f', sep='')[:525825].reshape(1025, 513)
+                snap_data = np.fromfile(f, dtype="f", sep="")[:525825].reshape(1025, 513)
 
             f.close()
         return snap_data
@@ -69,8 +69,8 @@ class SnapData():
 
         c_width = carnel.shape[1]
         c_height = carnel.shape[0]
-        result_width = int((data.shape[1] + 2*padding - c_width) / stride + 1)
-        result_height = int((data.shape[0] + 2*padding - c_height) / stride + 1)
+        result_width = int((data.shape[1] + 2 * padding - c_width) / stride + 1)
+        result_height = int((data.shape[0] + 2 * padding - c_height) / stride + 1)
         convoluted = np.zeros((result_height, result_width))
 
         orgY = 0
@@ -85,12 +85,11 @@ class SnapData():
 
         return convoluted
 
-
     def _ave_carnel(self, size: int):
         """
         畳み込みにおける平滑化のカーネル作成
         """
-        ones = np.ones((size,size))
+        ones = np.ones((size, size))
         res = ones / (size**2)
         return res
 

@@ -6,7 +6,7 @@ from glob import glob
 
 
 def unpacking(root_dir):
-    zip_files = glob(root_dir+"\\*.zip") # zipファイルの path の取得
+    zip_files = glob(root_dir + "\\*.zip")  # zipファイルの path の取得
     print("【 処理開始 】\n")
 
     print("【 解凍開始 ")

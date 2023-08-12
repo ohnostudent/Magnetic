@@ -1,4 +1,4 @@
-#　教師データの作成用。ビューワと併用する。
+# 　教師データの作成用。ビューワと併用する。
 
 import os
 
@@ -9,14 +9,15 @@ app = Flask(__name__)
 cors = CORS(app, supports_credentials=True)
 predoc = " "
 
+
 @app.route("/postdata", methods=["POST"])
 def writedata():
     req = request.json[0]
-    response = {"status":"success", "message":""}
+    response = {"status": "success", "message": ""}
     try:
         with open(req["filepath"], "a") as f:
             # f.write(str(request.json[0]))
-            #{'snappath': './imgout/LIC/snap77/left/lic_snap77.left.magfield.01.07.bmp',
+            # {'snappath': './imgout/LIC/snap77/left/lic_snap77.left.magfield.01.07.bmp',
             # 'filepath': '../txt/test.csv
             #  'locnumx': 0, 'locnumy': 0,
             #  'locnumx2': 0, 'locnumy2': 0,
@@ -24,8 +25,8 @@ def writedata():
 
             doc = str(request.json[0])
             # snappath, dataset, para, job, side, center[x, y], xrange[a, z],  yrange[a, z]
-            file_name = os.path.basename(req['snappath']).split(".")
-            dataset, para, job, side = file_name[0].split('_')[1].replace("snap", ""), file_name[3], file_name[4], file_name[1]
+            file_name = os.path.basename(req["snappath"]).split(".")
+            dataset, para, job, side = file_name[0].split("_")[1].replace("snap", ""), file_name[3], file_name[4], file_name[1]
             centerx = req["locnumx"]
             centery = req["locnumy"]
             xlow = req["locnumx2"]
@@ -65,5 +66,6 @@ def writedata():
         response["status"] = str(e)
 
     return jsonify(response)
+
 
 app.run(host="127.0.0.1", port=8888, debug=True)

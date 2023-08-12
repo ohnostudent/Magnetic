@@ -10,7 +10,7 @@ from Visualization.SnapData import SnapData
 
 
 def snap2npy(sp: SnapData, path: str, dataset: int):
-    data  = sp.loadSnapData(path)
+    data = sp.loadSnapData(path)
     # print(data.shape)
 
     _snap_all(path, dataset, data)
@@ -25,7 +25,7 @@ def _snap_half_left(path: str, dataset: int, data) -> None:
         os.makedirs(os.path.dirname(out_path_half))
 
     # 縦625 * 横256 に切り取る
-    half = data[200: 1025-200, :257]
+    half = data[200 : 1025 - 200, :257]
 
     # numpy 配列として保存
     np.save(out_path_half, half)
@@ -38,7 +38,7 @@ def _snap_half_right(path: str, dataset: int, data) -> None:
         os.makedirs(os.path.dirname(out_path_half))
 
     # 縦625 * 横256 に切り取る
-    half = data[200: 1025-200, 257:]
+    half = data[200 : 1025 - 200, 257:]
     # numpy 配列として保存
     np.save(out_path_half, half)
 
@@ -87,7 +87,6 @@ def doSnap2npy(dataset: int):
         logger.debug(str(e), extra={"addinfo": ""})
         logger.debug("END", extra={"addinfo": f"{param} 中断"})
         logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
-
 
 
 def main():
