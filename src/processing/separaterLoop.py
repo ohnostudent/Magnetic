@@ -32,14 +32,14 @@ def _move_file(dataset, param, job, item1):
     os.rename(item1, newname)
 
     # ファイルの移動
-    # separater.exe で出力されたファイルは親ディレクトリに生成されるため、逐一移動させる
+    # separator.exe で出力されたファイルは親ディレクトリに生成されるため、逐一移動させる
     shutil.move(newname, SNAP_PATH + f'/snap{dataset}/{item1}/{"{0:02d}".format(job)}//')
 
 
 def _rename_file(xyz, item2):
     # ファイル名の変更
     # magfield1 -> magfieldx
-    os.rename(item2, f"{item2[:-1]}{xyz[int(item2[-1])]}")  # separater.exe をもとに分割したファイル名を変換する
+    os.rename(item2, f"{item2[:-1]}{xyz[int(item2[-1])]}")  # separator.exe をもとに分割したファイル名を変換する
 
 
 def dataProcessing():

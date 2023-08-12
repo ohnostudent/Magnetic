@@ -12,7 +12,7 @@ import numpy as np
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMGOUT, SNAP_PATH, SRC_PATH
+from config.params import IMAGES, SNAP_PATH, SRC_PATH
 from Visualization.SnapData import SnapData
 
 
@@ -22,7 +22,7 @@ class LicMethod(SnapData):
     def LIC(self, props: list):
         """
         LIC法可視化の実行
-        /IMGOUT/LIC 配下に .bmp を作成
+        /IMAGES/LIC 配下に .bmp を作成
 
         Args:
             props (list[str])
@@ -35,14 +35,14 @@ class LicMethod(SnapData):
         result = subprocess.run(props)
         return result
 
-    def set_command(self, xfile: str, yfile: str, outname: str) -> list:
+    def set_command(self, xfile: str, yfile: str, out_name: str) -> list:
         """
         LIC.exe の引数を作成する関数
 
         Args:
             xfile (str) : 可視化を行う magfieldx のパス
             yfile (str) : 可視化を行う magfieldy のパス
-            outname (str) : 出力先のファイル
+            out_name (str) : 出力先のファイル
             x (bool) : わからん, default False
             y (bool) : わからん, default False
 
@@ -54,12 +54,12 @@ class LicMethod(SnapData):
         self.logger.debug("START", extra={"addinfo": f"make props\n"})
 
         # コマンドの作成
-        props = [SRC_PATH + f"/LIC/LIC.exe", xfile, yfile, outname]
-        xfile_isnot_exist = not os.path.exists(xfile)
-        yfile_isnot_exist = not os.path.exists(yfile)
+        props = [SRC_PATH + f"/LIC/LIC.exe", xfile, yfile, out_name]
+        xfile_is_not_exist = not os.path.exists(xfile)
+        yfile_is_not_exist = not os.path.exists(yfile)
 
-        if xfile_isnot_exist and yfile_isnot_exist:  # どちらかがない場合
-            props += list(map(str, [xfile_isnot_exist, yfile_isnot_exist]))
+        if xfile_is_not_exist and yfile_is_not_exist:  # どちらかがない場合
+            props += list(map(str, [xfile_is_not_exist, yfile_is_not_exist]))
 
         elif (xfile[-4:] == ".npy") and (yfile[-4:] == ".npy"):
             # ファイルのロード
@@ -133,7 +133,7 @@ def mainProcess(lic: LicMethod, dir_basename: str, base_out_path: str, binary_pa
             yfile = xfile.replace("magfieldx", "magfieldy")
             file_name = os.path.splitext(os.path.basename(xfile.replace("magfieldx", "magfield")))
             out_path = base_out_path + f"/lic_{dir_basename}.{os.path.basename(base_out_path)}.{file_name[0]}.bmp"
-            # print(out_path) # ./imgout/LIC/snap77/lic_snap77.magfieldx.01.14.bmp
+            # print(out_path) # ./IMAGES/LIC/snap77/lic_snap77.magfieldx.01.14.bmp
 
             if not os.path.exists(out_path):
                 # 引数の作成
@@ -192,14 +192,14 @@ def LICMainProcess(dataset, size):
         lic = LicMethod()
 
         # 入出力用path の作成
-        indir = SNAP_PATH + f"/{size}/snap{dataset}"
-        dir_basename = os.path.basename(indir)  # snap77
-        out_dir = IMGOUT + "/LIC"
-        base_out_path = out_dir + "/" + os.path.basename(indir) + "/" + size.split("_")[1]  # ./imgout/LIC/snap77/left
+        in_dir = SNAP_PATH + f"/{size}/snap{dataset}"
+        dir_basename = os.path.basename(in_dir)  # snap77
+        out_dir = IMAGES + "/LIC"
+        base_out_path = out_dir + "/" + os.path.basename(in_dir) + "/" + size.split("_")[1]  # ./IMAGES/LIC/snap77/left
         lic.makedir(f"/LIC/snap{dataset}/{size.split('_')[1]}")
 
         # バイナリファイルの取得
-        binary_paths = glob(indir + "/magfieldx/*/*.npy")
+        binary_paths = glob(in_dir + "/magfieldx/*/*.npy")
 
         # ファイルが無い場合
         if binary_paths == []:

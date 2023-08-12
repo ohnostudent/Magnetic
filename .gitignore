@@ -9,22 +9,25 @@ snaps/half_right/*
 snaps/half_left/*
 snaps/all/*
 snaps/snap*/
-imgout/
+images/
 logs/
 ML/
 
 src_def/
 
-# 各ファイル
+# 拡張子
+*.bmp
+*.cmd
 *.env
 *.exe
 *.ipynb
+*.log
+*.npy
 *.obj
-*.pyx
-*.pxd
-*.pyi
 *.temp
-*.cmd
+*.pyi
+*.pxd
+*.pyx
 
-tree.txt
+# 各ファイル
 src/Processing/viewer/template/lic_viewer*.html

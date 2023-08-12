@@ -7,12 +7,12 @@ import numpy as np
 
 sys.path.append(os.getcwd())
 
-from config.params import IMGOUT
+from config.params import IMAGES
 
 
 class SnapData:
     """
-    _convolute, _ave_carnel, _calc -> Visualize.py, /k-means/Clustering.py にて使用
+    _convolute, _ave_kernel, _calc -> Visualize.py, /k-means/Clustering.py にて使用
     """
 
     def loadSnapData(self, file_path: str, z=3) -> np.ndarray:
@@ -48,7 +48,7 @@ class SnapData:
     def makedir(self, path: str) -> None:
         """
         ディレクトリの作成を行う関数
-        /ROOT_DIR/imgout 配下にのみ対応
+        /ROOT_DIR/images 配下にのみ対応
 
         Args:
             path (str) : ディレクトリパス
@@ -56,10 +56,10 @@ class SnapData:
         Returns:
             None
         """
-        if not os.path.exists(IMGOUT + f"/{path}"):
-            os.makedirs(IMGOUT + f"/{path}")
+        if not os.path.exists(IMAGES + f"/{path}"):
+            os.makedirs(IMAGES + f"/{path}")
 
-    def _convolute(self, data: np.array, carnel: np.array, padding=0, stride=1):
+    def _convolute(self, data: np.array, kernel: np.array, padding=0, stride=1):
         """
         畳み込み演算
         """
@@ -67,8 +67,8 @@ class SnapData:
             print("0パディングの処理未実装  padding=0で実行します")
             padding = 0
 
-        c_width = carnel.shape[1]
-        c_height = carnel.shape[0]
+        c_width = kernel.shape[1]
+        c_height = kernel.shape[0]
         result_width = int((data.shape[1] + 2 * padding - c_width) / stride + 1)
         result_height = int((data.shape[0] + 2 * padding - c_height) / stride + 1)
         convoluted = np.zeros((result_height, result_width))
@@ -79,13 +79,13 @@ class SnapData:
             for resultX in range(result_width):
                 array = data[orgY : orgY + c_height, orgX : orgX + c_width]
                 # a = convoluted[resultY]
-                convoluted[resultY][resultX] = self._calc(array, carnel)
+                convoluted[resultY][resultX] = self._calc(array, kernel)
                 orgX += stride
             orgY += stride
 
         return convoluted
 
-    def _ave_carnel(self, size: int):
+    def _ave_kernel(self, size: int):
         """
         畳み込みにおける平滑化のカーネル作成
         """
@@ -93,7 +93,7 @@ class SnapData:
         res = ones / (size**2)
         return res
 
-    def _calc(self, array, carnel) -> int:
-        result = sum(array * carnel)
+    def _calc(self, array, kernel) -> int:
+        result = sum(array * kernel)
         result = sum(result.flat)
         return result

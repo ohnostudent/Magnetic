@@ -20,7 +20,7 @@ def logger_conf():
         None
 
     Returns:
-        Logger :  
+        Logger :
 
     """
     time = datetime.strftime(datetime.now() + timedelta(hours=9), "%Y%m%d%H%M%S%f")
@@ -39,11 +39,11 @@ def logger_conf():
     fh.setLevel(DEBUG)
 
     # フォーマッタの生成（第一引数はメッセージのフォーマット文字列、第二引数は日付時刻のフォーマット文字列）
-    fmt_tarminal = Formatter("%(asctime)s :【 %(name)s 】%(message)s : %(addinfo)s\n", "%Y-%m-%d %H:%M:%S")
+    fmt_terminal = Formatter("%(asctime)s :【 %(name)s 】%(message)s : %(addinfo)s\n", "%Y-%m-%d %H:%M:%S")
     fmt_file = Formatter("%(asctime)s 【 %(message)s 】%(addinfo)s\n", "%Y-%m-%d %H:%M:%S")
 
     # フォーマッタの登録
-    sh.setFormatter(fmt_tarminal)
+    sh.setFormatter(fmt_terminal)
     fh.setFormatter(fmt_file)
 
     # ハンドラの登録

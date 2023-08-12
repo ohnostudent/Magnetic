@@ -17,7 +17,7 @@ def writedata():
     try:
         with open(req["filepath"], "a") as f:
             # f.write(str(request.json[0]))
-            # {'snappath': './imgout/LIC/snap77/left/lic_snap77.left.magfield.01.07.bmp',
+            # {'snappath': './images/LIC/snap77/left/lic_snap77.left.magfield.01.07.bmp',
             # 'filepath': '../txt/test.csv
             #  'locnumx': 0, 'locnumy': 0,
             #  'locnumx2': 0, 'locnumy2': 0,
@@ -45,15 +45,15 @@ def writedata():
             elif doc != predoc:
                 predoc = doc
                 f.write(doc)
-                # return "succes"
+                # return "success"
                 response["message"] = "success"
                 response["status"] = "success"
 
             else:
-                # return "error:double reqest"
-                response["message"] = "error:double reqest"
+                # return "error:double request"
+                response["message"] = "error:double request"
                 response["status"] = "success"
-        # return "succes"
+        # return "success"
 
     except FileNotFoundError:
         # return f"File not Found{req}"

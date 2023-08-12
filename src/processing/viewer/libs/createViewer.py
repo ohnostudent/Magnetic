@@ -7,13 +7,13 @@ from glob import glob
 
 sys.path.append(os.getcwd())
 
-from config.params import IMGOUT, SRC_PATH
+from config.params import IMAGES, SRC_PATH
 
 
 def _sort_paths(path_list):
     """
-    pathlistはglob等で取得したlist。
-    pathlistをparam, jobでソートして返す。
+    path_listはglob等で取得したlist。
+    path_listをparam, jobでソートして返す。
     """
     pjp = list(
         map(
@@ -34,25 +34,25 @@ def createViewer(dataset):
 
     for size in ["left", "right"]:
         # paths = _sort_paths(paths) # snapの命名規則をもとに時系列順に並び変える。
-        paths = glob(IMGOUT + f"/LIC/snap{dataset}/{size}/*.bmp")
+        paths = glob(IMAGES + f"/LIC/snap{dataset}/{size}/*.bmp")
         paths_sorted = _sort_paths(paths)
 
         # viewer用のファイル列を作成する
-        pathliststr = "\n"
+        path_list_str = "\n"
         for path in paths_sorted:
             path = path.replace("\\", "/")
-            pathliststr += f"\t\t\t'{path}', \n"
+            path_list_str += f"\t\t\t'{path}', \n"
 
         # html の読み込み
         with open(SRC_PATH + "/Processing/viewer/template/viewer_template.html", "r", encoding="utf-8") as f:
             html = f.read()
 
         # 可視化した.bmpのpathの一覧をhtml に追記
-        html = html.replace("{ replaceblock }", pathliststr)
+        html = html.replace("{ replaceblock }", path_list_str)
 
         # html の保存
-        outname = SRC_PATH + f"/Processing/viewer/template/lic_viewer{dataset}.{size}.html"
-        with open(outname, "w", encoding="utf8") as f:
+        out_name = SRC_PATH + f"/Processing/viewer/template/lic_viewer{dataset}.{size}.html"
+        with open(out_name, "w", encoding="utf8") as f:
             f.write(html)
 
 

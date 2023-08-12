@@ -43,19 +43,19 @@ class crateTrain(_kernel):
             np.save(base_path + f"/{val_param}_{dataset}.{para:02d}.{job:02d}_{centerx}.{centery}", separated_im)
 
     # 複数の変数を混合したデータを作成する
-    def loadBinaryData(self, impath, val_params):
+    def loadBinaryData(self, img_path, val_params):
         im_list = []
         for val in val_params:
-            im = np.load(impath.replace(val_params[0], val))
+            im = np.load(img_path.replace(val_params[0], val))
             im_list.append(im)
 
         return im_list
 
-    def saveFusionData(self, resim, outpath):
-        if not os.path.exists(os.path.dirname(outpath)):
-            os.mkdir(os.path.dirname(outpath))
+    def saveFusionData(self, resim, out_path):
+        if not os.path.exists(os.path.dirname(out_path)):
+            os.mkdir(os.path.dirname(out_path))
 
-        np.save(outpath, resim)
+        np.save(out_path, resim)
 
 
 def makeTrainingData(dataset: int) -> None:
@@ -68,20 +68,20 @@ def makeTrainingData(dataset: int) -> None:
     OUT_DIR = ML_DATA_DIR + f"/snap{dataset}"
 
     md = crateTrain()
-    # /imgout/0131_not/density/density_49.50.8_9.528
-    for val_params, outbasename, kernel in props_params:
+    # /images/0131_not/density/density_49.50.8_9.528
+    for val_params, out_basename, kernel in props_params:
         for a in labels:
             npys = OUT_DIR + f"/point_{a}"
 
-            for impath in glob(npys + "/" + val_params[0] + "/*.npy"):
-                im_list = md.loadBinaryData(impath, val_params)  # 混合データのロード
+            for img_path in glob(npys + "/" + val_params[0] + "/*.npy"):
+                im_list = md.loadBinaryData(img_path, val_params)  # 混合データのロード
                 resim = kernel(*im_list)  # データの作成
 
                 # 保存先のパスの作成
-                # /MLdata/snap{dataset}/{outbasename}/{outbasename}_{dataset}.{param}.{job}_{centerx}.{centery}.npy
+                # /MLdata/snap{dataset}/{out_basename}/{out_basename}_{dataset}.{param}.{job}_{centerx}.{centery}.npy
                 # /MLdata/snap77/energy/energy_77.01.03_131.543.npy
-                outpath = npys + "/" + outbasename + "/" + os.path.basename(impath).replace(val_params[0], outbasename)
-                md.saveFusionData(resim, outpath)  # データの保存
+                out_path = npys + "/" + out_basename + "/" + os.path.basename(img_path).replace(val_params[0], out_basename)
+                md.saveFusionData(resim, out_path)  # データの保存
 
 
 if __name__ == "__main__":

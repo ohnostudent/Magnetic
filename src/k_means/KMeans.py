@@ -140,19 +140,19 @@ def doClustering():
         os.makedirs(ML_RESULT_DIR + "/clustering")
 
     for dataset in datasets:
-        logger.debug("START", extra={"addinfon": f"snap{dataset}"})
+        logger.debug("START", extra={"addinfo": f"snap{dataset}"})
         for val_param in variable_parameters:
-            logger.debug("START", extra={"addinfon": f"{val_param}"})
+            logger.debug("START", extra={"addinfo": f"{val_param}"})
 
             # パスの取得
             path_list = glob(SNAP_PATH + f"/snap{dataset}/{val_param}/*/*")
 
             num_of_data = len(path_list)  # リコネクションがない画像の枚数
             temp_data = cluster.compress(cluster.loadSnapData(path_list[0], z=3))
-            IMGSHAPE = temp_data.shape  # 画像サイズ
+            IMG_SHAPE = temp_data.shape  # 画像サイズ
 
             # 行列の列数
-            N_col = IMGSHAPE[0] * IMGSHAPE[1] * 1
+            N_col = IMG_SHAPE[0] * IMG_SHAPE[1] * 1
             # 学習データ格納のためゼロ行列生成
             X_train = np.zeros((num_of_data, N_col))
             # 学習データに対するラベルを格納するためのゼロ行列生成
@@ -169,8 +169,8 @@ def doClustering():
             df_re = cluster.save_result(cluster_labels, path_list, dataset)
             # display(df_re)
 
-        logger.debug("END", extra={"addinfon": f"{val_param}\n"})
-    logger.debug("END", extra={"addinfon": f"snap{dataset}\n"})
+        logger.debug("END", extra={"addinfo": f"{val_param}\n"})
+    logger.debug("END", extra={"addinfo": f"snap{dataset}\n"})
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import seaborn as sns
 sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMGOUT
+from config.params import IMAGES
 from Visualization.SnapData import SnapData
 
 
@@ -43,11 +43,11 @@ class VisualizeMethod(SnapData):
         res = -x[4:] + 8 * x[3:-1] - 8 * x[1:-3] + x[:-4]
         return res / (12 * h)
 
-    def _diff4_xy(self, data: np.ndarray, h: float, vectol: str):
+    def _diff4_xy(self, data: np.ndarray, h: float, vector: str):
         """
         diff4を使った行列の横方向偏微分
         """
-        if vectol == "y":
+        if vector == "y":
             data = data.T
 
         res = np.ndarray([])
@@ -57,7 +57,7 @@ class VisualizeMethod(SnapData):
             else:
                 res = np.append(res, self._diff4(vec, h))
 
-        if vectol == "y":
+        if vector == "y":
             return res.reshape(data.shape[0], data.shape[1] - 4).T
         return res.reshape(data.shape[0], data.shape[1] - 4)
 
@@ -67,11 +67,6 @@ class VisualizeMethod(SnapData):
         y方向については、vZ(zx平面)、vX(zx平面)の順で入力、x方向はvY(yz平面)、vZ(yz平面)の順で入力すると得られる。
         x､y､zそれぞれの出力であるスカラーの行列に対して、
         それぞれの方向の単位ベクトルを掛けて足せば3次元のローテーションが求まる
-
-        rot2dの結果に対して単位ベクトルを掛けるやり方。
-        a = np.array([[0,1,2,3],[0,4,5,6],[0,7,8,9]])
-        e = np.array([1,0,0])
-        mylist = [[j *e for j in i ] for i in a]
         """
         return self._diff4_xy(vY, 1)[2:-2,] - self._diff4_xy(vX, 1)[:, 2:-2]
 
@@ -80,7 +75,7 @@ class VisualizeMethod(SnapData):
         return np.arccos(u / np.sqrt(u**2 + v**2))
 
     # ヒートマップの描画
-    def drawHeatmap(self, path, saveimg=True, bar_range=None):
+    def drawHeatmap(self, path, save_img=True, bar_range=None):
         # 描画
         snap_data = self.loadSnapData(path)
         plt.figure(figsize=(10, 15))
@@ -90,7 +85,7 @@ class VisualizeMethod(SnapData):
             sns.heatmap(snap_data)
 
         # グラフの保存
-        self._savefig(f"/heatmap/{self.val_param}", saveimg)
+        self._save_fig(f"/heatmap/{self.val_param}", save_img)
 
     # エッジの表示
     def drawEdge(self, path, save=True):
@@ -109,7 +104,7 @@ class VisualizeMethod(SnapData):
             filepath = f"/visualization/edges/snap{self.dataset}/{self.val_param}/{self.job :02d}"
             self.makedir(filepath)
             plt.tight_layout()
-            cv2.imwrite(IMGOUT + filepath + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png", edges)
+            cv2.imwrite(IMAGES + filepath + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png", edges)
 
         # メモリの開放
         plt.clf()
@@ -127,10 +122,10 @@ class VisualizeMethod(SnapData):
 
         # 計算が重いので平滑化フィルターの畳み込みで圧縮
         if compress:
-            carnel1 = self._ave_carnel(compress)
-            carnel2 = carnel1.T
-            dataX = self._convolute(dataX, carnel2, stride=compress)
-            dataY = self._convolute(dataY, carnel1, stride=compress)
+            kernel1 = self._ave_kernel(compress)
+            kernel2 = kernel1.T
+            dataX = self._convolute(dataX, kernel2, stride=compress)
+            dataY = self._convolute(dataY, kernel1, stride=compress)
 
         x = range(dataX.shape[1])
         y = range(dataY.shape[0])
@@ -167,7 +162,7 @@ class VisualizeMethod(SnapData):
         # strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
 
         # fig.colorbar(strm.lines)
-        # plt._savefig(IMGOUT}1111/{number}.png")
+        # plt._save_fig(IMAGES}1111/{number}.png")
         # plt.show()
 
     def stream_plt(self, X, Y, xrange=False, yrange=False, compress=0):
@@ -185,10 +180,10 @@ class VisualizeMethod(SnapData):
 
         # 計算が重いので平滑化フィルターの畳み込みで圧縮
         if compress:
-            carnel1 = self._ave_carnel(compress)
-            carnel2 = carnel1.T
-            dataX = self._convolute(dataX, carnel2, stride=compress)
-            dataY = self._convolute(dataY, carnel1, stride=compress)
+            kernel1 = self._ave_kernel(compress)
+            kernel2 = kernel1.T
+            dataX = self._convolute(dataX, kernel2, stride=compress)
+            dataY = self._convolute(dataY, kernel1, stride=compress)
         x = range(dataX.shape[1])
         y = range(dataY.shape[0])
         # X,Y方向それぞれのベクトルに対して座標の行列を設定
@@ -271,7 +266,7 @@ class VisualizeMethod(SnapData):
 
         # グラフの保存
         path = "/StreamHeatmap"
-        self._savefig(path, save)
+        self._save_fig(path, save)
 
     # エネルギーの速さと密度について
     def drawEnergy_for_velocity(self, dens_path, vx_path, vy_path, save=True):
@@ -287,7 +282,7 @@ class VisualizeMethod(SnapData):
 
         # グラフの保存
         path = f"/Energy_velocity"
-        self._savefig(path, save)
+        self._save_fig(path, save)
 
     # エネルギーの磁場について
     def drawEnergy_for_magfield(self, magx_path, magy_path, save=True):
@@ -302,10 +297,10 @@ class VisualizeMethod(SnapData):
 
         # グラフの保存
         path = f"/Energy_magfield"
-        self._savefig(path, save)
+        self._save_fig(path, save)
 
     # 保存
-    def _savefig(self, path, save=True):
+    def _save_fig(self, path, save=True):
         # フォルダの作成
         file_path = f"/visualization/{path}/snap{self.dataset}/{self.job :02d}"
 
@@ -313,7 +308,7 @@ class VisualizeMethod(SnapData):
         if save:
             self.makedir(file_path)
             plt.tight_layout()
-            plt.savefig(IMGOUT + file_path + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png")
+            plt.savefig(IMAGES + file_path + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png")
 
         # メモリの開放
         plt.clf()
@@ -330,7 +325,7 @@ def gridHeatmap():
     logger = logger_conf()
 
     for dataset in datasets:
-        logger.debug("START", extra={"addinfon": f"snap{dataset}"})
+        logger.debug("START", extra={"addinfo": f"snap{dataset}"})
         target_path = SNAP_PATH + f"/snap{dataset}"
 
         # インスタンスの生成
@@ -358,7 +353,7 @@ def gridHeatmap():
                 viz.drawHeatmap(path)
                 viz.drawEdge(path)
 
-        logger.debug("END", extra={"addinfon": f"snap{dataset}"})
+        logger.debug("END", extra={"addinfo": f"snap{dataset}"})
 
 
 if __name__ == "__main__":
