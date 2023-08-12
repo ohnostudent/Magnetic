@@ -102,7 +102,7 @@ void savedata(float *data, int num, char fname[]){
 		printf("file open error for write %s¥n", fname);
 		exit(1);
 	}
-	
+
 	fwrite(data, sizeof(float), num, fp);
 	fclose(fp);
 }

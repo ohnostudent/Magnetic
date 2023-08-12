@@ -2,7 +2,9 @@
 
 import os
 import sys
+
 import numpy as np
+
 sys.path.append(os.getcwd())
 
 from config.params import IMGOUT
@@ -12,14 +14,14 @@ class SnapData():
     """
     _convolute, _ave_carnel, _calc -> Visualize.py, /k-means/Clustering.py にて使用
     """
-    
+
     def loadSnapData(self, file_path: str, z=3) -> np.ndarray:
         """
         データのロードを行う関数
 
         Arg:
             file_path (str) : ファイルパス
-            z (int) : 
+            z (int) :
 
         Returns:
             ndarray : 読み込んだデータをnumpy配列として読み込む
@@ -64,7 +66,7 @@ class SnapData():
         if padding:
             print("0パディングの処理未実装  padding=0で実行します")
             padding = 0
-        
+
         c_width = carnel.shape[1]
         c_height = carnel.shape[0]
         result_width = int((data.shape[1] + 2*padding - c_width) / stride + 1)
@@ -82,8 +84,8 @@ class SnapData():
             orgY += stride
 
         return convoluted
-    
-    
+
+
     def _ave_carnel(self, size: int):
         """
         畳み込みにおける平滑化のカーネル作成
@@ -91,9 +93,8 @@ class SnapData():
         ones = np.ones((size,size))
         res = ones / (size**2)
         return res
-    
+
     def _calc(self, array, carnel) -> int:
         result = sum(array * carnel)
         result = sum(result.flat)
         return result
-    

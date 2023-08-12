@@ -4,9 +4,10 @@
 import os
 import sys
 from glob import glob
+
 sys.path.append(os.getcwd())
 
-from config.params import SRC_PATH, IMGOUT
+from config.params import IMGOUT, SRC_PATH
 
 
 def _sort_paths(path_list):
@@ -35,7 +36,7 @@ def createViewer(dataset):
         for path in paths_sorted:
             path = path.replace("\\", "/")
             pathliststr += f"\t\t\t'{path}', \n"
-        
+
         # html の読み込み
         with open(SRC_PATH + "/Processing/viewer/template/viewer_template.html", 'r', encoding="utf-8") as f:
             html = f.read()

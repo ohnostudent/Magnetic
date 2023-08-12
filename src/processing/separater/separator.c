@@ -103,7 +103,7 @@ void savedata(float *data, int num, char fname[]){
 		printf("file open error for write %s¥n", fname);
 		exit(1);
 	}
-	
+
 	fwrite(data, sizeof(float), num, fp);
 	fclose(fp);
 }
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
 				ab1 = Vars2Print[i+NGx1+(j+NGy1)*xcpsize+10*xcpsize*ycpsize]+am1; // Bx
 				ab2 = Vars2Print[i+NGx1+(j+NGy1)*xcpsize+11*xcpsize*ycpsize]+am2; // By
 				ab3 = Vars2Print[i+NGx1+(j+NGy1)*xcpsize+12*xcpsize*ycpsize]+am3; // Bz
-				aprs = (Vars2Print[i+NGx1+(j+NGy1)*xcpsize+xcpsize*ycpsize] 
+				aprs = (Vars2Print[i+NGx1+(j+NGy1)*xcpsize+xcpsize*ycpsize]
 				  - 0.5*aden*(av1*av1+av2*av2+av3*av3) - 0.5*(ab1*ab1+ab2*ab2+ab3*ab3))*gm1;
 
 				var1[i+j*ixsize+k*ixsize*iysize] = aden;
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
 
 
 /*
-!  columns for  NS3DComp,        XMHD3DComp:: 
+!  columns for  NS3DComp,        XMHD3DComp::
 !    1-2        (i,j)            (i,j)
 !    3-5        (x,y,z)         (x,y,z)
 !    6-10       den,enet,amo1-3  den,enet,amo1-3

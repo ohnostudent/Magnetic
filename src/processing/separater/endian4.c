@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
 		size = atol(argv[3]);
 		printf("size =  %ld (argv[3]=%s)\n",size,argv[3]);
 	}
-	
+
 	fdata = (float *)malloc(size);
 
 	fp = fopen(argv[1], "rb");
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
 		printf("File Open Error %s\n", argv[1]);
 		exit(1);
 	}
-	
+
 	num=fread(fdata, sizeof(float), size/sizeof(float), fp);
 
 	fclose(fp);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
 		printf("num=%d(%ld)\n",num,size/sizeof(float));
 		exit(1);
 	}
-	
+
 	byteorder(fdata, num);
 
 	min = max = fdata[1];
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
 	fp= fopen(argv[2], "wb");
 	fwrite(fdata, sizeof(float), num, fp);
 	fclose(fp);
-	
+
 	free(fdata);
 
 	return 0;

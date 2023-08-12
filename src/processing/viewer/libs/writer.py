@@ -1,9 +1,9 @@
 #　教師データの作成用。ビューワと併用する。
 
 import os
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-
 
 app = Flask(__name__)
 cors = CORS(app, supports_credentials=True)
@@ -35,12 +35,12 @@ def writedata():
             label = req["label"]
             doc = f"{req['snappath']},{dataset},{para},{job},{side},{centerx},{centery},{xlow},{xup},{ylow},{yup},{label}\n"
             global predoc
-            
+
             if int(req["rangenumx"]) == 0 or int(req["rangenumy"]) == 0:
                 # return "error:range is 0"
                 response["message"] = "error:range is 0"
                 response["status"] = "error"
-                
+
             elif doc != predoc:
                 predoc = doc
                 f.write(doc)

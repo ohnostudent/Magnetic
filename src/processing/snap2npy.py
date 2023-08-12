@@ -2,8 +2,10 @@
 
 import os
 import sys
+
 import numpy as np
-sys.path.append(os.getcwd())
+
+sys.path.append(os.getcwd() + "/src")
 from Visualization.SnapData import SnapData
 
 
@@ -54,8 +56,9 @@ def _snap_all(path: str, dataset: int, data) -> None:
 def doSnap2npy(dataset: int):
     from glob import glob
     from logging import getLogger
+
     from config.params import SNAP_PATH, datasets, variable_parameters
-    
+
     logger = getLogger("res_root").getChild(__name__)
 
     if dataset not in datasets:
@@ -73,22 +76,23 @@ def doSnap2npy(dataset: int):
                 # print(path)
                 snap2npy(sp, path, dataset)
 
-            logger.debug("END", extra={"addinfo": f"{param} 終了"}) 
+            logger.debug("END", extra={"addinfo": f"{param} 終了"})
         logger.debug("END", extra={"addinfo": f"Snap{dataset} 終了"})
-    
+
     except KeyboardInterrupt:
         logger.debug("END", extra={"addinfo": f"{param} 中断"})
         logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
-    
+
     except Exception as e:
         logger.debug(str(e), extra={"addinfo": ""})
         logger.debug("END", extra={"addinfo": f"{param} 中断"})
         logger.debug("END", extra={"addinfo": f"Snap{dataset} 中断"})
-    
+
 
 
 def main():
     from concurrent.futures import ThreadPoolExecutor
+
     from config.SetLogger import logger_conf
 
     logger = logger_conf()

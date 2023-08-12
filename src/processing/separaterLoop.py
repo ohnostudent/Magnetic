@@ -1,14 +1,15 @@
 # -*- coding utf-8, LF -*-
 
 import os
-import sys
 import shutil
 import subprocess
+import sys
 from glob import glob
 from logging import getLogger
+
 sys.path.append(os.getcwd())
 
-from config.params import ROOT_DIR, SRC_PATH, SNAP_PATH, BIN_PATH
+from config.params import BIN_PATH, ROOT_DIR, SNAP_PATH, SRC_PATH
 
 
 def _set_ij(logger, dataset):

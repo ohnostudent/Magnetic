@@ -2,15 +2,17 @@
 
 import os
 import sys
-import numpy as np
-import pandas as pd
 from glob import glob
 from logging import getLogger
+
+import numpy as np
+import pandas as pd
+
+from config.params import ML_DATA_DIR, SNAP_PATH, labels
+from Processing.kernel import _kernel
+
 sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
-
-from config.params import SNAP_PATH, ML_DATA_DIR, labels
-from Processing.kernel import _kernel
 
 
 class crateTrain(_kernel):
@@ -47,7 +49,7 @@ class crateTrain(_kernel):
         for val in val_params:
             im = np.load(impath.replace(val_params[0], val))
             im_list.append(im)
-    
+
         return im_list
 
     def saveFusionData(self, resim, outpath):
@@ -57,7 +59,14 @@ class crateTrain(_kernel):
         np.save(outpath, resim)
 
 
-def mergeBinerys(props_params, dataset) -> None:
+
+def makeTrainingData(dataset: int) -> None:
+    logger = getLogger("res_root").getChild(__name__)
+
+    props_params = [
+        (["magfieldx", "magfieldy"], "mag_tupledxy", crateTrain().kernellistxy),
+        (["velocityx", "velocityy", "density"], "energy", crateTrain().kernelEnergy)
+    ]
     OUT_DIR = ML_DATA_DIR + f"/snap{dataset}"
 
     md = crateTrain()
@@ -75,17 +84,6 @@ def mergeBinerys(props_params, dataset) -> None:
                 # /MLdata/snap77/energy/energy_77.01.03_131.543.npy
                 outpath = npys + "/" + outbasename + "/" + os.path.basename(impath).replace(val_params[0], outbasename)
                 md.saveFusionData(resim, outpath) # データの保存
-
-
-def makeTrainingData(dataset: int) -> None:
-    logger = getLogger("res_root").getChild(__name__)
-
-    props_params = [
-        (["magfieldx", "magfieldy"], "mag_tupledxy", crateTrain().kernellistxy), 
-        (["velocityx", "velocityy", "density"], "energy", crateTrain().kernelEnergy)
-    ]
-
-    mergeBinerys(props_params, dataset)
 
 
 if __name__ == "__main__":

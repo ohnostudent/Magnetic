@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-from glob import glob
-import sys
 import os
+import sys
+from glob import glob
 from logging import getLogger
+
+import numpy as np
+
 sys.path.append(os.getcwd() + "/src")
 from Visualization.SnapData import SnapData
 
@@ -37,19 +39,19 @@ def separate_binary(indir, outdir, sep, sepy, targets):
                 with open(f"{path}/description_{s}.txt", mode = "w") as f:
                     f.write(f"このファイルは{os.path.basename(os.path.dirname(indir))}{img.shape}を/n X{sep[s][0]}:{sep[s][1]}/n Y{sepy[0]}:{sepy[1]}/nで切り取った")
                     f.close()
-        
+
         logger.debug("FILE", extra={"addinfo": name})
     logger.debug("TARGET END", extra={"addinfo": target})
 
 
 
 if __name__ == "__main__":
-    from config.params import SNAP_PATH, IMGOUT
+    from config.params import IMGOUT, SNAP_PATH
     from config.SetLogger import logger_conf
     logger = logger_conf()
 
     ###############################
-    # 
+    #
     indir = SNAP_PATH + "/snap77"
     outdir  = IMGOUT + "/snap77split1"
     sep = [[8, 43], [36, 71], [64, 99], [92, 127], [126, 161], [154, 189], [182, 217], [210, 245], [239, 274]]

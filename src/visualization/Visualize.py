@@ -2,11 +2,13 @@
 
 import os
 import sys
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from logging import getLogger
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
 sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
@@ -16,12 +18,12 @@ from Visualization.SnapData import SnapData
 
 class VisualizeMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
-    
+
     def __init__(self, dataset) -> None:
         super().__init__()
         self.dataset = dataset
-    
- 
+
+
     # 離散データの微分
     def _diff(self, x, h):
         """
@@ -31,7 +33,7 @@ class VisualizeMethod(SnapData):
         # print(x[1:])
         # print(x[:-1])
         return res / (2 * h)
-    
+
     def _diff4(self, x, h):
         """
         精度高めの微分・。誤差:h**4
@@ -41,7 +43,7 @@ class VisualizeMethod(SnapData):
         """
         res = -x[4:] + 8*x[3:-1] - 8*x[1:-3] + x[:-4]
         return res / (12 * h)
-    
+
     def _diff4_xy(self, data: np.ndarray, h:float, vectol: str):
         """
         diff4を使った行列の横方向偏微分
@@ -55,7 +57,7 @@ class VisualizeMethod(SnapData):
                 res = self._diff4(vec, h)
             else:
                 res = np.append(res, self._diff4(vec, h))
-        
+
         if vectol == "y":
             return res.reshape(data.shape[0], data.shape[1]-4).T
         return res.reshape(data.shape[0], data.shape[1]-4)
@@ -112,7 +114,7 @@ class VisualizeMethod(SnapData):
 
         # メモリの開放
         plt.clf()
-        plt.close() 
+        plt.close()
 
     # ベクトル場の可視化
     def drawStream(self, X, Y, compress=0):
@@ -153,7 +155,7 @@ class VisualizeMethod(SnapData):
         color2 = color2 / max(color2.flat)
         speed = np.sqrt(u ** 2 + v ** 2)
         lw = 7 * speed / speed.max()
-        
+
         fig = plt.figure(1)
         # plt.contour(X,Y,rad)
         # show(rot,bar_range=[-0.05,0.05])
@@ -164,7 +166,7 @@ class VisualizeMethod(SnapData):
         rad2 = abs(rad - (3.1415927/2))
         # sns.heatmap(rad2, cmap="bone")
         # strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
-        
+
         #fig.colorbar(strm.lines)
         # plt._savefig(IMGOUT}1111/{number}.png")
         # plt.show()
@@ -225,7 +227,7 @@ class VisualizeMethod(SnapData):
 
 
         #strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
-        
+
         #fig.colorbar(strm.lines)
         # plt.show()
 
@@ -257,11 +259,11 @@ class VisualizeMethod(SnapData):
         # v = v[2:-2,2:-2]
         # X = X[2:-2,2:-2]
         # Y = Y[2:-2,2:-2]
-        
+
         rad1 = self._calc_radian(dataX1, dataY1)
         rad2 = self._calc_radian(dataX2, dataY2)
         rad = rad2 - rad1
-        
+
         # グラフの描画
         ax1 = plt.subplot(2, 1, 1)
         ax1.pcolor(rad, cmap="brg", vmax=0.1, vmin=-0.1)
@@ -303,7 +305,7 @@ class VisualizeMethod(SnapData):
         # グラフの保存
         path = f"/Energy_magfield"
         self._savefig(path, save)
-    
+
     # 保存
     def _savefig(self, path, save=True):
         # フォルダの作成
@@ -323,9 +325,9 @@ class VisualizeMethod(SnapData):
 
 def gridHeatmap():
     from glob import glob
+
     from config.params import SNAP_PATH, datasets
     from config.SetLogger import logger_conf
-
 
     # ログ取得の開始
     logger = logger_conf()
@@ -351,7 +353,7 @@ def gridHeatmap():
         files["magfieldy"] = glob(target_path + f"/magfieldy/*/*")
         for magx_path, magy_path in zip(files["magfieldx"], files["magfieldy"]):
             viz.drawEnergy_for_magfield(magx_path, magy_path)
-        
+
         # Heatmap と edge の可視化
         files["enstrophy"] = glob(target_path + f"/enstrophy/*/*")
         for val_param in ["velocityx", "velocityy", "magfieldx", "magfieldy", "density", "enstrophy"]:

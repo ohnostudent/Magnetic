@@ -2,10 +2,12 @@
 
 import os
 import sys
+from glob import glob
+from logging import getLogger
+
 import cv2
 import numpy as np
-from logging import getLogger
-from glob import glob
+
 sys.path.append(os.getcwd()+"\src")
 
 from config.params import AVS_IN_DIR, AVS_OUT_DIR
@@ -17,7 +19,7 @@ class AvsMethod(SnapData):
 
     def __init__(self) -> None:
         super().__init__()
-        
+
 
     def _AVSlat2bilat(self, dataname, xy):
         dataname = str(dataname)
@@ -68,11 +70,11 @@ class AvsMethod(SnapData):
         tempsepy = list(map(self._change_sep_y, sepy, 77))
 
         return tempsepx, tempsepy
-    
+
 
 
 #snap77 を分ける、AVSとの紐付け
-if __name__ == "__main__":    
+if __name__ == "__main__":
     #o点が見えるように分けた 77AVSsplit1
     avssep = [[120, 440], [380, 700], [630, 950], [890, 1210], [1200, 1520], [1460, 1780], [1720, 2040], [1980, 2300], [2240, 2560]]
     #X点が見えるように分けた 77AVSsplit2

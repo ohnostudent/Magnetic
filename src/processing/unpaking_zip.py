@@ -1,7 +1,7 @@
 # -*- coding utf-8, LF -*-
 
-import shutil
 import os
+import shutil
 from glob import glob
 
 
@@ -20,7 +20,7 @@ def unpacking(root_dir):
     for file in zip_files:
         print("【 解凍中 】  : {file}".format(file=file))
         shutil.unpack_archive(file, root_dir)
-    
+
     print("【 解凍終了 】:}")
     print()
 

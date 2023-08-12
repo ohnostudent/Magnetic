@@ -2,26 +2,28 @@
 
 import os
 import sys
+from glob import glob
+
 import numpy as np
 import pandas as pd
-from glob import glob
+
 sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
+from config.params import ML_RESULT_DIR, SNAP_PATH
 from Visualization.SnapData import SnapData
-from config.params import SNAP_PATH, ML_RESULT_DIR
 
 
 class ClusteringMethod(SnapData):
     """
-    
+
     Args:
 
     Returns:
-    
+
     """
     def compress(self, array, LEVEL=10):
         """
@@ -54,7 +56,7 @@ class ClusteringMethod(SnapData):
         elif type == ".npz":
             print("npz doesnot supported")
             return
-        
+
         else: # バイナリの読み込み
             im = self.loadSnapData(path, z=3)
 
@@ -69,7 +71,7 @@ class ClusteringMethod(SnapData):
             X_train () : 学習用データ
 
         Returns:
-            ndarray : 
+            ndarray :
 
         """
 
@@ -88,7 +90,7 @@ class ClusteringMethod(SnapData):
         Args:
 
         Returns:
-            ndarray : 
+            ndarray :
 
         """
         model = KMeans(n_clusters=4, random_state=1)
@@ -118,13 +120,13 @@ class ClusteringMethod(SnapData):
         df_clustering_result = df_clustering_result.reset_index()
         df_clustering_result[['parameter', 'param', 'job']] = df_clustering_result["index"].str.split('.', expand=True)
         df_clustering_result = df_clustering_result[['parameter', 'param', 'job', 'cluster']]
-        
+
         # 保存
         if save:
             df_clustering_result.to_csv(ML_RESULT_DIR + f"/clustering/snap{dataset}{self.val_param}.csv", encoding="utf-8")
 
         return df_clustering_result
-        
+
 
 def doClustering():
     from config.params import datasets, variable_parameters
@@ -149,12 +151,12 @@ def doClustering():
             IMGSHAPE = temp_data.shape # 画像サイズ
 
             # 行列の列数
-            N_col = IMGSHAPE[0] * IMGSHAPE[1] * 1 
+            N_col = IMGSHAPE[0] * IMGSHAPE[1] * 1
             # 学習データ格納のためゼロ行列生成
-            X_train = np.zeros((num_of_data, N_col)) 
+            X_train = np.zeros((num_of_data, N_col))
             # 学習データに対するラベルを格納するためのゼロ行列生成
-            y_train = np.zeros((num_of_data)) 
-            
+            y_train = np.zeros((num_of_data))
+
             # リコネクションがない画像を行列に読み込む
             for idx, path in enumerate(path_list[:10]):
                 X_train[idx, :] = cluster.load_regularize(path)
@@ -172,4 +174,3 @@ def doClustering():
 
 if __name__ == "__main__":
     doClustering()
-    

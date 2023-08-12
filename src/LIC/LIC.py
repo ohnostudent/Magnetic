@@ -1,16 +1,18 @@
 # -*- coding utf-8, LF -*-
 
 import os
-import sys
-import subprocess
 import random
-import numpy as np
+import subprocess
+import sys
 from glob import glob
-from struct import pack
 from logging import getLogger
+from struct import pack
+
+import numpy as np
+
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import SRC_PATH, SNAP_PATH, IMGOUT
+from config.params import IMGOUT, SNAP_PATH, SRC_PATH
 from Visualization.SnapData import SnapData
 
 
@@ -70,7 +72,7 @@ class LicMethod(SnapData):
             ytempfile = self._create_tempfile(ydata, 'y')
 
             props[1], props[2] = xtempfile, ytempfile # 引数に指定
-        
+
         # else:
         #     pass
 
@@ -87,7 +89,7 @@ class LicMethod(SnapData):
 
         Returns:
             tempfile_path (str) : temp ファイルのパス
-        
+
         """
 
         # コマンドを保存するための.tempファイルの作成
@@ -155,6 +157,8 @@ def mainProcess(lic: LicMethod, dir_basename: str, base_out_path: str, binary_pa
 
 
 from config.params import datasets
+
+
 def LICMainProcess(dataset, size):
     """
     処理時間の目安
@@ -163,7 +167,7 @@ def LICMainProcess(dataset, size):
 
     snap497  : 791(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
     -> 65.9167 (時間)
-    
+
     snap4949 : 886(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
     -> 73.83 (時間)
 
@@ -186,7 +190,7 @@ def LICMainProcess(dataset, size):
 
         logger.debug("START", extra={"addinfo": f"{dataset}.{size.split('_')[1]} 開始\n"})
         lic = LicMethod()
-        
+
         # 入出力用path の作成
         indir = SNAP_PATH + f"/{size}/snap{dataset}"
         dir_basename = os.path.basename(indir) # snap77
@@ -196,7 +200,7 @@ def LICMainProcess(dataset, size):
 
         # バイナリファイルの取得
         binary_paths = glob(indir+"/magfieldx/*/*.npy")
-    
+
         # ファイルが無い場合
         if binary_paths == []:
             logger.debug("ERROR", extra={"addinfo": f"File not Found\n"})
@@ -214,7 +218,7 @@ def LICMainProcess(dataset, size):
             exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 7 : file_count // 10 * 8])
             exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 8 : file_count // 10 * 9])
             exec.submit(mainProcess, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 9 :])
-        
+
         logger.debug("END", extra={"addinfo": f"{dataset} 終了\n"})
 
     except KeyboardInterrupt:
@@ -222,7 +226,7 @@ def LICMainProcess(dataset, size):
 
     except Exception as e:
         logger.debug("ERROR", extra={"addinfo": f"{e}\n"})
-    
+
     finally:
         logger.debug("END", extra={"addinfo": "処理終了"})
 
@@ -234,4 +238,4 @@ if __name__ == "__main__":
     for dataset in datasets:
         for size in ["half_left", "half_right"]:
             LICMainProcess(dataset, size)
-    
+
