@@ -22,6 +22,7 @@ class _kernel:
     ##
 
     """
+
     def kernellistxy(self, im1, im2):  # xy交互のリストを持った行列を返す。shapeが1次元増えるので使わない
         res = np.empty([im1.shape[0], im1.shape[1]])
         res = [[0 for j in range(im1.shape[1])] for _ in range(im1.shape[0])]

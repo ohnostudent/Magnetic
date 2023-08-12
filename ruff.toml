@@ -1,46 +1,35 @@
 [tool.ruff]
-# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F", "I", "PL", "B"]
-ignore = []
+# A list of rule codes or prefixes to enable
+select = ["B", "E", "F", "I", "N", "ANN", "PL"]
+# A list of rule codes or prefixes to ignore
+ignore = ["F401", "F841", "W505", "ARG"]
 
-# Allow autofix for all enabled rules (when `--fix`) is provided.
+# A list of rule codes or prefixes to consider autofixable
 fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
-unfixable = ["F401", "F841"]
+# A list of rule codes or prefixes to consider non-autofix-able.
+unfixable = ["F401", "F841", "W505", "ARG"]
 
 # Exclude a variety of commonly ignored directories.
 exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
+    "__pypackages__",
     ".git",
     ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
     ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
+    "data",
+    "images",
+    "logs",
+    "ML",
+    "snaps",
 ]
+
+# The directories to consider when resolving first- vs. third-party imports.
+src = ["src"]
+
+# The tabulation size to calculate line length.
+tab-size = 4
 
 # Same as Black.
 line-length = 150
 
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-# Assume Python 3.10
+# The minimum Python version to target
 target-version = "py310"
-
-[tool.ruff.mccabe]
-# Unlike Flake8, default to a complexity level of 10.
-max-complexity = 10
