@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.getcwd())
 
-from config.params import IMAGES
+from config.params import IMAGE_PATH
 
 
 class SnapData:
@@ -56,8 +56,8 @@ class SnapData:
         Returns:
             None
         """
-        if not os.path.exists(IMAGES + f"/{path}"):
-            os.makedirs(IMAGES + f"/{path}")
+        if not os.path.exists(IMAGE_PATH + f"/{path}"):
+            os.makedirs(IMAGE_PATH + f"/{path}")
 
     def _convolute(self, data: np.array, kernel: np.array, padding=0, stride=1):
         """

@@ -12,13 +12,13 @@ import sys
 ROOT_DIR = os.getcwd()
 
 BIN_PATH = ROOT_DIR + "/BIN"
-IMAGES = ROOT_DIR + "/images"
+IMAGE_PATH = ROOT_DIR + "/images"
 LOG_DIR = ROOT_DIR + "/logs"
 SNAP_PATH = ROOT_DIR + "/snaps"
 SRC_PATH = ROOT_DIR + "/src"
 
-AVS_IN_DIR = IMAGES + "/AVS"
-AVS_OUT_DIR = IMAGES + "/AVSsplit"
+AVS_IN_DIR = IMAGE_PATH + "/AVS"
+AVS_OUT_DIR = IMAGE_PATH + "/AVSsplit"
 
 ML_DIR = ROOT_DIR + "/ML"
 ML_DATA_DIR = ML_DIR + "/data"

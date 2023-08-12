@@ -47,7 +47,7 @@ def separate_binary(in_dir, out_dir, sep, sepy, targets) -> None:
 
 
 if __name__ == "__main__":
-    from config.params import IMAGES, SNAP_PATH
+    from config.params import IMAGE_PATH, SNAP_PATH
     from config.SetLogger import logger_conf
 
     logger = logger_conf()
@@ -55,16 +55,16 @@ if __name__ == "__main__":
     ###############################
     #
     in_dir = SNAP_PATH + "/snap77"
-    out_dir = IMAGES + "/snap77split1"
+    out_dir = IMAGE_PATH + "/snap77split1"
     sep = [[8, 43], [36, 71], [64, 99], [92, 127], [126, 161], [154, 189], [182, 217], [210, 245], [239, 274]]
     ###############################
     # in_dir = SNAP_PATH + "/snap49"
-    # out_dir  = IMAGES + "/snap49split1"
+    # out_dir  = IMAGE_PATH + "/snap49split1"
     # sep = [[8, 44], [36, 72], [54, 90], [92, 128], [110, 146], [142, 178], [168, 204], [200, 236], [235, 271]]
     ###############################
     # X点が見えるように分けた 77AVSsplit2
     # in_dir = SNAP_PATH + "/snap49"
-    # out_dir  = IMAGES + "/snap49split2"
+    # out_dir  = IMAGE_PATH + "/snap49split2"
     # sep = [[22, 58], [52, 88], [74, 110], [102, 138], [124, 160], [154, 190], [182, 218], [213, 249], [249, 285]]
     ###############################
 

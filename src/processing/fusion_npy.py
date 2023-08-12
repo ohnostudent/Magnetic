@@ -9,13 +9,13 @@ import numpy as np
 import pandas as pd
 
 from config.params import ML_DATA_DIR, SNAP_PATH, labels
-from Processing.kernel import _kernel
+from Processing.kernel import _Kernel
 
 sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
 
-class CrateTrain(_kernel):
+class CrateTrain(_Kernel):
     res = {0: "n", 1: "x", 2: "o"}
 
     def __init__(self) -> None:
@@ -70,8 +70,8 @@ def makeTrainingData(dataset: int) -> None:
 
     # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
-        for a in labels:
-            npys = OUT_DIR + f"/point_{a}"
+        for label in labels:
+            npys = OUT_DIR + f"/point_{label}"
 
             for img_path in glob(npys + "/" + val_params[0] + "/*.npy"):
                 im_list = md.loadBinaryData(img_path, val_params)  # 混合データのロード

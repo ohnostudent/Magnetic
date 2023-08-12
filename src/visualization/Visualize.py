@@ -12,7 +12,7 @@ import seaborn as sns
 sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMAGES
+from config.params import IMAGE_PATH
 from Visualization.SnapData import SnapData
 
 
@@ -104,7 +104,7 @@ class VisualizeMethod(SnapData):
             filepath = f"/visualization/edges/snap{self.dataset}/{self.val_param}/{self.job :02d}"
             self.makedir(filepath)
             plt.tight_layout()
-            cv2.imwrite(IMAGES + filepath + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png", edges)
+            cv2.imwrite(IMAGE_PATH + filepath + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png", edges)
 
         # メモリの開放
         plt.clf()
@@ -162,7 +162,7 @@ class VisualizeMethod(SnapData):
         # strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
 
         # fig.colorbar(strm.lines)
-        # plt._save_fig(IMAGES}1111/{number}.png")
+        # plt._save_fig(IMAGE_PATH}1111/{number}.png")
         # plt.show()
 
     def stream_plt(self, X, Y, xrange=False, yrange=False, compress=0) -> None:
@@ -308,7 +308,7 @@ class VisualizeMethod(SnapData):
         if save:
             self.makedir(file_path)
             plt.tight_layout()
-            plt.savefig(IMAGES + file_path + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png")
+            plt.savefig(IMAGE_PATH + file_path + f"/{self.val_param}.{self.param :02d}.{self.job :02d}.png")
 
         # メモリの開放
         plt.clf()
