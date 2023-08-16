@@ -8,7 +8,7 @@ from logging import getLogger
 import numpy as np
 
 sys.path.append(os.getcwd() + "/src")
-from Visualization.SnapData import SnapData
+from Visualization.Visualize.SnapData import SnapData
 
 
 def separate_binary(in_dir, out_dir, sep, sepy, targets) -> None:
@@ -19,31 +19,35 @@ def separate_binary(in_dir, out_dir, sep, sepy, targets) -> None:
     sp = SnapData()
     for target in targets:
         logger.debug("TARGET", extra={"addinfo": target})
+        file_paths = glob(in_dir + f"{target}/*/*")
 
-        for path in glob(in_dir + f"{target}/*/*"):
-            name = os.path.basename(path)
-            logger.debug("FILE", extra={"addinfo": name})
-            img = sp.setSnapData(path)
+        if len(file_paths) == 0:
+            raise ValueError
 
-            for idx, d in enumerate(sep):
-                # ファイル名の変更
-                file_name = name.replace(target, f"{target}.{idx}")
-                # 分割
-                separated_img = img[sepy[0] : sepy[1], d[0] : d[1]]
-                # .npy として保存
-                np.save(out_dir + f"/{target}/{idx}/{file_name}", separated_img)
+        else:
+            for path in file_paths:
+                name = os.path.basename(path)
+                logger.debug("FILE", extra={"addinfo": name})
+                img = sp.loadSnapData(path)
 
-        # 説明用 .txt の作成
-        for s in range(len(sep)):
-            for path in glob(out_dir + f"{target}/{s}"):
-                with open(f"{path}/description_{s}.txt", mode="w") as f:
-                    f.write(
-                        f"このファイルは{os.path.basename(os.path.dirname(in_dir))}{img.shape}を/n X{sep[s][0]}:{sep[s][1]}/n Y{sepy[0]}:{sepy[1]}/nで切り取った"
-                    )
-                    f.close()
+                for idx, d in enumerate(sep):
+                    # ファイル名の変更
+                    file_name = name.replace(target, f"{target}.{idx}")
+                    # 分割
+                    separated_img = img[sepy[0] : sepy[1], d[0] : d[1]]
+                    # .npy として保存
+                    np.save(out_dir + f"/{target}/{idx}/{file_name}", separated_img)
 
-        logger.debug("FILE", extra={"addinfo": name})
-    logger.debug("TARGET END", extra={"addinfo": target})
+            # # 説明用 .txt の作成
+            # for s in range(len(sep)):
+            #     for path in glob(out_dir + f"{target}/{s}"):
+            #         with open(f"{path}/description_{s}.txt", mode="w") as f:
+            #             f.write(
+            #                 f"このファイルは{os.path.basename(os.path.dirname(in_dir))}{img.shape}を/n X{sep[s][0]}:{sep[s][1]}/n Y{sepy[0]}:{sepy[1]}/nで切り取った"
+            #             )
+            #             f.close()
+
+        logger.debug("TARGET END", extra={"addinfo": target})
 
 
 if __name__ == "__main__":

@@ -41,6 +41,8 @@ class SnapData:
                 snap_data = np.fromfile(f, dtype="f", sep="").reshape(1025, 513)
             elif z == 3:
                 snap_data = np.fromfile(f, dtype="f", sep="")[:525825].reshape(1025, 513)
+            else:
+                raise ValueError
 
             f.close()
         return snap_data
@@ -59,7 +61,7 @@ class SnapData:
         if not os.path.exists(IMAGE_PATH + f"/{path}"):
             os.makedirs(IMAGE_PATH + f"/{path}")
 
-    def _convolute(self, data: np.array, kernel: np.array, padding=0, stride=1):
+    def _convolute(self, data: np.ndarray, kernel: np.ndarray, padding=0, stride=1):
         """
         畳み込み演算
         """
@@ -90,10 +92,10 @@ class SnapData:
         畳み込みにおける平滑化のカーネル作成
         """
         ones = np.ones((size, size))
-        res = ones / (size**2)
+        res = ones / (size ** 2)
         return res
 
-    def _calc(self, array, kernel) -> int:
+    def _calc(self, array: np.ndarray, kernel) -> int:
         result = sum(array * kernel)
-        result = sum(result.flat)
+        result = sum(result.flat) # type: ignore
         return result

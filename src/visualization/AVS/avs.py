@@ -11,7 +11,7 @@ import numpy as np
 sys.path.append(os.getcwd() + "\src")
 
 from config.params import AVS_IN_DIR, AVS_OUT_DIR
-from Visualization.SnapData import SnapData
+from Visualization.Visualize.SnapData import SnapData
 
 
 class AvsMethod(SnapData):

@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 from config.params import BIN_PATH, ROOT_DIR, SNAP_PATH, SRC_PATH
 
 
-def set_ij(dataset) -> tuple | bool:
+def set_ij(dataset) -> tuple[int, int] | bool:
     if dataset == 4949:
         i, j = 49, 49
     elif dataset == 77:
@@ -54,7 +54,8 @@ def dataProcessing() -> None:
 
         ij = set_ij(dataset)
         if ij:
-            i, j = ij
+            i, j = ij # type: ignore
+
         else:
             logger.debug("Value Error", extra={"addinfo": "入力したデータセットは使用できません"})
             return
@@ -75,7 +76,7 @@ def dataProcessing() -> None:
             # 出力されたファイル名の変更
             for item2 in items2:
                 if os.path.exists(item2):
-                    rename_file(xyz, param, job, item2)
+                    rename_file(xyz, item2)
 
                 else:  # 見つからない場合
                     logger.debug("NotFound", extra={"addinfo": f"ファイル {item2}.{param:02d}.{job:02d}"})
@@ -83,12 +84,12 @@ def dataProcessing() -> None:
             # 出力されたファイルの移動
             for item1 in items1:
                 if os.path.exists(item1):
-                    move_file(dataset, item1)
+                    move_file(dataset, param, job, item1)
 
                 else:  # 見つからない場合
-                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item2}.{param:02d}.{job:02d}"})
+                    logger.debug("NotFound", extra={"addinfo": f"ファイル {item1}.{param:02d}.{job:02d}"})
 
-            logger.debug("CLOSE", extra={"addinfo": f"File {item2}.{param:02d}.{job:02d}"})
+            logger.debug("CLOSE", extra={"addinfo": f"File snap{i}{j}.{param:02d}.{job:02d}"})
 
         # coordn を最後に移動させる
         for i in range(1, 4):

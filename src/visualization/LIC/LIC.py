@@ -10,19 +10,20 @@ from struct import pack
 
 import numpy as np
 
+sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMAGES, SNAP_PATH, SRC_PATH, datasets
-from Visualization.SnapData import SnapData
+from config.params import IMAGE_PATH, SNAP_PATH, SRC_PATH, datasets
+from Visualization.Visualize.SnapData import SnapData
 
 
 class LicMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
 
-    def LIC(self, props: list) -> int:
+    def LIC(self, props: list):
         """
         LIC法可視化の実行
-        /IMAGES/LIC 配下に .bmp を作成
+        /IMAGE_PATH/LIC 配下に .bmp を作成
 
         Args:
             props (list[str])
@@ -43,18 +44,16 @@ class LicMethod(SnapData):
             xfile (str) : 可視化を行う magfieldx のパス
             yfile (str) : 可視化を行う magfieldy のパス
             out_name (str) : 出力先のファイル
-            x (bool) : わからん, default False
-            y (bool) : わからん, default False
 
         Returns:
             props (list[str]) : .exe 実行用引数の配列
 
         """
 
-        self.logger.debug("START", extra={"addinfo": "make props\n"})
+        self.logger.debug("START", extra={"addinfo": "make props"})
 
         # コマンドの作成
-        props = [SRC_PATH + "/LIC/LIC.exe", xfile, yfile, out_name]
+        props = [SRC_PATH + "/Visualization/LIC/LIC.exe", xfile, yfile, out_name]
         xfile_is_not_exist = not os.path.exists(xfile)
         yfile_is_not_exist = not os.path.exists(yfile)
 
@@ -73,10 +72,11 @@ class LicMethod(SnapData):
 
             props[1], props[2] = xtempfile, ytempfile  # 引数に指定
 
-        # else:
-        #     pass
+        else:
+            self.logger.debug("ERROR", extra={"addinfo": ""})
+            raise ValueError
 
-        self.logger.debug("COMP", extra={"addinfo": "make props\n"})
+        self.logger.debug("COMP", extra={"addinfo": "make props"})
         return props
 
     def _create_tempfile(self, data, xy: str) -> str:
@@ -91,10 +91,9 @@ class LicMethod(SnapData):
             tempfile_path (str) : temp ファイルのパス
 
         """
-
         # コマンドを保存するための.tempファイルの作成
         while True:  # 同じファイルを作成しないようにする
-            tempfile_path = SRC_PATH + f"/LIC/temp/lic_command_{xy}_reading{random.randint(10000, 99999)}.temp"
+            tempfile_path = SRC_PATH + f"/Visualization/LIC/temp/lic_command_{xy}_reading{random.randint(10000, 99999)}.temp"
 
             if not os.path.exists(tempfile_path):
                 break
@@ -104,6 +103,7 @@ class LicMethod(SnapData):
                 b = pack("f", val)
                 f.write(b)
             f.close()
+
         return tempfile_path
 
     def delete_tempfile(self, xtempfile: str, ytempfile: str) -> None:
@@ -128,34 +128,25 @@ def main_process(lic: LicMethod, dir_basename: str, base_out_path: str, binary_p
     logger = getLogger("res_root").getChild(__name__)
 
     for xfile in binary_paths:
-        try:
-            logger.debug("START", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 開始\n"})
+        logger.debug("START", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 開始"})
+        file_name = os.path.splitext(os.path.basename(xfile.replace("magfieldx", "magfield")))
+        out_path = base_out_path + f"/lic_{dir_basename}.{os.path.basename(base_out_path)}.{file_name[0]}.bmp"
+        # print(out_path) # ./IMAGE_PATH/LIC/snap77/left/lic_snap77.left.magfieldx.01.14.bmp
+
+        if not os.path.exists(out_path):
             yfile = xfile.replace("magfieldx", "magfieldy")
-            file_name = os.path.splitext(os.path.basename(xfile.replace("magfieldx", "magfield")))
-            out_path = base_out_path + f"/lic_{dir_basename}.{os.path.basename(base_out_path)}.{file_name[0]}.bmp"
-            # print(out_path) # ./IMAGES/LIC/snap77/lic_snap77.magfieldx.01.14.bmp
+            props = lic.set_command(xfile, yfile, out_path)
+            # 引数の作成
+            # 実行 (1画像20分程度)
+            lic.LIC(props)
 
-            if not os.path.exists(out_path):
-                # 引数の作成
-                props = lic.set_command(xfile, yfile, out_path)
-                # 実行 (1画像20分程度)
-                lic.LIC(props)
-
-                # temp ファイルの削除
-                lic.delete_tempfile(props[1], props[2])
-
-            logger.debug("END", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 終了\n"})
-
-        except KeyboardInterrupt:
+            # temp ファイルの削除
             lic.delete_tempfile(props[1], props[2])
-            break
 
-        except Exception as e:
-            lic.delete_tempfile(props[1], props[2])
-            logger.debug(str(e), extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 中断\n"})
+        logger.debug("END", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 終了"})
 
 
-def LICMainProcess(dataset, size) -> None:
+def LICMainProcess(dataset: int, side: str) -> None:
     """
     処理時間の目安
     snap77   : 778(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
@@ -175,62 +166,53 @@ def LICMainProcess(dataset, size) -> None:
 
     logger = getLogger("res_root").getChild(__name__)
 
-    try:
-        # ログ取得の開始
-        logger.debug("START", extra={"addinfo": "処理開始\n\n"})
+    if dataset not in datasets:
+        logger.debug("ERROR", extra={"addinfo": "このデータセットは使用できません"})
+        sys.exit()
 
-        # dataset = int(input("使用するデータセットを入力してください (77/497/4949): "))
-        if dataset not in datasets:
-            logger.debug("ERROR", extra={"addinfo": "このデータセットは使用できません\n"})
-            sys.exit()
+    logger.debug("START", extra={"addinfo": f"{dataset}.{side.split('_')[1]} 開始"})
 
-        logger.debug("START", extra={"addinfo": f"{dataset}.{size.split('_')[1]} 開始\n"})
-        lic = LicMethod()
+    if not os.path.exists(SRC_PATH + "/Visualization/LIC/LIC.exe"):
+        raise FileNotFoundError
 
-        # 入出力用path の作成
-        in_dir = SNAP_PATH + f"/{size}/snap{dataset}"
-        dir_basename = os.path.basename(in_dir)  # snap77
-        out_dir = IMAGES + "/LIC"
-        base_out_path = out_dir + "/" + os.path.basename(in_dir) + "/" + size.split("_")[1]  # ./IMAGES/LIC/snap77/left
-        lic.makedir(f"/LIC/snap{dataset}/{size.split('_')[1]}")
+    lic = LicMethod()
 
-        # バイナリファイルの取得
-        binary_paths = glob(in_dir + "/magfieldx/*/*.npy")
+    # 入出力用path の作成
+    dir_basename = f"/{side}/snap{dataset}"  # snap77
+    base_out_path = IMAGE_PATH + f"/LIC{dir_basename}/{side.split('_')[1]}"  # ./images/LIC/snap77/left
+    lic.makedir(f"/LIC/snap{dataset}/{side.split('_')[1]}")
 
-        # ファイルが無い場合
-        if binary_paths == []:
-            logger.debug("ERROR", extra={"addinfo": "File not Found\n"})
-            return
+    # バイナリファイルの取得
+    binary_paths = glob(SNAP_PATH + dir_basename + "/magfieldx/*/*.npy")
+    file_count = len(binary_paths)
 
-        file_count = len(binary_paths)
-        with ThreadPoolExecutor() as exec:  # 並列処理 # max_workers は自信のCPUのコア数と相談してください
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[: file_count // 10])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 : file_count // 10 * 2])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 2 : file_count // 10 * 3])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 3 : file_count // 10 * 4])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 4 : file_count // 10 * 5])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 5 : file_count // 10 * 6])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 6 : file_count // 10 * 7])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 7 : file_count // 10 * 8])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 8 : file_count // 10 * 9])
-            exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 10 * 9 :])
+    # ファイルが無い場合
+    if file_count == 0:
+        logger.debug("ERROR", extra={"addinfo": "File not Found"})
+        return
 
-        logger.debug("END", extra={"addinfo": f"{dataset} 終了\n"})
+    else:
+        logger.debug("FILE COUNT", extra={"addinfo": f"{file_count}"})
 
-    except KeyboardInterrupt:
-        logger.debug("ERROR", extra={"addinfo": "処理中断\n"})
+    with ThreadPoolExecutor() as exec:  # 並列処理 # max_workers は自信のCPUのコア数と相談してください
+        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[: file_count // 5])
+        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 : file_count // 5 * 2])
+        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 * 2 : file_count // 5 * 3])
+        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 * 3 : file_count // 5 * 4])
+        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 * 4 :])
 
-    except Exception as e:
-        logger.debug("ERROR", extra={"addinfo": f"{e}\n"})
-
-    finally:
-        logger.debug("END", extra={"addinfo": "処理終了"})
+    logger.debug("END", extra={"addinfo": f"{dataset} 終了"})
 
 
 if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
     logger = logger_conf()
+    # ログ取得の開始
+    logger.debug("START", extra={"addinfo": "処理開始"})
+
     for dataset in datasets:
-        for size in ["half_left", "half_right"]:
-            LICMainProcess(dataset, size)
+        for side in ["half_left", "half_right"]:
+            LICMainProcess(dataset, side)
+
+    logger.debug("END", extra={"addinfo": "処理終了"})

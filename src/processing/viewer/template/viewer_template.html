@@ -43,8 +43,7 @@
         <p class="discribe">グリッド幅X:</p><input class="textinput" id="dxinput" type="text" name="text" value="30">
         <p class="discribe">Y:</p><input class="textinput" id="dyinput" type="text" name="text" value="100">
         <p>元データのピクセルに準拠</p>
-        <p class="discribe">送信先ファイルパス</p><input id="filepath" type="text" value="./ML/data/LIC_labels/label_snap_all.csv"></input>
-
+        <p class="discribe">送信先ファイルパス</p><input id="filepath" type="text" value="./ML/data/LIC_labels/label_snap_org.csv"></input>
     </body>
 </html>
 
@@ -174,7 +173,7 @@
                 "locnumx2": _locnumx2,
                 "locnumy2": _locnumy2,
                 "rangenumx": _rangenumx,
-                "rangenumy": _rangenumy, 
+                "rangenumy": _rangenumy,
                 "label": label
             },
         ];
@@ -189,7 +188,7 @@
             var res = xhr.responseText;
             if (res.length > 0) alert(res);
         };
-        
+
         xhr.onerror = function() {       //エラーが起きた時の処理（非同期）
             alert("error!");
         }
@@ -234,7 +233,7 @@
                 sendData(2) // o点
             }
         }
-        return false; 
+        return false;
     }
 
 	function wheel_event(dir, diff, max) {
@@ -250,6 +249,15 @@
 	}
 
 
+    // 画像の表示範囲
+    const imgXlen = 1800;
+    const imgYlen = 570;
+    // 画像の座標の範囲
+    // 切り取ったサイズに合わせる
+    const orgx = 257;
+    const orgy = 1025;
+
+
     var path_index = 0
     var paths =[{ replaceblock }]
     update()
@@ -258,9 +266,6 @@
     var cvsy = document.getElementById("cvy");
     var boxs = document.getElementById("box")
     var boxs2 = document.getElementById("secondbox")
-
-    const imgXlen = 1799;
-    const imgYlen = 570;
 
     cvsx.setAttribute("width", imgXlen);
     cvsx.setAttribute("height", imgYlen);
@@ -275,14 +280,13 @@
     var ctxy = cvsy.getContext("2d");
     var boxct = boxs.getContext("2d");
     var boxct2 = boxs2.getContext("2d");
-    
-    const orgx = 257;
-    const orgy = 1025;
+
     const inputx = document.getElementById("dxinput");
     const inputy = document.getElementById("dyinput");
 
     drawglidx()
     drawglidy()
+    
     inputx.addEventListener("input", drawglidx);
     inputy.addEventListener("input", drawglidy);
 
@@ -313,7 +317,7 @@
     rangex.addEventListener("input", drawbox2);
     rangey.addEventListener("input", drawbox2);
 
-    // 
+    //
     document.getElementById("secondbox").addEventListener("click", function(event) {
         var clickX = event.pageX;
         var clickY = event.pageY;
@@ -328,7 +332,7 @@
         var y = clickY - positionY;
         // locx = document.getElementById("locx")
         // locy = document.getElementById("locy")
-        
+
         document.getElementById("locx").value = roundDecimal(x * orgx / imgXlen, 0)
         document.getElementById("locy").value = roundDecimal(y * orgy / imgYlen, 0)
         drawbox2()

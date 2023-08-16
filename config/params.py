@@ -35,11 +35,11 @@ def set_dataset(dataset: str):
     from config.params import datasets
 
     if dataset.isnumeric():
-        dataset = int(dataset)
-        if dataset not in datasets:
+        dataset_int = int(dataset)
+        if dataset_int not in datasets:
             sys.exit()
 
     else:
         sys.exit()
 
-    return dataset
+    return dataset_int
