@@ -236,14 +236,14 @@
         return false;
     }
 
-	function wheel_event(dir, diff, max) {
+	function wheel_event(dir, diff, min, max) {
 		event.preventDefault();  // 元のCtrl + マウスホイール時のイベントを止める
 		let wheelVal = event.deltaY;
 		var range = Number(document.getElementById(dir).value);
 		if (wheelVal > 0) {
-			range >= 10 ? range -= diff : range = 0;
+			range >= 10 + min ? range -= diff : range = min;
 		} else {
-			range < max - diff ? range += diff : range = max;
+			range < max - diff + min ? range += diff : range = max;
 		}
 		document.getElementById(dir).value = range ;
 	}
@@ -255,7 +255,7 @@
     // 画像の座標の範囲
     // 切り取ったサイズに合わせる
     const orgx = 257;
-    const orgy = 1025;
+    const orgy = 625;
 
 
     var path_index = 0
@@ -286,7 +286,7 @@
 
     drawglidx()
     drawglidy()
-    
+
     inputx.addEventListener("input", drawglidx);
     inputy.addEventListener("input", drawglidy);
 
@@ -351,9 +351,9 @@
 
     window.addEventListener('wheel', function(event) {
         if (event.ctrlKey) {  // Ctrlキーか判定
-			wheel_event('rangey', 50, 300)
+			wheel_event('rangey', 50, 100, 300)
 		} else if (event.shiftKey) {
-			wheel_event('rangex', 5, 40)
+			wheel_event('rangex', 5, 10, 40)
 		}
 	}, {passive: false});
 

@@ -23,15 +23,15 @@ class _Kernel:
 
     """
 
-    def kernellistxy(self, im1, im2) -> np.ndarray:  # xy交互のリストを持った行列を返す。shapeが1次元増えるので使わない
+    def kernel_listxy(self, im1, im2) -> np.ndarray:  # xy交互のリストを持った行列を返す。shapeが1次元増えるので使わない
         res = np.empty([im1.shape[0], im1.shape[1]])
-        res = [[0 for j in range(im1.shape[1])] for _ in range(im1.shape[0])]
+        res = [[[] for _ in range(im1.shape[1])] for _ in range(im1.shape[0])]
         for x in range(im1.shape[1]):
             for y in range(im1.shape[0]):
                 res[y][x] = [im1[y][x], im2[y][x]]
         return np.array(res)
 
-    def kernelxy(self, im1, im2) -> np.ndarray:  # xy交互の行列を返す。shapeのx方向が2倍になる。
+    def kernel_xy(self, im1, im2) -> np.ndarray:  # xy交互の行列を返す。shapeのx方向が2倍になる。
         res = np.zeros([im1.shape[0], im1.shape[1] * 2])
         for x in range(im1.shape[1]):
             for y in range(im1.shape[0]):
@@ -39,8 +39,8 @@ class _Kernel:
                 res[y][x * 2 + 1] = im2[y][x]
         return res
 
-    def kernelEnergy(self, vx, vy, dens):
+    def kernel_Energy(self, vx, vy, dens):
         return dens * (vx**2 + vy**2) / 2
 
-    def kernelRad(self, vx, vy):
+    def kernel_Rad(self, vx, vy):
         return np.arccos(vx / np.sqrt(vx**2 + vy**2))

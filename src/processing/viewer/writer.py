@@ -12,7 +12,7 @@ predoc = " "
 
 @app.route("/postdata", methods=["POST"])
 def writedata() -> Response:
-    req = request.json[0]
+    req = request.json[0] # type: ignore
     response = {"status": "success", "message": ""}
     try:
         with open(req["filepath"], "a") as f:
@@ -23,7 +23,7 @@ def writedata() -> Response:
             #  'locnumx2': 0, 'locnumy2': 0,
             #  'rangenumx': 0, 'rangenumy': 0}
 
-            doc = str(request.json[0])
+            doc = str(request.json[0]) # type: ignore
             # snappath, dataset, para, job, side, center[x, y], xrange[a, z],  yrange[a, z]
             file_name = os.path.basename(req["snappath"]).split(".")
             dataset, para, job, side = file_name[0].split("_")[1].replace("snap", ""), file_name[3], file_name[4], file_name[1]
@@ -35,7 +35,7 @@ def writedata() -> Response:
             yup = int(req["locnumy2"]) + int(req["rangenumy"])
             label = req["label"]
             doc = f"{req['snappath']},{dataset},{para},{job},{side},{centerx},{centery},{xlow},{xup},{ylow},{yup},{label}\n"
-            global predoc
+            global predoc  # noqa: PLW0603
 
             if int(req["rangenumx"]) == 0 or int(req["rangenumy"]) == 0:
                 # return "error:range is 0"

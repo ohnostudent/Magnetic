@@ -17,10 +17,12 @@ src_def/
 
 # 拡張子
 *.bmp
+*.csv
 *.cmd
 *.env
 *.exe
 *.ipynb
+*.json
 *.log
 *.npy
 *.obj

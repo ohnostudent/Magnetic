@@ -27,8 +27,9 @@ ML_RESULT_DIR = ML_DIR + "/result"
 
 
 datasets  = [77, 497, 4949]
+sides = ["left", "right"]
 variable_parameters = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
-labels = ["n", "o", "x"]
+labels = ["n", "x", "o"]
 
 
 def set_dataset(dataset: str):

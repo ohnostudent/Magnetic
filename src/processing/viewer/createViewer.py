@@ -10,12 +10,12 @@ sys.path.append(os.getcwd())
 from config.params import IMAGE_PATH, SRC_PATH
 
 
-def _sort_paths(path_list):
+def _sort_paths(path_list: list[str]) -> list[str]:
     """
     path_listはglob等で取得したlist。
     path_listをparam, jobでソートして返す。
     """
-    pjp = list(
+    pjp: list = list(
         map(
             lambda x: list(map(lambda y: int(y) if y.isnumeric() else y, x)),
             map(lambda path: [path] + os.path.basename(path).split(".")[2:4], path_list),
