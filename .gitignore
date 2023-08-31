@@ -1,6 +1,7 @@
 # ディレクトリ
 .vscode/
 .venv/
+.ruff_cache/
 *__pycache__
 
 data/
@@ -27,8 +28,8 @@ src_def/
 *.npy
 *.obj
 *.temp
-*.pyi
 *.pxd
+*.pyi
 *.pyx
 
 # 各ファイル

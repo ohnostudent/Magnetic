@@ -54,6 +54,9 @@ class CreateTrain(_Kernel):
             data = json.load(f)
 
         locs = data[str(self.dataset)][side][labels[label]]
+        if locs == {}:
+            return
+
         npy_base_path = SNAP_PATH + f"/half_{side}/snap{self.dataset}/{val_param}"
         for para in range(1, 31):
             for job in range(7, 15):
@@ -64,7 +67,6 @@ class CreateTrain(_Kernel):
 
                 npy_path = npy_base_path + f"/{job:02d}/{val_param}.{para:02d}.{job:02d}.npy"
                 if not os.path.exists(npy_path):
-                    print(npy_path)
                     continue
 
                 for i in range(8):
@@ -74,7 +76,6 @@ class CreateTrain(_Kernel):
 
                     img = np.load(npy_path)
                     separated_im = img[ylow:yup, xlow:xup]
-                    print(separated_im.shape)
 
                     base_path = (
                         ML_DATA_DIR
@@ -100,13 +101,22 @@ class CreateTrain(_Kernel):
 
 
 def save_split_data_from_json(dataset: int):
+    logger = getLogger("res_root").getChild(__name__)
     path = ML_DATA_DIR + "/LIC_labels/test.json"
     md = CreateTrain(dataset)
 
     for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
+        logger.debug("START", extra={"addinfo": val})
         for side in sides:
+            logger.debug("START", extra={"addinfo": side})
             for label in range(3):
+                logger.debug("START", extra={"addinfo": labels[label]})
+
                 md.cut_and_save_from_json(path, side, label, val)
+
+                logger.debug("END", extra={"addinfo": labels[label]})
+            logger.debug("END", extra={"addinfo": side})
+        logger.debug("END", extra={"addinfo": val})
 
 
 def save_split_data_from_csv(dataset: int) -> None:

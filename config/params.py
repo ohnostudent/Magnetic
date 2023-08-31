@@ -33,8 +33,6 @@ labels = ["n", "x", "o"]
 
 
 def set_dataset(dataset: str):
-    from config.params import datasets
-
     if dataset.isnumeric():
         dataset_int = int(dataset)
         if dataset_int not in datasets:

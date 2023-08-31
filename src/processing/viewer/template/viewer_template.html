@@ -257,6 +257,13 @@
     const orgx = 257;
     const orgy = 625;
 
+    // 切り取る枠の範囲指定
+    const range_x_low = 50
+    const range_x_up = 200
+    const range_y_low = 10
+    const range_y_up = 40
+    const range_x = 50
+    const range_y = 5
 
     var path_index = 0
     var paths =[{ replaceblock }]
@@ -351,9 +358,9 @@
 
     window.addEventListener('wheel', function(event) {
         if (event.ctrlKey) {  // Ctrlキーか判定
-			wheel_event('rangey', 50, 100, 300)
+			wheel_event('rangey', range_x, range_x_low, range_x_up)
 		} else if (event.shiftKey) {
-			wheel_event('rangex', 5, 10, 40)
+			wheel_event('rangex', range_y, range_y_low, range_y_up)
 		}
 	}, {passive: false});
 
