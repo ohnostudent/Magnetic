@@ -30,7 +30,7 @@ def _sort_paths(path_list: list[str]) -> list[str]:
 def createViewer(dataset) -> None:
     from logging import getLogger
 
-    logger = getLogger("res_root").getChild(__name__)
+    logger = getLogger("main").getChild("Create_Viewer")
 
     for size in ["left", "right"]:
         # paths = _sort_paths(paths) # snapの命名規則をもとに時系列順に並び変える。

@@ -42,7 +42,7 @@ def rename_file(xyz, item2):
 
 
 def dataProcessing() -> None:
-    logger = getLogger("res_root").getChild(__name__)
+    logger = getLogger("main").getChild("Save_Snap")
 
     # パラメータの定義
     items1 = ["density", "enstrophy", "pressure", "magfieldx", "magfieldy", "magfieldz", "velocityx", "velocityy", "velocityz"]

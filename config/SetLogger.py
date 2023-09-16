@@ -24,7 +24,7 @@ def logger_conf() -> Logger:
     """
     time = datetime.strftime(datetime.now() + timedelta(hours=9), "%Y%m%d%H%M%S%f")
     # ロガーの生成
-    logger = getLogger("res_root")
+    logger = getLogger("main")
     # 出力レベルの設定
     logger.setLevel(DEBUG)
 

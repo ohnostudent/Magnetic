@@ -59,7 +59,7 @@ def doSnap2npy(dataset: int) -> None:
 
     from config.params import SNAP_PATH, datasets, variable_parameters
 
-    logger = getLogger("res_root").getChild(__name__)
+    logger = getLogger("main").getChild("Snap_to_npy")
 
     if dataset not in datasets:
         logger.debug("ERROR", extra={"addinfo": f"cannot use dataset{dataset}"})
