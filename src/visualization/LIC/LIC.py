@@ -18,9 +18,9 @@ from Visualization.Visualize.SnapData import SnapData
 
 
 class LicMethod(SnapData):
-    logger = getLogger("res_root").getChild(__name__)
+    logger = getLogger("main").getChild("LIC")
 
-    def LIC(self, props: list):
+    def LIC(self, props :list):
         """
         LIC法可視化の実行
         /IMAGE_PATH/LIC 配下に .bmp を作成
@@ -36,7 +36,7 @@ class LicMethod(SnapData):
         result = subprocess.run(props)
         return result
 
-    def set_command(self, xfile: str, yfile: str, out_name: str) -> list:
+    def set_command(self, xfile :str, yfile :str, out_name :str) -> list:
         """
         LIC.exe の引数を作成する関数
 
@@ -79,7 +79,7 @@ class LicMethod(SnapData):
         self.logger.debug("COMP", extra={"addinfo": "make props"})
         return props
 
-    def _create_tempfile(self, data, xy: str) -> str:
+    def _create_tempfile(self, data, xy :str) -> str:
         """
         temp ファイルの作成
 
@@ -106,7 +106,7 @@ class LicMethod(SnapData):
 
         return tempfile_path
 
-    def delete_tempfile(self, xtempfile: str, ytempfile: str) -> None:
+    def delete_tempfile(self, xtempfile :str, ytempfile : str) -> None:
         """
         props 作成時に生成した tempファイルの削除を行う関数
 
@@ -124,14 +124,14 @@ class LicMethod(SnapData):
         os.remove(ytempfile)
 
 
-def main_process(lic: LicMethod, dir_basename: str, base_out_path: str, binary_paths: list[str]) -> None:
-    logger = getLogger("res_root").getChild(__name__)
+def main_process(lic :LicMethod, dataset :int, base_out_path :str, binary_paths :list[str]) -> None:
+    logger = getLogger("main").getChild("LIC_main")
 
     for xfile in binary_paths:
         logger.debug("START", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 開始"})
         file_name = os.path.splitext(os.path.basename(xfile.replace("magfieldx", "magfield")))
-        out_path = base_out_path + f"/lic_{dir_basename}.{os.path.basename(base_out_path)}.{file_name[0]}.bmp"
-        # print(out_path) # ./IMAGE_PATH/LIC/snap77/left/lic_snap77.left.magfieldx.01.14.bmp
+        out_path = base_out_path + f"/lic_snap{dataset}.{os.path.basename(base_out_path)}.{file_name[0]}.bmp"
+        # print(out_path) # ./IMAGE_PATH/LIC/snap77/left/lic_snap77.left.magfield.01.14.bmp
 
         if not os.path.exists(out_path):
             yfile = xfile.replace("magfieldx", "magfieldy")
@@ -146,25 +146,26 @@ def main_process(lic: LicMethod, dir_basename: str, base_out_path: str, binary_p
         logger.debug("END", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 終了"})
 
 
-def LICMainProcess(dataset: int, side: str) -> None:
+def LICMainProcess(dataset :int, side :str) -> None:
     """
     処理時間の目安
-    snap77   : 778(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
+    1ファイル : 20(分) (3.98(GHz))
+
+    snap77   : 778(ファイル) * 20(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 3.98(GHz))
     -> 64.833 (時間)
 
-    snap497  : 791(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
+    snap497  : 791(ファイル) * 20(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 3.98(GHz))
     -> 65.9167 (時間)
 
-    snap4949 : 886(ファイル) * 30(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 2.8(GHz))
+    snap4949 : 886(ファイル) * 20(分) / 60 / 4 (並列スレッド数) * (CPU速度(GHz) / 3.98(GHz))
     -> 73.83 (時間)
 
-    計     : 2455 * 30(分) / 60 / 並列スレッド数 * (CPU速度(GHz) / 2.8(GHz))
+    計     : 2455(ファイル) * 20(分) / 60 / 並列スレッド数 * (CPU速度(GHz) / 3.98(GHz))
     -> 204.58 (時間)
-
     """
     from concurrent.futures import ThreadPoolExecutor
 
-    logger = getLogger("res_root").getChild(__name__)
+    logger = getLogger("main").getChild("LIC_main")
 
     if dataset not in datasets:
         logger.debug("ERROR", extra={"addinfo": "このデータセットは使用できません"})
@@ -178,12 +179,11 @@ def LICMainProcess(dataset: int, side: str) -> None:
     lic = LicMethod()
 
     # 入出力用path の作成
-    dir_basename = f"/{side}/snap{dataset}"  # snap77
-    base_out_path = IMAGE_PATH + f"/LIC{dir_basename}/{side.split('_')[1]}"  # ./images/LIC/snap77/left
+    base_out_path = IMAGE_PATH + f"/LIC/snap{dataset}/{side.split('_')[1]}"  # ./images/LIC/snap77/left
     lic.makedir(f"/LIC/snap{dataset}/{side.split('_')[1]}")
 
     # バイナリファイルの取得
-    binary_paths = glob(SNAP_PATH + dir_basename + "/magfieldx/*/*.npy")
+    binary_paths = glob(SNAP_PATH + f"/{side}/snap{dataset}/magfieldx/*/*.npy")
     file_count = len(binary_paths)
 
     # ファイルが無い場合
@@ -195,11 +195,11 @@ def LICMainProcess(dataset: int, side: str) -> None:
         logger.debug("FILE COUNT", extra={"addinfo": f"{file_count}"})
 
     with ThreadPoolExecutor() as exec:  # 並列処理 # max_workers は自信のCPUのコア数と相談してください
-        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[: file_count // 5])
-        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 : file_count // 5 * 2])
-        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 * 2 : file_count // 5 * 3])
-        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 * 3 : file_count // 5 * 4])
-        exec.submit(main_process, lic, dir_basename, base_out_path, binary_paths[file_count // 5 * 4 :])
+        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[: file_count // 5])
+        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 : file_count // 5 * 2])
+        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 2 : file_count // 5 * 3])
+        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 3 : file_count // 5 * 4])
+        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 4 :])
 
     logger.debug("END", extra={"addinfo": f"{dataset} 終了"})
 
@@ -211,8 +211,10 @@ if __name__ == "__main__":
     # ログ取得の開始
     logger.debug("START", extra={"addinfo": "処理開始"})
 
-    for dataset in datasets:
-        for side in ["half_left", "half_right"]:
-            LICMainProcess(dataset, side)
+    # for dataset in datasets:
+    #     for side in ["half_left", "half_right"]:
+    #         LICMainProcess(dataset, side)
+
+    LICMainProcess(4949, "half_right")
 
     logger.debug("END", extra={"addinfo": "処理終了"})

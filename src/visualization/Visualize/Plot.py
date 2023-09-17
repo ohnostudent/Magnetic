@@ -16,7 +16,7 @@ from config.params import IMAGE_PATH
 from Visualization.Visualize.SnapData import SnapData
 
 
-class VisualizeMethod(SnapData):
+class PlotMethod(SnapData):
     logger = getLogger("res_root").getChild(__name__)
 
     def __init__(self, dataset) -> None:
@@ -329,7 +329,7 @@ def gridHeatmap() -> None:
         target_path = SNAP_PATH + f"/snap{dataset}"
 
         # インスタンスの生成
-        viz = VisualizeMethod(dataset)
+        viz = PlotMethod(dataset)
 
         files = {}  # glob した path の保存
 

@@ -1,21 +1,26 @@
 ## 4. 機械学習
 
 ※ /Magnetic を作業ディレクトリとしてください
+
 ```
 > pwd
 ./Magnetic
 
 ```
+
 ※ 場合によっては以下のコードを追記してください
+
 ```python
 import os
 import sys
 sys.path.append(os.getcwd() + "/src")
 
 ```
+
 <br>
 
 ### 4.2. k-Means
+
     - kMeans
 
 ```python
@@ -52,22 +57,24 @@ for dataset in datasets:
         df_re = cluster.save_result(cluster_labels, path_list, dataset)
         # display(df_re)
 ```
-<br>
-<br>
 
+<br>
+<br>
 
 ### 4.3. SVM
 
 出力先
-- `/MLres/*`
+
+- `/ML/data/*`
 
 <br>
 <br>
 
-### 4.4. 非線形SVM
+### 4.4. 非線形 SVM
 
 出力先
-- `/MLres/*`
+
+- `/ML/data/*`
 
 <br>
 <br>
@@ -75,7 +82,8 @@ for dataset in datasets:
 ### 4.5. k-近傍法
 
 出力先
-- `/MLres/*`
+
+- `/ML/data/*`
 
 <br>
 <br>
@@ -83,7 +91,8 @@ for dataset in datasets:
 ### 4.6. XGBoost
 
 出力先
-- `/MLres/*`
+
+- `/ML/data/*`
 
 <br>
 <br>
@@ -91,6 +100,7 @@ for dataset in datasets:
 ### 4.7. CNN
 
 出力先
-- `/MLres/*`
+
+- `/ML/data/*`
 
 <br>

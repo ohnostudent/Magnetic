@@ -157,7 +157,7 @@ def makeTrainingData(dataset: int) -> None:
         (["magfieldx", "magfieldy"], "mag_tupledxy", md.kernel_listxy),
         (["velocityx", "velocityy", "density"], "energy", md.kernel_Energy),
     ]
-    OUT_DIR = ML_DATA_DIR + f"/snap{dataset}"
+    OUT_DIR = ML_DATA_DIR + f"/snap_files/snap{dataset}"
 
     # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
