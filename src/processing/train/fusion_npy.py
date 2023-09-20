@@ -6,13 +6,13 @@ import sys
 from glob import glob
 from logging import getLogger
 
+import cv2
 import numpy as np
 import pandas as pd
 
-sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import ML_DATA_DIR, SNAP_PATH, labels, sides
+from config.params import IMAGE_SHAPE, LABELS, ML_DATA_DIR, SIDES, SNAP_PATH
 from Processing.train.kernel import _Kernel
 
 
@@ -44,17 +44,26 @@ class CreateTrain(_Kernel):
 
         base_path = (
             ML_DATA_DIR
-            + f"/snap{self.dataset}/point_{labels[label]}/{val_param}"
+            + f"/snap{self.dataset}/point_{LABELS[label]}/{val_param}"
             + f"/{val_param}_{self.dataset}_{side}.{para:02d}.{job:02d}_{centerx:03d}.{centery:03d}"
         )
         self.save_Data(separated_im, base_path)
 
     def cut_and_save_from_json(self, path: str, side: str, label: int, val_param: str):
-        logger.debug("START", extra={"addinfo": labels[label]})
+        """
+        json の座標データを基に、データを切り取る関数
+
+        Args:
+            path (str): 画像パス
+            side (str): left / right
+            label (int): 0(n), 1(x), 2(o)
+            val_param (str): 対象のパラメータ
+        """
+        self.logger.debug("START", extra={"addinfo": LABELS[label]})
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        locs = data[str(self.dataset)][side][labels[label]]
+        locs = data[str(self.dataset)][side][LABELS[label]]
         if locs == {}:
             return
 
@@ -64,7 +73,7 @@ class CreateTrain(_Kernel):
             job_range = locs.keys()
 
         npy_base_path = SNAP_PATH + f"/half_{side}/snap{self.dataset}/{val_param}"
-        for param in range(1, 31):
+        for param in range(1, 75):
             for job in job_range:
                 npy_path = npy_base_path + f"/{int(job):02d}/{val_param}.{param:02d}.{int(job):02d}.npy"
                 if not os.path.exists(npy_path):
@@ -76,24 +85,45 @@ class CreateTrain(_Kernel):
                     y_range = locs[job]["y_range"]
 
                     for num in center.keys():
-                        centerx, centery = center[num]
-                        xlow, xup = x_range[num]
-                        ylow, yup = y_range[num]
-
                         img = np.load(npy_path)
-                        separated_im = img[ylow:yup, xlow:xup]
+                        img_shape = img.shape
+
+                        centerx, centery = center[num]
+                        xlow, xup, ylow, yup = self._range_shape(x_range, y_range, num, img_shape)
+                        separated_im = img[ylow:yup, xlow:xup]  # 切り取り
+                        img_resize = cv2.resize(separated_im, IMAGE_SHAPE, interpolation=cv2.INTER_LANCZOS4)  # サイズ変更 -> (100, 25)
 
                         base_path = (
                             ML_DATA_DIR
-                            + f"/snap{self.dataset}/point_{labels[label]}/{val_param}"
+                            + f"/snap_files/snap{self.dataset}/point_{LABELS[label]}/{val_param}"
                             + f"/{val_param}_{self.dataset}_{side}.{param:02d}.{int(job):02d}_{centerx:03d}.{centery:03d}"
                         )
-                        self.save_Data(separated_im, base_path)
+                        self.save_Data(img_resize, base_path)
 
                 except ValueError as e:
-                    logger.error("ERROR", extra={"addinfo": str(e)})
+                    self.logger.error("ERROR", extra={"addinfo": str(e)})
 
-        logger.debug("END", extra={"addinfo": labels[label]})
+                except cv2.error as e:
+                    if "!ssize.empty() in function" in str(e):
+                        self.logger.error("ERROR", extra={"addinfo": "切り取り範囲がファイルサイズ外です"})
+                    else:
+                        self.logger.error("ERROR", extra={"addinfo": f"{e}"})
+
+        self.logger.debug("END", extra={"addinfo": LABELS[label]})
+
+    def _range_shape(self, x_range, y_range, num, img_shape):
+        xlow, xup = x_range[num]
+        ylow, yup = y_range[num]
+        if xlow < 0:
+            xlow = 0
+        if xup > img_shape[1]:
+            xup = img_shape[1]
+        if ylow < 0:
+            ylow = 0
+        if yup > img_shape[0]:
+            yup = img_shape[0]
+
+        return xlow, xup, ylow, yup
 
     # 複数の変数を混合したデータを作成する
     def loadBinaryData(self, img_path, val_params) -> list:
@@ -111,30 +141,14 @@ class CreateTrain(_Kernel):
         np.save(out_path, result_img)
 
 
-def save_split_data_from_json(dataset: int):
-    logger = getLogger("main").getChild("Split_from_json")
-    path = ML_DATA_DIR + "/LIC_labels/test.json"
-    if not os.path.exists(path):
-        raise ValueError
-
-    md = CreateTrain(dataset)
-    for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
-        logger.debug("START", extra={"addinfo": val})
-        for side in sides:
-            logger.debug("START", extra={"addinfo": side})
-            for label in range(3):
-                md.cut_and_save_from_json(path, side, label, val)
-
-            logger.debug("END", extra={"addinfo": side})
-        logger.debug("END", extra={"addinfo": val})
-
-
 def save_split_data_from_csv(dataset: int) -> None:
     logger = getLogger("main").getChild("Split_from_csv")
+    logger.debug("START", extra={"addinfo": "Make Train"})
 
     csv_path = ML_DATA_DIR + f"/LIC_labels/label_snap{dataset}_org.csv"
     if not os.path.exists(csv_path):
-        raise ValueError
+        logger.debug("ERROR", extra={"addinfo": "ファイルが見つかりませんでした"})
+        raise ValueError("File not found")
 
     md = CreateTrain(dataset)
     df = pd.read_csv(csv_path, encoding="utf-8")
@@ -147,10 +161,33 @@ def save_split_data_from_csv(dataset: int) -> None:
             md.cut_and_save_from_csv(val, d)
 
         logger.debug("END", extra={"addinfo": val})
+    logger.debug("END", extra={"addinfo": "Make Train\n"})
+
+
+def save_split_data_from_json(dataset: int):
+    logger = getLogger("main").getChild("Split_from_json")
+    logger.debug("START", extra={"addinfo": "Cut"})
+    path = ML_DATA_DIR + "/LIC_labels/snap_labels.json"
+    if not os.path.exists(path):
+        logger.debug("ERROR", extra={"addinfo": "ファイルが見つかりませんでした"})
+        raise ValueError("File not found")
+
+    md = CreateTrain(dataset)
+    for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
+        logger.debug("START", extra={"addinfo": val})
+        for side in SIDES:
+            logger.debug("START", extra={"addinfo": side})
+            for label in range(3):
+                md.cut_and_save_from_json(path, side, label, val)
+
+            logger.debug("END", extra={"addinfo": side + "\n"})
+        logger.debug("END", extra={"addinfo": val + "\n"})
+    logger.debug("END", extra={"addinfo": "Cut\n"})
 
 
 def makeTrainingData(dataset: int) -> None:
     logger = getLogger("main").getChild("Make_Training")
+    logger.debug("START", extra={"addinfo": "Make Training Data"})
 
     md = CreateTrain(dataset)
     props_params = [
@@ -162,7 +199,7 @@ def makeTrainingData(dataset: int) -> None:
     # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
         logger.debug("START", extra={"addinfo": val_params})
-        for label in labels:  # n, o, x
+        for label in LABELS:  # n, x, o
             logger.debug("START", extra={"addinfo": f"label : {label}"})
             npys_path = OUT_DIR + f"/point_{label}"
 
@@ -176,8 +213,9 @@ def makeTrainingData(dataset: int) -> None:
                 out_path = npys_path + f"/{out_basename}/{os.path.basename(img_path).replace(val_params[0], out_basename)}"
                 md.save_Data(result_img, out_path)  # データの保存
 
-            logger.debug("END", extra={"addinfo": f"label : {label}"})
-        logger.debug("END", extra={"addinfo": val_params})
+            logger.debug("END", extra={"addinfo": f"label : {label}\n"})
+        logger.debug("END", extra={"addinfo": f"{val_params}\n"})
+    logger.debug("END", extra={"addinfo": "Make Training Data\n"})
 
 
 if __name__ == "__main__":
@@ -193,11 +231,11 @@ if __name__ == "__main__":
     logger = logger_conf()
     dataset = set_dataset(dataset)
 
-    logger.debug("START", extra={"addinfo": "Cut"})
+    logger.debug("START", extra={"addinfo": f"{dataset}"})
+
     # save_split_data_from_csv(dataset)
     save_split_data_from_json(dataset)
-    logger.debug("END", extra={"addinfo": "Cut"})
 
-    logger.debug("START", extra={"addinfo": "Make Train"})
     makeTrainingData(dataset)
-    logger.debug("END", extra={"addinfo": "Make Train"})
+
+    logger.debug("END", extra={"addinfo": f"{dataset}"})

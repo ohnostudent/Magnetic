@@ -26,16 +26,16 @@ ML_MODEL_DIR = ML_DIR + "/models"
 ML_RESULT_DIR = ML_DIR + "/result"
 
 
-datasets  = [77, 497, 4949]
-sides = ["left", "right"]
-variable_parameters = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
-labels = ["n", "x", "o"]
-
+DATASETS  = [77, 497, 4949]
+SIDES = ["left", "right"]
+VARIABLE_PARAMETERS = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
+LABELS = ["n", "x", "o"]
+IMAGE_SHAPE = (100, 25) # (Y, X)
 
 def set_dataset(dataset: str):
     if dataset.isnumeric():
         dataset_int = int(dataset)
-        if dataset_int not in datasets:
+        if dataset_int not in DATASETS:
             sys.exit()
 
     else:

@@ -8,9 +8,9 @@ from math import floor
 
 import pandas as pd
 
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd() + "/src")
 
-from config.params import ML_DATA_DIR, datasets, labels, sides
+from config.params import DATASETS, LABELS, ML_DATA_DIR, SIDES
 
 
 def _create_json(file_name):
@@ -27,13 +27,13 @@ def _create_json(file_name):
 def _set_default():
     # 基盤の作成
     json_dict = dict()
-    for dataset in datasets:
+    for dataset in DATASETS:
         json_dict[dataset] = dict()
 
-        for side in sides:
+        for side in SIDES:
             json_dict[dataset][side] = dict()
 
-            for label in labels:
+            for label in LABELS:
                 json_dict[dataset][side][label] = dict()
     return json_dict
 
@@ -78,7 +78,7 @@ def _df_to_dict(df: pd.DataFrame):
 def set_n():
     # 切り取る長方形の重心座標のリスト
     # 4 * 2 = 8 点取る
-    x_locs = [30, 90, 150, 210]
+    x_locs = [30, 60, 90, 120, 150, 180, 210]
     y_locs = [150, 450]
     shapes = [25, 100]
 
@@ -190,7 +190,7 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
         _set_default()
 
     with open(folder, "w", encoding="utf-8") as f:
-        data[str(dataset)][side][labels[label]] = result_list
+        data[str(dataset)][side][LABELS[label]] = result_list
         json.dump(data, f)
 
 
@@ -211,12 +211,12 @@ if __name__ == "__main__":
 
     logger.debug("START", extra={"addinfo": "処理開始"})
 
-    for side in sides:
+    for side in SIDES:
         logger.debug("START", extra={"addinfo": side})
         for label in [0, 1, 2]:
-            logger.debug("START", extra={"addinfo": labels[label]})
+            logger.debug("START", extra={"addinfo": LABELS[label]})
             makeTrain(dataset, side, label, test=test)
-            logger.debug("END", extra={"addinfo": labels[label]})
-        logger.debug("END", extra={"addinfo": side})
+            logger.debug("END", extra={"addinfo": LABELS[label] + "\n"})
+        logger.debug("END", extra={"addinfo": side + "\n"})
 
     logger.debug("END", extra={"addinfo": "処理終了"})

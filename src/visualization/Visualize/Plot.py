@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
 from config.params import IMAGE_PATH
@@ -17,7 +16,7 @@ from Visualization.Visualize.SnapData import SnapData
 
 
 class PlotMethod(SnapData):
-    logger = getLogger("res_root").getChild(__name__)
+    logger = getLogger("main").getChild(__name__)
 
     def __init__(self, dataset) -> None:
         super().__init__()
@@ -91,7 +90,7 @@ class PlotMethod(SnapData):
     def drawEdge(self, path, save=True) -> None:
         # cv2で扱える0-255の整数に整形
         snap_data = self.loadSnapData(path)
-        snap_data = (snap_data - min(snap_data.flat)) * 254 / max(snap_data.flat) # type: ignore
+        snap_data = (snap_data - min(snap_data.flat)) * 254 / max(snap_data.flat)  # type: ignore
         snap_data = snap_data.astype("uint8")
 
         # plt 可視化
@@ -142,10 +141,10 @@ class PlotMethod(SnapData):
         Y = Y[2:-2, 2:-2]
         ##########
         color = u**2 + v**2
-        color = color * 2 / max(color.flat) # type: ignore
+        color = color * 2 / max(color.flat)  # type: ignore
         rad = np.arccos(u / np.sqrt(u**2 + v**2))
         color2 = np.array(v) / np.array(u)
-        color2 = color2 - min(color2.flat) # type: ignore
+        color2 = color2 - min(color2.flat)  # type: ignore
         color2 = color2 / max(color2.flat)
         speed = np.sqrt(u**2 + v**2)
         lw = 7 * speed / speed.max()
@@ -155,7 +154,7 @@ class PlotMethod(SnapData):
         # show(rot,bar_range=[-0.05,0.05])
         # sns.heatmap(dataY)
         # strm = plt.streamplot(X, Y, u, v, density=[5], color=color, arrowstyle='-', linewidth=1,cmap="rainbow")
-        strm = plt.streamplot(X, Y, u, v, density=[3], color=rot, arrowstyle="-", linewidth=lw, cmap="rainbow") # type: ignore
+        strm = plt.streamplot(X, Y, u, v, density=[3], color=rot, arrowstyle="-", linewidth=lw, cmap="rainbow")  # type: ignore
         # strm = plt.streamplot(X, Y, u, v, density=[0.5], color=rad, arrowstyle='-', linewidth=1,cmap="rainbow", minlength=0.001)
         rad2 = abs(rad - (3.1415927 / 2))
         # sns.heatmap(rad2, cmap="bone")
@@ -165,7 +164,7 @@ class PlotMethod(SnapData):
         # plt._save_fig(IMAGE_PATH}1111/{number}.png")
         # plt.show()
 
-    def stream_plt(self, X, Y, xrange: list[int] | None=None, yrange: list[int] | None=None, compress: int=0) -> None:
+    def stream_plt(self, X, Y, xrange: list[int] | None = None, yrange: list[int] | None = None, compress: int = 0) -> None:
         dataX = X
         dataY = Y
         if xrange:
@@ -191,8 +190,8 @@ class PlotMethod(SnapData):
         # X,Y方向それぞれのベクトルの強さ
         u = dataX
         v = dataY
-        color = u ** 2 + v ** 2
-        color = color * 2 / max(color.flat) # type: ignore
+        color = u**2 + v**2
+        color = color * 2 / max(color.flat)  # type: ignore
         #########rotの計算途中の微分でデータの端っこが削れる
         rot = self._rot2d(u, v)
         u = u[2:-2, 2:-2]
@@ -202,7 +201,7 @@ class PlotMethod(SnapData):
         ##########
         rad = np.arccos(u / np.sqrt(u**2 + v**2))
         color2 = np.array(v) / np.array(u)
-        color2 = color2 - min(color2.flat) # type: ignore
+        color2 = color2 - min(color2.flat)  # type: ignore
         color2 = color2 / max(color2.flat)
         speed = np.sqrt(u**2 + v**2)
         lw = 7 * speed / speed.max()
@@ -217,7 +216,7 @@ class PlotMethod(SnapData):
         # plot = plt.pcolor(rad, cmap="bwr")
         # strm = plt.streamplot(X, Y, u, v, density=[5], color=color, arrowstyle='-', linewidth=1,cmap="rainbow")
         # strm = plt.streamplot(X, Y, u, v, density=[3], color=rot, arrowstyle='-', linewidth=lw,cmap="rainbow")
-        strm = plt.streamplot(X, Y, u, v, density=[5], color="black", arrowstyle="-", linewidth=1.5, cmap="bwr", minlength=0.001) # type: ignore
+        strm = plt.streamplot(X, Y, u, v, density=[5], color="black", arrowstyle="-", linewidth=1.5, cmap="bwr", minlength=0.001)  # type: ignore
 
         # strm = plt.streamplot(X, Y, u, v, density=[1,5], color=black, arrowstyle='-|>', linewidth=1)
 
@@ -318,13 +317,13 @@ class PlotMethod(SnapData):
 def gridHeatmap() -> None:
     from glob import glob
 
-    from config.params import SNAP_PATH, datasets
+    from config.params import DATASETS, SNAP_PATH
     from config.SetLogger import logger_conf
 
     # ログ取得の開始
     logger = logger_conf()
 
-    for dataset in datasets:
+    for dataset in DATASETS:
         logger.debug("START", extra={"addinfo": f"snap{dataset}"})
         target_path = SNAP_PATH + f"/snap{dataset}"
 

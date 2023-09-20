@@ -10,17 +10,16 @@ from struct import pack
 
 import numpy as np
 
-sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMAGE_PATH, SNAP_PATH, SRC_PATH, datasets
+from config.params import DATASETS, IMAGE_PATH, SNAP_PATH, SRC_PATH
 from Visualization.Visualize.SnapData import SnapData
 
 
 class LicMethod(SnapData):
     logger = getLogger("main").getChild("LIC")
 
-    def LIC(self, props :list):
+    def LIC(self, props: list):
         """
         LIC法可視化の実行
         /IMAGE_PATH/LIC 配下に .bmp を作成
@@ -36,7 +35,7 @@ class LicMethod(SnapData):
         result = subprocess.run(props)
         return result
 
-    def set_command(self, xfile :str, yfile :str, out_name :str) -> list:
+    def set_command(self, xfile: str, yfile: str, out_name: str) -> list:
         """
         LIC.exe の引数を作成する関数
 
@@ -79,7 +78,7 @@ class LicMethod(SnapData):
         self.logger.debug("COMP", extra={"addinfo": "make props"})
         return props
 
-    def _create_tempfile(self, data, xy :str) -> str:
+    def _create_tempfile(self, data, xy: str) -> str:
         """
         temp ファイルの作成
 
@@ -106,7 +105,7 @@ class LicMethod(SnapData):
 
         return tempfile_path
 
-    def delete_tempfile(self, xtempfile :str, ytempfile : str) -> None:
+    def delete_tempfile(self, xtempfile: str, ytempfile: str) -> None:
         """
         props 作成時に生成した tempファイルの削除を行う関数
 
@@ -124,7 +123,7 @@ class LicMethod(SnapData):
         os.remove(ytempfile)
 
 
-def main_process(lic :LicMethod, dataset :int, base_out_path :str, binary_paths :list[str]) -> None:
+def main_process(lic: LicMethod, dataset: int, base_out_path: str, binary_paths: list[str]) -> None:
     logger = getLogger("main").getChild("LIC_main")
 
     for xfile in binary_paths:
@@ -146,7 +145,7 @@ def main_process(lic :LicMethod, dataset :int, base_out_path :str, binary_paths 
         logger.debug("END", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 終了"})
 
 
-def LICMainProcess(dataset :int, side :str) -> None:
+def LICMainProcess(dataset: int, side: str) -> None:
     """
     処理時間の目安
     1ファイル : 20(分) (3.98(GHz))
@@ -167,7 +166,7 @@ def LICMainProcess(dataset :int, side :str) -> None:
 
     logger = getLogger("main").getChild("LIC_main")
 
-    if dataset not in datasets:
+    if dataset not in DATASETS:
         logger.debug("ERROR", extra={"addinfo": "このデータセットは使用できません"})
         sys.exit()
 
@@ -211,10 +210,8 @@ if __name__ == "__main__":
     # ログ取得の開始
     logger.debug("START", extra={"addinfo": "処理開始"})
 
-    # for dataset in datasets:
-    #     for side in ["half_left", "half_right"]:
-    #         LICMainProcess(dataset, side)
-
-    LICMainProcess(4949, "half_right")
+    for dataset in DATASETS:
+        for side in ["half_left", "half_right"]:
+            LICMainProcess(dataset, side)
 
     logger.debug("END", extra={"addinfo": "処理終了"})

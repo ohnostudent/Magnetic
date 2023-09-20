@@ -55,6 +55,6 @@ def logger_conf() -> Logger:
 
 if __name__ == "__main__":
     logger_a = logger_conf()
-    logger = getLogger("res_root").getChild(__name__)
+    logger = getLogger("main").getChild(__name__)
     logger.debug('test', extra={"addinfo": "test"})
 

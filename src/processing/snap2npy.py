@@ -57,18 +57,18 @@ def doSnap2npy(dataset: int) -> None:
     from glob import glob
     from logging import getLogger
 
-    from config.params import SNAP_PATH, datasets, variable_parameters
+    from config.params import DATASETS, SNAP_PATH, VARIABLE_PARAMETERS
 
     logger = getLogger("main").getChild("Snap_to_npy")
 
-    if dataset not in datasets:
+    if dataset not in DATASETS:
         logger.debug("ERROR", extra={"addinfo": f"cannot use dataset{dataset}"})
         return
 
     sp = SnapData()
     logger.debug("START", extra={"addinfo": f"Snap{dataset} 開始"})
 
-    for param in variable_parameters:
+    for param in VARIABLE_PARAMETERS:
         logger.debug("START", extra={"addinfo": f"{param} 開始"})
 
         for path in glob(SNAP_PATH + f"/snap{dataset}/{param}/*/*"):
@@ -77,7 +77,6 @@ def doSnap2npy(dataset: int) -> None:
 
         logger.debug("END", extra={"addinfo": f"{param} 終了"})
     logger.debug("END", extra={"addinfo": f"Snap{dataset} 終了"})
-
 
 
 def main() -> None:

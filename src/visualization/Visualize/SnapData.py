@@ -92,10 +92,10 @@ class SnapData:
         畳み込みにおける平滑化のカーネル作成
         """
         ones = np.ones((size, size))
-        res = ones / (size ** 2)
+        res = ones / (size**2)
         return res
 
     def _calc(self, array: np.ndarray, kernel) -> int:
         result = sum(array * kernel)
-        result = sum(result.flat) # type: ignore
+        result = sum(result.flat)  # type: ignore
         return result
