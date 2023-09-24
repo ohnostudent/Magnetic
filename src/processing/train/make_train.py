@@ -161,6 +161,7 @@ def set_xo(dataset: int, side: str, label: int):
 
 def makeTrain(dataset: int, side: str, label: int, test=False):
     logger = getLogger("main").getChild("Make_json")
+    logger.debug("PARAMETER", extra={"addinfo": f"dataset={dataset}, side={side}, label={label}"})
 
     # テスト用
     if test:
@@ -179,10 +180,12 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
     elif 0 < label <= 2:  # x点、o点用
         result_list = set_xo(dataset, side, label)
     else:  # その他
+        logger.debug("ERROR", extra={"addinfo": "label の値が間違っています"})
         raise ValueError
 
     # 保存
     folder = ML_DATA_DIR + f"/LIC_labels/{file_name}.json"
+    logger.debug("SAVE", extra={"addinfo": f"{folder} に保存"})
     with open(folder, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -192,6 +195,8 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
     with open(folder, "w", encoding="utf-8") as f:
         data[str(dataset)][side][LABELS[label]] = result_list
         json.dump(data, f)
+
+    logger.debug("SAVE", extra={"addinfo": "完了"})
 
 
 if __name__ == "__main__":
@@ -203,20 +208,14 @@ if __name__ == "__main__":
     from config.params import set_dataset
     from config.SetLogger import logger_conf
 
-    logger = logger_conf()
+    logger = logger_conf("make_train")
     dataset = set_dataset(dataset)
 
     # 各種パラメータ
-    test = False
-
     logger.debug("START", extra={"addinfo": "処理開始"})
 
     for side in SIDES:
-        logger.debug("START", extra={"addinfo": side})
         for label in [0, 1, 2]:
-            logger.debug("START", extra={"addinfo": LABELS[label]})
-            makeTrain(dataset, side, label, test=test)
-            logger.debug("END", extra={"addinfo": LABELS[label] + "\n"})
-        logger.debug("END", extra={"addinfo": side + "\n"})
+            makeTrain(dataset, side, label)
 
     logger.debug("END", extra={"addinfo": "処理終了"})

@@ -101,6 +101,6 @@ def dataProcessing() -> None:
 if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
-    logger = logger_conf()
+    logger = logger_conf("separator")
 
     dataProcessing()

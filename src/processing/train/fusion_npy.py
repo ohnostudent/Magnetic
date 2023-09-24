@@ -59,7 +59,7 @@ class CreateTrain(_Kernel):
             label (int): 0(n), 1(x), 2(o)
             val_param (str): 対象のパラメータ
         """
-        self.logger.debug("START", extra={"addinfo": LABELS[label]})
+        self.logger.debug("START", extra={"addinfo": f"val_param={val_param}, side={side}, label={label}, path={path}"})
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -167,6 +167,7 @@ def save_split_data_from_csv(dataset: int) -> None:
 def save_split_data_from_json(dataset: int):
     logger = getLogger("main").getChild("Split_from_json")
     logger.debug("START", extra={"addinfo": "Cut"})
+
     path = ML_DATA_DIR + "/LIC_labels/snap_labels.json"
     if not os.path.exists(path):
         logger.debug("ERROR", extra={"addinfo": "ファイルが見つかりませんでした"})
@@ -174,14 +175,10 @@ def save_split_data_from_json(dataset: int):
 
     md = CreateTrain(dataset)
     for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
-        logger.debug("START", extra={"addinfo": val})
         for side in SIDES:
-            logger.debug("START", extra={"addinfo": side})
             for label in range(3):
                 md.cut_and_save_from_json(path, side, label, val)
 
-            logger.debug("END", extra={"addinfo": side + "\n"})
-        logger.debug("END", extra={"addinfo": val + "\n"})
     logger.debug("END", extra={"addinfo": "Cut\n"})
 
 
@@ -201,7 +198,7 @@ def makeTrainingData(dataset: int) -> None:
         logger.debug("START", extra={"addinfo": val_params})
         for label in LABELS:  # n, x, o
             logger.debug("START", extra={"addinfo": f"label : {label}"})
-            npys_path = OUT_DIR + f"/point_{label}"
+            npys_path = OUT_DIR + f"/point_{label}/{out_basename}"
 
             for img_path in glob(npys_path + f"/{val_params[0]}/*.npy"):
                 im_list = md.loadBinaryData(img_path, val_params)  # 混合データのロード
@@ -210,7 +207,7 @@ def makeTrainingData(dataset: int) -> None:
                 # 保存先のパスの作成
                 # /MLdata/snap{dataset}/{out_basename}/{out_basename}_{dataset}.{param}.{job}_{centerx}.{centery}.npy
                 # /MLdata/snap77/energy/energy_77.01.03_131.543.npy
-                out_path = npys_path + f"/{out_basename}/{os.path.basename(img_path).replace(val_params[0], out_basename)}"
+                out_path = npys_path + f"/{os.path.basename(img_path).replace(val_params[0], out_basename)}"
                 md.save_Data(result_img, out_path)  # データの保存
 
             logger.debug("END", extra={"addinfo": f"label : {label}\n"})
@@ -228,7 +225,7 @@ if __name__ == "__main__":
     from config.params import set_dataset
     from config.SetLogger import logger_conf
 
-    logger = logger_conf()
+    logger = logger_conf("fusion")
     dataset = set_dataset(dataset)
 
     logger.debug("START", extra={"addinfo": f"{dataset}"})

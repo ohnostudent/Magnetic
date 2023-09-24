@@ -2,16 +2,16 @@
 
 import os
 import sys
+
 # from logging import WARNING, ERROR, CRITICAL, config
 from datetime import datetime, timedelta
-from logging import (DEBUG, FileHandler, Formatter, Logger, StreamHandler,
-                     getLogger)
+from logging import DEBUG, FileHandler, Formatter, Logger, StreamHandler, getLogger
 
 sys.path.append(os.getcwd() + "/src")
 from config.params import LOG_DIR
 
 
-def logger_conf() -> Logger:
+def logger_conf(name: str = __name__) -> Logger:
     """
     ログ取得に関する関数
 
@@ -34,7 +34,7 @@ def logger_conf() -> Logger:
     sh.setLevel(DEBUG)
     # sh.setLevel(WARNING)
 
-    fh = FileHandler(filename=LOG_DIR+"/{time}.log".format(time=time), encoding='utf-8')
+    fh = FileHandler(filename=LOG_DIR + f"/{name}.{time}.log", encoding="utf-8")
     fh.setLevel(DEBUG)
 
     # フォーマッタの生成（第一引数はメッセージのフォーマット文字列、第二引数は日付時刻のフォーマット文字列）
@@ -56,5 +56,4 @@ def logger_conf() -> Logger:
 if __name__ == "__main__":
     logger_a = logger_conf()
     logger = getLogger("main").getChild(__name__)
-    logger.debug('test', extra={"addinfo": "test"})
-
+    logger.debug("test", extra={"addinfo": "test"})

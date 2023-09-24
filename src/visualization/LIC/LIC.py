@@ -206,7 +206,7 @@ def LICMainProcess(dataset: int, side: str) -> None:
 if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
-    logger = logger_conf()
+    logger = logger_conf("LIC")
     # ログ取得の開始
     logger.debug("START", extra={"addinfo": "処理開始"})
 
