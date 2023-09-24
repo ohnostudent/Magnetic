@@ -1,9 +1,9 @@
 # -*- coding utf-8, LF -*-
 
 import os
-import pickle
 import sys
 from glob import glob
+from logging import getLogger
 
 import numpy as np
 from sklearn.decomposition import PCA
@@ -11,49 +11,73 @@ from sklearn.model_selection import train_test_split
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_DIR  # noqa: E402
+from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_DIR
 
 
 class BaseModel:
     def __init__(self, parameter: str) -> None:
-        self.PARAMETER = parameter
-        self.path_n, self.path_x, self.path_o = self._load_file_path()
-        self.mode = None
+        self.logger = getLogger("main").getChild("BaseModel")
+
+        self.param_dict = dict()
+        self.param_dict["mode"] = None
+        self.param_dict["parameter"] = parameter
+        self.param_dict["train_params"] = dict()
 
     @classmethod
-    def load_model(cls, path, parameter):  # noqa: ANN206
+    def load_npys(cls, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3):  # noqa: ANN206
+        # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
+        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.random_state={random_state}.test_size={test_size}.npz")
+
         model = cls(parameter)
-        model.model = pickle.load(open(path, "rb"))
+        model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
+
+        model.param_dict["mode"] = mode
+        model.param_dict["parameter"] = parameter
+        model.X_train = train_test_data["X_train"]
+        model.y_train = train_test_data["y_train"]
+        model.X_test = train_test_data["X_test"]
+        model.y_test = train_test_data["y_test"]
+
         return model
 
-    @classmethod
-    def load_npys(cls, mode, parameter):  # noqa: ANN206
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{mode}_{parameter}.npz")
-        X_train, y_train, X_test, y_test = train_test_data
+    # TODO overrode
+    def _load_npys(self, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3):
+        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.random_state={random_state}.test_size={test_size}.npz")
 
-        model = cls(parameter)
-        model.mode = mode
-        return X_train, y_train, X_test, y_test
+        self.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
+        self.param_dict["mode"] = mode
+        self.X_train = train_test_data["X_train"]
+        self.y_train = train_test_data["y_train"]
+        self.X_test = train_test_data["X_test"]
+        self.y_test = train_test_data["y_test"]
 
-    def split_train_test(self, mode, label=None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        if mode == "sep":
-            train_paths, self.test_paths, train_label, test_label = self._split_train_test_sep(label)
+    def split_train_test(
+        self, mode: str, test_size: float = 0.3, random_state: int = 100, label: int = 1
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        self.path_n, self.path_x, self.path_o = self._load_file_path()
+        self.param_dict["mode"] = mode
+        self.param_dict["train_params"]["test_size"] = test_size
+        self.param_dict["train_params"]["random_state"] = random_state
 
-        elif mode == "mixsep":
-            train_paths, self.test_paths, train_label, test_label = self._split_train_test_sep_mix()
+        match mode:
+            case "sep":
+                train_paths, test_paths, train_label, test_label = self._split_train_test_sep(label)
 
-        elif mode == "mix":
-            train_paths, self.test_paths, train_label, test_label = self._split_train_test_mix()
+            case "mixsep":
+                train_paths, test_paths, train_label, test_label = self._split_train_test_sep_mix(test_size=test_size, random_state=random_state)
 
-        else:
-            raise ValueError(f"Mode '{mode}' is not supported.")
+            case "mix":
+                train_paths, test_paths, train_label, test_label = self._split_train_test_mix(test_size=test_size, random_state=random_state)
+
+            case _:
+                raise ValueError(f"Mode '{mode}' is not supported.")
 
         self.X_train, self.y_train = self._set_data(train_paths, train_label)
-        self.X_test, self.y_test = self._set_data(self.test_paths, test_label)
+        self.X_test, self.y_test = self._set_data(test_paths, test_label)
 
         return self.X_train, self.y_train, self.X_test, self.y_test
 
-    def dilute(self, ALT_IMAGES):
+    def dilute(self, ALT_IMAGES: str) -> None:
         """
         上下、左右反転の画像を作成し、教師データをかさましする
         """
@@ -63,29 +87,29 @@ class BaseModel:
         self._save_altImage(self.X_train, ALT_IMAGES)
 
     def exePCA(self, N_dim=100, randomstate=None):
+        self.param_dict["train_params"]["do_pca"] = False
         pca = PCA(n_components=N_dim, random_state=randomstate)
 
         self.X_train = pca.fit_transform(self.X_train)
         self.X_test = pca.transform(self.X_test)
 
-        print(f"PCA累積寄与率: {sum(pca.explained_variance_ratio_)}")
+        print("PCA累積寄与率: {0}".format(sum(pca.explained_variance_ratio_)))
 
     def save_npys(self, X_train, y_train, X_test, y_test):
-        np.savez_compressed(ML_MODEL_DIR + f"/npz/{self.PARAMETER}_{self.mode}.npz", X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)
+        np.savez_compressed(
+            ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{self.param_dict['mode']}.{self._dict_to_str('train_params')}.npz",
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            y_test=y_test,
+        )
 
-    def save_model(self, model_name) -> None:
-        model_path = ML_MODEL_DIR + f"/{model_name}/model_{model_name}_{self.PARAMETER}_{self.mode}"
-
-        with open(model_path, "wb") as f:
-            pickle.dump(self.model, f)
-            f.close()
-
-    def _load_file_path(self):
+    def _load_file_path(self) -> tuple[list[str], list[str], list[str]]:
         path_n, path_x, path_o = list(), list(), list()
         for dataset in DATASETS:
-            path_n.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_n/{self.PARAMETER}/*"))
-            path_o.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_o/{self.PARAMETER}/*"))
-            path_x.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_x/{self.PARAMETER}/*"))
+            path_n.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_n/{self.param_dict['parameter']}/*"))
+            path_o.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_o/{self.param_dict['parameter']}/*"))
+            path_x.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_x/{self.param_dict['parameter']}/*"))
 
         return path_n, path_x, path_o
 
@@ -120,7 +144,8 @@ class BaseModel:
 
         return img_binary.flatten()
 
-    def _split_train_test_sep(self, test_label):
+    def _split_train_test_sep(self, test_label: int):
+        # TODO test_label -> dataset
         train_label = [0, 1, 2]
         train_label.remove(test_label)
         a, b = train_label
@@ -138,7 +163,7 @@ class BaseModel:
 
         return train_paths, test_paths, train_labels, test_labels
 
-    def _split_train_test_sep_mix(self, test_size=0.3, random_state=100):
+    def _split_train_test_sep_mix(self, test_size: float = 0.3, random_state: int = 100) -> tuple[list[int], list[int], list[int], list[int]]:
         path_n = sum(self.path_n, [])
         path_x = sum(self.path_x, [])
         path_o = sum(self.path_o, [])
@@ -147,11 +172,11 @@ class BaseModel:
         train_x, test_x = train_test_split(path_x, test_size=test_size, random_state=random_state)
         train_o, test_o = train_test_split(path_o, test_size=test_size, random_state=random_state)
 
-        train_paths: list = train_n
+        train_paths: list = train_n.copy()
         train_paths.extend(train_o)
         train_paths.extend(train_x)
 
-        test_paths: list = test_n
+        test_paths: list = test_n.copy()
         test_paths.extend(test_o)
         test_paths.extend(test_x)
 
@@ -165,7 +190,7 @@ class BaseModel:
 
         return train_paths, test_paths, train_label, test_label
 
-    def _split_train_test_mix(self, test_size=0.3, random_state=100):
+    def _split_train_test_mix(self, test_size: float = 0.3, random_state: int = 100) -> tuple[list[int], list[int], list[int], list[int]]:
         path_all = self.path_n
         path_all.extend(self.path_o)
         path_all.extend(self.path_x)
@@ -186,7 +211,7 @@ class BaseModel:
 
         return X_data, label_data
 
-    def _alt_array_save(self, item, out_path) -> None:
+    def _alt_array_save(self, item: str, out_path: str) -> None:
         img = np.load(item)
         file_name = os.path.basename(item)
 
@@ -200,21 +225,46 @@ class BaseModel:
         # img_T = mf.resize(img.T, IMGSHAPE) # 画像の上下左右反転
         # np.save(temp_output_dir + "trns_" + file_name , img_T) # 画像保存
 
-    def _save_altImage(self, files, ALT_IMAGES):
+    def _save_altImage(self, files: np.ndarray, ALT_IMAGES: str) -> None:
         if not os.path.exists(ALT_IMAGES):
             raise ValueError("IMAGES is not correct")
 
-        out_path = ALT_IMAGES + f"/{self.PARAMETER}"
+        out_path = ALT_IMAGES + f"/{self.param_dict['parameter']}"
         if not os.path.exists(out_path):
             os.mkdir(out_path)
 
         for file in files:
             self._alt_array_save(file, out_path)
 
+    def _dict_to_str(self, key: str = "train_params") -> str:
+        if key not in self.param_dict.keys():
+            raise ValueError("Wrong keys")
+        param_list_sorted = sorted(self.param_dict[key].items())
+        return ".".join(map(lambda x: f"{x[0]}={x[1]}", param_list_sorted))
+
     @property
     def model(self):
         return self.__model
 
     @model.setter
-    def model(self, model):
-        self.__model = model
+    def model(self, model_set):
+        self.__model = model_set
+
+
+if __name__ == "__main__":
+    from config.SetLogger import logger_conf
+
+    logger = logger_conf("basemodel")
+
+    mode = "mixsep"
+    logger.debug("START", extra={"addinfo": f"mode = {mode}"})
+    for parameter in ["density", "magfieldx", "magfieldy", "velocityx", "velocityy", "energy"]:
+        logger.debug("START", extra={"addinfo": f"{parameter}"})
+
+        bm = BaseModel(parameter)
+        X_train, y_train, X_test, y_test = bm.split_train_test("mixsep")
+        bm.save_npys(X_train, y_train, X_test, y_test)
+
+        logger.debug("END", extra={"addinfo": f"{parameter}"})
+
+    logger.debug("END", extra={"addinfo": f"mode = {mode}"})
