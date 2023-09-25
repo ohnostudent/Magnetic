@@ -22,11 +22,12 @@ class BaseModel:
         self.param_dict["mode"] = None
         self.param_dict["parameter"] = parameter
         self.param_dict["train_params"] = dict()
+        self.param_dict["train_params"]["do_pca"] = False
 
     @classmethod
     def load_npys(cls, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3):  # noqa: ANN206
         # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.random_state={random_state}.test_size={test_size}.npz")
+        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.randomstate={random_state}.testsize={test_size}.npz")
 
         model = cls(parameter)
         model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
@@ -42,7 +43,7 @@ class BaseModel:
 
     # TODO overrode
     def _load_npys(self, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3):
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.random_state={random_state}.test_size={test_size}.npz")
+        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.randomstate={random_state}.testsize={test_size}.npz")
 
         self.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
         self.param_dict["mode"] = mode
@@ -56,8 +57,8 @@ class BaseModel:
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         self.path_n, self.path_x, self.path_o = self._load_file_path()
         self.param_dict["mode"] = mode
-        self.param_dict["train_params"]["test_size"] = test_size
-        self.param_dict["train_params"]["random_state"] = random_state
+        self.param_dict["train_params"]["testsize"] = test_size
+        self.param_dict["train_params"]["randomstate"] = random_state
 
         match mode:
             case "sep":
@@ -87,7 +88,7 @@ class BaseModel:
         self._save_altImage(self.X_train, ALT_IMAGES)
 
     def exePCA(self, N_dim=100, randomstate=None):
-        self.param_dict["train_params"]["do_pca"] = False
+        self.param_dict["train_params"]["do_pca"] = True
         pca = PCA(n_components=N_dim, random_state=randomstate)
 
         self.X_train = pca.fit_transform(self.X_train)
@@ -242,13 +243,6 @@ class BaseModel:
         param_list_sorted = sorted(self.param_dict[key].items())
         return ".".join(map(lambda x: f"{x[0]}={x[1]}", param_list_sorted))
 
-    @property
-    def model(self):
-        return self.__model
-
-    @model.setter
-    def model(self, model_set):
-        self.__model = model_set
 
 
 if __name__ == "__main__":
