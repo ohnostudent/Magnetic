@@ -11,6 +11,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC
+from torch import cuda
 from xgboost import XGBClassifier
 
 sys.path.append(os.getcwd() + "/src")
@@ -75,17 +76,17 @@ class SupervisedML(BaseModel):
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
         return self.model
 
-    def XGBoost(self, n_estimators=80, max_depth=4, gamma=3, params: dict | None=None) -> XGBClassifier:
+    def XGBoost(self, n_estimators=80, max_depth=4, gamma=3, params: dict | None = None) -> XGBClassifier:
         self.param_dict["model_name"] = "XGBoost"
         self.param_dict["clf_params"]["gamma"] = gamma
         self.param_dict["clf_params"]["max_depth"] = max_depth
         self.param_dict["clf_params"]["n_estimators"] = n_estimators
 
-        tree_methods = "gpu_hist"
-        # if GPU:
-        #     tree_methods = "gpu_hist"
-        # else:
-        #     tree_methods = "hist"
+        if cuda.is_available():
+            tree_methods = "gpu_hist"
+        else:
+            tree_methods = "hist"
+
         self.model = XGBClassifier(n_estimators=n_estimators, max_depth=max_depth, gamma=gamma, tree_method=tree_methods)
 
         if params is not None:
@@ -102,6 +103,7 @@ class SupervisedML(BaseModel):
         )
         self.pred = self.model.predict(self.X_test)
         time = datetime.strftime(datetime.now() + timedelta(hours=9), "%Y-%m-%d %H:%M:%S")
+
         print(time, file=f)
         print("パラメータ : ", self._dict_to_str("clf_params"), "\n", file=f)
         print("スコア     : ", self.model.score(self.X_test, self.y_test), file=f)
@@ -119,10 +121,7 @@ class SupervisedML(BaseModel):
 
     def save_model(self, model_path: str | None = None) -> None:
         if model_path is None:
-            model_path = (
-                ML_MODEL_DIR
-                + f"/model/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}{self._dict_to_str()}.sav"
-            )
+            model_path = ML_MODEL_DIR + f"/model/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}{self._dict_to_str()}.sav"
 
         with open(model_path, "wb") as f:
             pickle.dump(self.model, f)

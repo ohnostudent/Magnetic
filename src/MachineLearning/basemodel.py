@@ -22,12 +22,12 @@ class BaseModel:
         self.param_dict["mode"] = None
         self.param_dict["parameter"] = parameter
         self.param_dict["train_params"] = dict()
-        self.param_dict["train_params"]["do_pca"] = False
+        self.param_dict["train_params"]["pca"] = False
 
     @classmethod
-    def load_npys(cls, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3):  # noqa: ANN206
+    def load_npys(cls, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
         # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.randomstate={random_state}.testsize={test_size}.npz")
+        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
 
         model = cls(parameter)
         model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
@@ -42,8 +42,8 @@ class BaseModel:
         return model
 
     # TODO overrode
-    def _load_npys(self, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3):
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.randomstate={random_state}.testsize={test_size}.npz")
+    def _load_npys(self, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3, pca: bool = False):
+        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
 
         self.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
         self.param_dict["mode"] = mode
@@ -52,9 +52,7 @@ class BaseModel:
         self.X_test = train_test_data["X_test"]
         self.y_test = train_test_data["y_test"]
 
-    def split_train_test(
-        self, mode: str, test_size: float = 0.3, random_state: int = 100, label: int = 1
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int = 100, label: int = 1, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         self.path_n, self.path_x, self.path_o = self._load_file_path()
         self.param_dict["mode"] = mode
         self.param_dict["train_params"]["testsize"] = test_size
@@ -76,6 +74,9 @@ class BaseModel:
         self.X_train, self.y_train = self._set_data(train_paths, train_label)
         self.X_test, self.y_test = self._set_data(test_paths, test_label)
 
+        if pca:
+            self._exePCA()
+
         return self.X_train, self.y_train, self.X_test, self.y_test
 
     def dilute(self, ALT_IMAGES: str) -> None:
@@ -87,22 +88,24 @@ class BaseModel:
         # リコネクションがある画像ファイルのパスのリストを取得
         self._save_altImage(self.X_train, ALT_IMAGES)
 
-    def exePCA(self, N_dim=100, randomstate=None):
-        self.param_dict["train_params"]["do_pca"] = True
+    def _exePCA(self, N_dim=100, randomstate=None) -> None:
+        self.param_dict["train_params"]["pca"] = True
         pca = PCA(n_components=N_dim, random_state=randomstate)
 
         self.X_train = pca.fit_transform(self.X_train)
         self.X_test = pca.transform(self.X_test)
+        self.y_train = pca.fit_transform(self.y_train)
+        self.y_test = pca.transform(self.y_test)
 
         print("PCA累積寄与率: {0}".format(sum(pca.explained_variance_ratio_)))
 
-    def save_npys(self, X_train, y_train, X_test, y_test):
+    def save_npys(self):
         np.savez_compressed(
             ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{self.param_dict['mode']}.{self._dict_to_str('train_params')}.npz",
-            X_train=X_train,
-            y_train=y_train,
-            X_test=X_test,
-            y_test=y_test,
+            X_train=self.X_train,
+            y_train=self.y_train,
+            X_test=self.X_test,
+            y_test=self.y_test,
         )
 
     def _load_file_path(self) -> tuple[list[str], list[str], list[str]]:
@@ -244,7 +247,6 @@ class BaseModel:
         return ".".join(map(lambda x: f"{x[0]}={x[1]}", param_list_sorted))
 
 
-
 if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
@@ -252,12 +254,12 @@ if __name__ == "__main__":
 
     mode = "mixsep"
     logger.debug("START", extra={"addinfo": f"mode = {mode}"})
-    for parameter in ["density", "magfieldx", "magfieldy", "velocityx", "velocityy", "energy"]:
+    for parameter in ["density"]:
         logger.debug("START", extra={"addinfo": f"{parameter}"})
 
         bm = BaseModel(parameter)
         X_train, y_train, X_test, y_test = bm.split_train_test("mixsep")
-        bm.save_npys(X_train, y_train, X_test, y_test)
+        bm.save_npys()
 
         logger.debug("END", extra={"addinfo": f"{parameter}"})
 
