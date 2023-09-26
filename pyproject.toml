@@ -38,7 +38,7 @@ src = ["src"]
 tab-size = 4
 
 # Same as Black.
-line-length = 150
+line-length = 200
 
 # The minimum Python version to target
 target-version = "py310"
@@ -50,7 +50,7 @@ max-args = 10
 
 [tool.black]
 target-version = ['py310']
-line-length = 120
+line-length = 200
 
 
 [tool.mypy]
