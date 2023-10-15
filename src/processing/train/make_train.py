@@ -10,10 +10,10 @@ import pandas as pd
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import DATASETS, LABELS, ML_DATA_DIR, SIDES
+from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, SIDES
 
 
-def _create_json(file_name):
+def _create_json(file_name) -> None:
     """基盤の作成を行う関数
     Args:
         file_name (str): 保存するファイルの名前
@@ -24,7 +24,7 @@ def _create_json(file_name):
         json.dump(json_dict, f)
 
 
-def _set_default():
+def _set_default() -> dict:
     # 基盤の作成
     json_dict = dict()
     for dataset in DATASETS:
@@ -38,7 +38,7 @@ def _set_default():
     return json_dict
 
 
-def _df_to_dict(df: pd.DataFrame):
+def _df_to_dict(df: pd.DataFrame) -> dict:
     """DataFrame を json に変換する関数
 
     return
@@ -53,7 +53,7 @@ def _df_to_dict(df: pd.DataFrame):
     }
     """
     job_list = df["job"].unique()
-    result_list = dict()
+    result_dict = dict()
 
     for job in job_list:
         shapes_list = df[df["job"] == job].reset_index(drop=True).to_dict()
@@ -70,17 +70,17 @@ def _df_to_dict(df: pd.DataFrame):
             save_dict["y_range"][cnt] = [shapes_list["ylow"][cnt], shapes_list["yup"][cnt]]
             save_dict["shape"][cnt] = [shapes_list["width"][cnt], shapes_list["height"][cnt]]
 
-        result_list[int(job)] = save_dict
+        result_dict[f"{int(job) :02d}"] = save_dict
 
-    return result_list
+    return result_dict
 
 
-def set_n():
+def _set_n() -> dict:
     # 切り取る長方形の重心座標のリスト
     # 4 * 2 = 8 点取る
     x_locs = [30, 60, 90, 120, 150, 180, 210]
     y_locs = [150, 450]
-    shapes = [25, 100]
+    shapes = IMAGE_SHAPE
 
     save_dict = dict()  # 保存用の辞書
     save_dict["center"] = dict()
@@ -92,14 +92,14 @@ def set_n():
         for y_idx in range(len(y_locs)):
             k = x_idx * 2 + y_idx
             save_dict["center"][k] = [x_locs[x_idx], y_locs[y_idx]]
-            save_dict["x_range"][k] = [x_locs[x_idx] - 13, x_locs[x_idx] + 12]
+            save_dict["x_range"][k] = [x_locs[x_idx] - shapes[0] // 2 - 1, x_locs[x_idx] + shapes[0] // 2]
             save_dict["y_range"][k] = [y_locs[y_idx] - shapes[1] // 2, y_locs[y_idx] + shapes[1] // 2]
             save_dict["shape"][k] = shapes
 
-    return {str(k): save_dict for k in range(7, 15)}
+    return {f"{k :02d}": save_dict for k in range(7, 15)}
 
 
-def set_xo(dataset: int, side: str, label: int):
+def _set_xo(dataset: int, side: str, label: int) -> dict:
     """x点, o点の切り取りに関する関数
 
     writer.py を用いて切り取ったx点, o点のcsvデータを jsonに変換する
@@ -154,13 +154,13 @@ def set_xo(dataset: int, side: str, label: int):
     df_median = df_median.sort_values(["para", "job"]).reset_index(drop=True)
 
     # DF を dict に変換
-    result_list = _df_to_dict(df_median)
+    result_dict = _df_to_dict(df_median)
     del df_median
-    return result_list
+    return result_dict
 
 
 def makeTrain(dataset: int, side: str, label: int, test=False):
-    logger = getLogger("main").getChild("Make_json")
+    logger = getLogger("make_train").getChild("Make_json")
     logger.debug("PARAMETER", extra={"addinfo": f"dataset={dataset}, side={side}, label={label}"})
 
     # テスト用
@@ -176,9 +176,9 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
 
     # ラベルによって処理が異なる
     if label == 0:  # 反応なし
-        result_list = set_n()
+        result_dict = _set_n()
     elif 0 < label <= 2:  # x点、o点用
-        result_list = set_xo(dataset, side, label)
+        result_dict = _set_xo(dataset, side, label)
     else:  # その他
         logger.debug("ERROR", extra={"addinfo": "label の値が間違っています"})
         raise ValueError
@@ -193,29 +193,25 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
         _set_default()
 
     with open(folder, "w", encoding="utf-8") as f:
-        data[str(dataset)][side][LABELS[label]] = result_list
+        data[str(dataset)][side][LABELS[label]] = result_dict
         json.dump(data, f)
 
     logger.debug("SAVE", extra={"addinfo": "完了"})
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        sys.exit()
-    else:
-        dataset = sys.argv[1]
-
-    from config.params import set_dataset
     from config.SetLogger import logger_conf
 
     logger = logger_conf("make_train")
-    dataset = set_dataset(dataset)
 
     # 各種パラメータ
     logger.debug("START", extra={"addinfo": "処理開始"})
+    # test = True
+    test = False
 
-    for side in SIDES:
-        for label in [0, 1, 2]:
-            makeTrain(dataset, side, label)
+    for dataset in DATASETS:
+        for side in SIDES:
+            for label in LABELS.keys():
+                makeTrain(dataset, side, label, test=test)
 
     logger.debug("END", extra={"addinfo": "処理終了"})

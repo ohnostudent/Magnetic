@@ -250,8 +250,8 @@
 
 
     // 画像の表示範囲
-    const imgXlen = 1800;
-    const imgYlen = 570;
+    const imgXlen = 1799;
+    const imgYlen = 571;
     // 画像の座標の範囲
     // 切り取ったサイズに合わせる
     const orgx = 257;
@@ -347,11 +347,11 @@
 
     var focused = false
     filepath = document.getElementById("filepath")
-    filepath.addEventListener('focus',function(e) {
+    filepath.addEventListener('focus', function(e) {
         focused = true
         console.log("focusing")
     });
-    filepath.addEventListener('blur',function(e) {
+    filepath.addEventListener('blur', function(e) {
         focused = false;
     });
     document.addEventListener("keypress", keypress_event);

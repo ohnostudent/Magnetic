@@ -6,6 +6,7 @@ import sys
 import numpy as np
 
 sys.path.append(os.getcwd() + "/src")
+
 from Visualization.Visualize.SnapData import SnapData
 
 
@@ -59,7 +60,7 @@ def doSnap2npy(dataset: int) -> None:
 
     from config.params import DATASETS, SNAP_PATH, VARIABLE_PARAMETERS
 
-    logger = getLogger("main").getChild("Snap_to_npy")
+    logger = getLogger("Snap_to_npy").getChild("main")
 
     if dataset not in DATASETS:
         logger.debug("ERROR", extra={"addinfo": f"cannot use dataset{dataset}"})
@@ -84,7 +85,7 @@ def main() -> None:
 
     from config.SetLogger import logger_conf
 
-    logger = logger_conf()
+    logger = logger_conf("Snap_to_npy")
     logger.debug("START", extra={"addinfo": "処理開始"})
 
     with ThreadPoolExecutor(max_workers=6) as exec:

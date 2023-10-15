@@ -7,7 +7,7 @@ from glob import glob
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMAGE_PATH, SRC_PATH
+from config.params import IMAGE_PATH, SIDES, SRC_PATH
 
 
 def _sort_paths(path_list: list[str]) -> list[str]:
@@ -28,11 +28,7 @@ def _sort_paths(path_list: list[str]) -> list[str]:
 
 
 def createViewer(dataset) -> None:
-    from logging import getLogger
-
-    logger = getLogger("main").getChild("Create_Viewer")
-
-    for size in ["left", "right"]:
+    for size in SIDES:
         # paths = _sort_paths(paths) # snapの命名規則をもとに時系列順に並び変える。
         paths = glob(IMAGE_PATH + f"/LIC/snap{dataset}/{size}/*.bmp")
         paths_sorted = _sort_paths(paths)
@@ -66,5 +62,4 @@ if __name__ == "__main__":
     from config.params import set_dataset
 
     dataset = set_dataset(dataset)
-
     createViewer(dataset)

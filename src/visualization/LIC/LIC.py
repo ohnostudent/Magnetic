@@ -17,7 +17,7 @@ from Visualization.Visualize.SnapData import SnapData
 
 
 class LicMethod(SnapData):
-    logger = getLogger("main").getChild("LIC")
+    logger = getLogger("LIC").getChild("LIC")
 
     def LIC(self, props: list):
         """
@@ -123,8 +123,8 @@ class LicMethod(SnapData):
         os.remove(ytempfile)
 
 
-def main_process(lic: LicMethod, dataset: int, base_out_path: str, binary_paths: list[str]) -> None:
-    logger = getLogger("main").getChild("LIC_main")
+def _main_process(lic: LicMethod, dataset: int, base_out_path: str, binary_paths: list[str]) -> None:
+    logger = getLogger("LIC").getChild("LIC_main")
 
     for xfile in binary_paths:
         logger.debug("START", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 開始"})
@@ -145,7 +145,7 @@ def main_process(lic: LicMethod, dataset: int, base_out_path: str, binary_paths:
         logger.debug("END", extra={"addinfo": f"{os.path.splitext(os.path.basename(xfile))[0]} 終了"})
 
 
-def LICMainProcess(dataset: int, side: str) -> None:
+def _main(dataset: int, side: str) -> None:
     """
     処理時間の目安
     1ファイル : 20(分) (3.98(GHz))
@@ -164,7 +164,7 @@ def LICMainProcess(dataset: int, side: str) -> None:
     """
     from concurrent.futures import ThreadPoolExecutor
 
-    logger = getLogger("main").getChild("LIC_main")
+    logger = getLogger("LIC").getChild("LIC_main")
 
     if dataset not in DATASETS:
         logger.debug("ERROR", extra={"addinfo": "このデータセットは使用できません"})
@@ -194,11 +194,11 @@ def LICMainProcess(dataset: int, side: str) -> None:
         logger.debug("FILE COUNT", extra={"addinfo": f"{file_count}"})
 
     with ThreadPoolExecutor() as exec:  # 並列処理 # max_workers は自信のCPUのコア数と相談してください
-        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[: file_count // 5])
-        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 : file_count // 5 * 2])
-        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 2 : file_count // 5 * 3])
-        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 3 : file_count // 5 * 4])
-        exec.submit(main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 4 :])
+        exec.submit(_main_process, lic, dataset, base_out_path, binary_paths[: file_count // 5])
+        exec.submit(_main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 : file_count // 5 * 2])
+        exec.submit(_main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 2 : file_count // 5 * 3])
+        exec.submit(_main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 3 : file_count // 5 * 4])
+        exec.submit(_main_process, lic, dataset, base_out_path, binary_paths[file_count // 5 * 4 :])
 
     logger.debug("END", extra={"addinfo": f"{dataset} 終了"})
 
@@ -212,6 +212,6 @@ if __name__ == "__main__":
 
     for dataset in DATASETS:
         for side in ["half_left", "half_right"]:
-            LICMainProcess(dataset, side)
+            _main(dataset, side)
 
     logger.debug("END", extra={"addinfo": "処理終了"})
