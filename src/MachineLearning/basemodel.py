@@ -240,10 +240,18 @@ class BaseModel:
         for file in files:
             self._alt_array_save(file, out_path)
 
-    def _dict_to_str(self, key: str = "train_params") -> str:
-        if key not in self.param_dict.keys():
-            raise ValueError("Wrong keys")
-        param_list_sorted = sorted(self.param_dict[key].items())
+    def _dict_to_str(self, key: str | dict = "train_params") -> str:
+        if isinstance(key, str):
+            if key not in self.param_dict.keys():
+                raise ValueError("Wrong keys")
+            param_list_sorted = sorted(self.param_dict[key].items())
+
+        elif isinstance(key, dict):
+            param_list_sorted = sorted(key.items())
+
+        else:
+            raise ValueError
+
         return ".".join(map(lambda x: f"{x[0]}={x[1]}", param_list_sorted))
 
 

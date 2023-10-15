@@ -22,6 +22,7 @@ from MachineLearning.basemodel import BaseModel
 
 class SupervisedML(BaseModel):
     logger = getLogger("main").getChild("Machine Learning")
+    CUDA = cuda.is_available()
 
     def __init__(self, parameter: str) -> None:
         super().__init__(parameter)
@@ -59,7 +60,7 @@ class SupervisedML(BaseModel):
         return self.model
 
     def rbfSVC(self, C: float = 1, gamma: float = 1, randomstate: int = 100, cls="ovo") -> SVC | OneVsRestClassifier:
-        self.param_dict["model_name"] = f"rbfSVC_{cls}"
+        self.param_dict["model_name"] = f"rbfSVC-{cls}"
         self.param_dict["clf_params"]["C"] = C
         self.param_dict["clf_params"]["gamma"] = gamma
         self.param_dict["clf_params"]["randomstate"] = randomstate
@@ -76,13 +77,13 @@ class SupervisedML(BaseModel):
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
         return self.model
 
-    def XGBoost(self, n_estimators=80, max_depth=4, gamma=3, params: dict | None = None) -> XGBClassifier:
+    def XGBoost(self, n_estimators: int = 80, max_depth: int = 4, gamma: float = 3, params: dict | None = None) -> XGBClassifier:
         self.param_dict["model_name"] = "XGBoost"
         self.param_dict["clf_params"]["gamma"] = gamma
         self.param_dict["clf_params"]["max_depth"] = max_depth
         self.param_dict["clf_params"]["n_estimators"] = n_estimators
 
-        if cuda.is_available():
+        if self.CUDA:
             tree_methods = "gpu_hist"
         else:
             tree_methods = "hist"
@@ -95,13 +96,25 @@ class SupervisedML(BaseModel):
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
         return self.model
 
-    def predict(self) -> None:
+    def predict(self, pred_path: str | list[str] | np.ndarray | None = None) -> None:
         f = open(
             ML_RESULT_DIR + f"/{self.param_dict['model_name']}/{self.param_dict['parameter']}_{self.param_dict['mode']}.txt",
             "a",
             encoding="utf-8",
         )
-        self.pred = self.model.predict(self.X_test)
+
+        if pred_path is None:
+            self.pred = self.model.predict(self.X_test)
+
+        elif isinstance(pred_path, str):
+            self.pred = self.model.predict(np.load(pred_path))
+
+        elif isinstance(pred_path, np.ndarray):
+            self.pred = self.model.predict(pred_path)
+
+        else:
+            raise ValueError
+
         time = datetime.strftime(datetime.now() + timedelta(hours=9), "%Y-%m-%d %H:%M:%S")
 
         print(time, file=f)
