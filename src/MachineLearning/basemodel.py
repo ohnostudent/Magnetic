@@ -15,25 +15,33 @@ from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_D
 
 
 class BaseModel:
-    def __init__(self, parameter: str) -> None:
-        self.logger = getLogger("main").getChild("BaseModel")
+    def __init__(self, parameter) -> None:
+        self.logger = getLogger("basemodel").getChild("BaseModel")
+        self.set_default(parameter)
 
-        self.param_dict = dict()
+    def set_default(self, parameter) -> None:
+        self.param_dict: dict = dict()
         self.param_dict["mode"] = None
         self.param_dict["parameter"] = parameter
         self.param_dict["train_params"] = dict()
         self.param_dict["train_params"]["pca"] = False
+        self.param_dict["clf_params"] = dict()
+        self.param_dict["model_name"] = None
 
     @classmethod
-    def load_npys(cls, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
-        # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
-
+    def load_npys(cls, mode: str, parameter: str, random_state: int | None = 100, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
         model = cls(parameter)
         model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
 
+        model.set_default(parameter)
         model.param_dict["mode"] = mode
         model.param_dict["parameter"] = parameter
+        model.param_dict["train_params"]["pca"] = pca
+        model.param_dict["train_params"]["random_state"] = random_state
+        model.param_dict["train_params"]["test_size"] = test_size
+
+        # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
+        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
         model.X_train = train_test_data["X_train"]
         model.y_train = train_test_data["y_train"]
         model.X_test = train_test_data["X_test"]
@@ -41,18 +49,23 @@ class BaseModel:
 
         return model
 
-    # TODO overrode
-    def _load_npys(self, mode: str, parameter: str, random_state: int = 100, test_size: float = 0.3, pca: bool = False):
+    # TODO overload
+    def _load_npys(self, mode: str, parameter: str, random_state: int | None = 100, test_size: float = 0.3, pca: bool = False):
         train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
 
         self.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
         self.param_dict["mode"] = mode
+        self.param_dict["parameter"] = parameter
+        self.param_dict["train_params"]["pca"] = pca
+        self.param_dict["train_params"]["random_state"] = random_state
+        self.param_dict["train_params"]["test_size"] = test_size
+
         self.X_train = train_test_data["X_train"]
         self.y_train = train_test_data["y_train"]
         self.X_test = train_test_data["X_test"]
         self.y_test = train_test_data["y_test"]
 
-    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int = 100, label: int = 1, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int | None = 100, label: int = 1, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         self.path_n, self.path_x, self.path_o = self._load_file_path()
         self.param_dict["mode"] = mode
         self.param_dict["train_params"]["testsize"] = test_size
@@ -88,7 +101,7 @@ class BaseModel:
         # リコネクションがある画像ファイルのパスのリストを取得
         self._save_altImage(self.X_train, ALT_IMAGES)
 
-    def _exePCA(self, N_dim=100, randomstate=None) -> None:
+    def _exePCA(self, N_dim: int = 100, randomstate: int | None = 100) -> None:
         self.param_dict["train_params"]["pca"] = True
         pca = PCA(n_components=N_dim, random_state=randomstate)
 
@@ -108,7 +121,7 @@ class BaseModel:
             y_test=self.y_test,
         )
 
-    def _load_file_path(self) -> tuple[list[str], list[str], list[str]]:
+    def _load_file_path(self) -> tuple[list[list], list[list], list[list]]:
         path_n, path_x, path_o = list(), list(), list()
         for dataset in DATASETS:
             path_n.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_n/{self.param_dict['parameter']}/*"))
@@ -167,14 +180,14 @@ class BaseModel:
 
         return train_paths, test_paths, train_labels, test_labels
 
-    def _split_train_test_sep_mix(self, test_size: float = 0.3, random_state: int = 100) -> tuple[list[int], list[int], list[int], list[int]]:
-        path_n = sum(self.path_n, [])
-        path_x = sum(self.path_x, [])
-        path_o = sum(self.path_o, [])
+    def _split_train_test_sep_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[int], list[int], list[int], list[int]]:
+        path_n_all: list = sum(self.path_n, [])
+        path_x_all: list = sum(self.path_x, [])
+        path_o_all: list = sum(self.path_o, [])
 
-        train_n, test_n = train_test_split(path_n, test_size=test_size, random_state=random_state)
-        train_x, test_x = train_test_split(path_x, test_size=test_size, random_state=random_state)
-        train_o, test_o = train_test_split(path_o, test_size=test_size, random_state=random_state)
+        train_n, test_n = train_test_split(path_n_all, test_size=test_size, random_state=random_state)
+        train_x, test_x = train_test_split(path_x_all, test_size=test_size, random_state=random_state)
+        train_o, test_o = train_test_split(path_o_all, test_size=test_size, random_state=random_state)
 
         train_paths: list = train_n.copy()
         train_paths.extend(train_o)
@@ -194,7 +207,7 @@ class BaseModel:
 
         return train_paths, test_paths, train_label, test_label
 
-    def _split_train_test_mix(self, test_size: float = 0.3, random_state: int = 100) -> tuple[list[int], list[int], list[int], list[int]]:
+    def _split_train_test_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[int], list[int], list[int], list[int]]:
         path_all = self.path_n
         path_all.extend(self.path_o)
         path_all.extend(self.path_x)
@@ -256,16 +269,19 @@ class BaseModel:
 
 
 if __name__ == "__main__":
+    from config.params import VARIABLE_PARAMETERS
     from config.SetLogger import logger_conf
 
     logger = logger_conf("basemodel")
 
     mode = "mixsep"
-    logger.debug("START", extra={"addinfo": f"mode = {mode}"})
-    for parameter in ["density"]:
+    logger.debug("PARAMETER", extra={"addinfo": f"mode = {mode}"})
+
+    bm = BaseModel("density")
+    for parameter in ["density"]:  # VARIABLE_PARAMETERS:
         logger.debug("START", extra={"addinfo": f"{parameter}"})
 
-        bm = BaseModel(parameter)
+        bm.set_default(parameter)
         X_train, y_train, X_test, y_test = bm.split_train_test("mixsep")
         bm.save_npys()
 
