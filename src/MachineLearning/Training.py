@@ -7,9 +7,8 @@ from datetime import datetime, timedelta
 from logging import getLogger
 
 import numpy as np
-from sklearn.metrics import (accuracy_score, classification_report,
-                             confusion_matrix, f1_score, precision_score,
-                             recall_score)
+from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC
@@ -35,14 +34,20 @@ class SupervisedML(BaseModel):
     @classmethod
     def load_model(cls, parameter: str, param_dict: dict, mode: str = "mixsep", name: str = "LinearSVC", model_random_state: int = 100, path: str | None = None):  # noqa: ANN206
         model = cls(parameter)
-
-        if path is None:
-            path = ML_MODEL_DIR + f"/model/model_{name}_{parameter}_{mode}.{model._dict_to_str(param_dict)}.sav"
-
         model.param_dict["mode"] = mode
         model.param_dict["parameter"] = parameter
         model.param_dict["model_name"] = name
-        model.param_dict["clf_params"] = param_dict
+
+        if path is None:
+            path = ML_MODEL_DIR + f"/model/model_{name}_{parameter}_{mode}.{model._dict_to_str(param_dict)}.sav"
+            model.param_dict["clf_params"] = param_dict
+        else:
+            # TODO 小数に対応
+            path_params = path.split(".")[1:]
+            for param in path_params:
+                key, val = param.split("=")
+                model.param_dict[key] = val
+
         model._load_npys(mode=mode, parameter=parameter, random_state=model_random_state)
         model.model = pickle.load(open(path, "rb"))
         return model
@@ -54,17 +59,22 @@ class SupervisedML(BaseModel):
             clf_name (str): 使用する分類器の名前 (kneighbors / linearSVC / rbfSVC / XGBoost)
             param_dict(dict): 各種パラメータを格納する辞書, 各値は以下の通り.
             - kneighbors
-                - n_neighbors(int)      : k の値
+                - n_clusters            : クラスターの個数
+                - init                  : セントロイドの初期値をランダムに設定  default: 'k-means++'
+                - n_init                : 異なるセントロイドの初期値を用いたk-meansの実行回数 default: '10' 実行したうちもっとSSE値が小さいモデルを最終モデルとして選択
+                - max_iter              : k-meansアルゴリズムの内部の最大イテレーション回数  default: '300'
+                - tol                   : 収束と判定するための相対的な許容誤差 default: '1e-04'
+                - random_state          : セントロイドの初期化に用いる乱数発生器の状態
 
             - linearSVC
                 - C (float)             : マージン. Defaults to 1.
-                - randomstate (int)     : 乱数のseed値. Defaults to 100.
+                - random_state (int)     : 乱数のseed値. Defaults to 100.
 
             - rbfSVC
                 - C (float)             : マージン. Defaults to 1.
                 - gamma (float)         : ガンマ値. Defaults to 3.
                 - cls (str)             : 非線形SVM の種類の指定(ovo / ovr). Defaults to "ovo".
-                - randomstate (int)     : 乱数のseed値. Defaults to 100.
+                - random_state (int)     : 乱数のseed値. Defaults to 100.
 
             - XGBoost
                 - n_estimators (int)    : 学習する決定木の数. Defaults to 80.
@@ -77,7 +87,10 @@ class SupervisedML(BaseModel):
                 - tree_method			: 木構造の種類 (hist, gpu_hist)
                 - params (dict | None)  : その他使用するパラメータ. Defaults to None.
         """
+        logger.debug("START", extra={"addinfo": f"学習開始 ({clf_name})"})
         match clf_name:
+            case "KMeans":
+                self.model = self.KMeans(**param_dict)
             case "kneighbors":
                 self.model = self.kneighbors(**param_dict)
             case "linearSVC":
@@ -86,53 +99,62 @@ class SupervisedML(BaseModel):
                 self.model = self.rbfSVC(**param_dict)
             case "XGBoost":
                 self.model = self.XGBoost(**param_dict)
+        logger.debug("END", extra={"addinfo": "学習終了"})
+        return self.model
+
+    def KMeans(self, n_clusters: int = 3, n_init: int = 10, max_iter: int = 300, tol: float = 1e-04, random_state: int = 100) -> KMeans:
+        self.logger.debug("START", extra={"addinfo": "学習開始"})
+        self.param_dict["model_name"] = "LinearSVC"
+        self.param_dict["clf_params"]["n_clusters"] = n_clusters
+        self.param_dict["clf_params"]["n_init"] = n_init
+        self.param_dict["clf_params"]["max_iter"] = max_iter
+        self.param_dict["clf_params"]["tol"] = tol
+        self.param_dict["clf_params"]["random_state"] = random_state
+
+        self.model = KMeans(n_clusters=n_clusters, n_init=n_init, max_iter=max_iter, tol=tol, random_state=random_state)
+        self.model.fit(self.X_train)
+
         return self.model
 
     def kneighbors(self, n_neighbors: int | None = None) -> KNeighborsClassifier:
-        logger.debug("START", extra={"addinfo": "学習開始"})
         self.param_dict["model_name"] = "KNeighbors"
+        self.param_dict["clf_params"]["n_neighbors"] = n_neighbors
 
         if n_neighbors is None:
             n_neighbors = int(np.sqrt(self.X_train.shape[0]))  # kの設定
 
         self.model = KNeighborsClassifier(n_neighbors=n_neighbors)
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
-        logger.debug("START", extra={"addinfo": "学習終了"})
         return self.model
 
-    def linearSVC(self, C: float = 0.3, randomstate: int = 0) -> LinearSVC:
-        logger.debug("START", extra={"addinfo": "学習開始"})
+    def linearSVC(self, C: float = 0.3, random_state: int = 0) -> LinearSVC:
         self.param_dict["model_name"] = "LinearSVC"
         self.param_dict["clf_params"]["C"] = C
-        self.param_dict["clf_params"]["randomstate"] = randomstate
+        self.param_dict["clf_params"]["randomstate"] = random_state
 
-        self.model = LinearSVC(C=C, random_state=randomstate)  # インスタンスを生成
+        self.model = LinearSVC(C=C, random_state=random_state)  # インスタンスを生成
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
-        logger.debug("START", extra={"addinfo": "学習終了"})
         return self.model
 
-    def rbfSVC(self, C: float = 0.3, gamma: float = 3, randomstate: int = 100, cls: str = "ovo") -> SVC | OneVsRestClassifier:
-        logger.debug("START", extra={"addinfo": "学習開始"})
+    def rbfSVC(self, C: float = 0.3, gamma: float = 3, random_state: int = 100, cls: str = "ovo") -> SVC | OneVsRestClassifier:
         self.param_dict["model_name"] = f"rbfSVC-{cls}"
         self.param_dict["clf_params"]["C"] = C
         self.param_dict["clf_params"]["gamma"] = gamma
-        self.param_dict["clf_params"]["randomstate"] = randomstate
+        self.param_dict["clf_params"]["randomstate"] = random_state
 
         match cls:
             case "ovo":
-                self.model = SVC(C=C, kernel="rbf", random_state=randomstate)  # インスタンスを生成
+                self.model = SVC(C=C, kernel="rbf", random_state=random_state)  # インスタンスを生成
             case "ovr":
-                estimator = SVC(C=C, kernel="rbf", gamma=gamma)
+                estimator = SVC(C=C, kernel="rbf", gamma=gamma, random_state=random_state)
                 self.model = OneVsRestClassifier(estimator)
             case _:
                 raise ValueError
 
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
-        logger.debug("START", extra={"addinfo": "学習終了"})
         return self.model
 
-    def XGBoost(self, colsample_bytree: float = 0.4, early_stopping_rounds: int = 100, eval_metric: str = "auc", learning_rate: float = 0.02, max_depth: int = 4, missing: int = -1, n_estimators: int = 500, subsample: float = 0.8, params: dict | None = None, ) -> XGBClassifier:
-        logger.debug("START", extra={"addinfo": "学習開始"})
+    def XGBoost(self, colsample_bytree: float = 0.4, early_stopping_rounds: int = 100, eval_metric: str = "auc", learning_rate: float = 0.02, max_depth: int = 4, missing: int = -1, n_estimators: int = 500, subsample: float = 0.8, params: dict | None = None) -> XGBClassifier:
         self.param_dict["model_name"] = "XGBoost"
         self.param_dict["clf_params"]["n_estimators"] = n_estimators
         self.param_dict["clf_params"]["max_depth"] = max_depth
@@ -166,7 +188,6 @@ class SupervisedML(BaseModel):
         eval_set = [(self.X_train, self.y_train)]
         self.model.fit(model.X_train, model.y_train, eval_set=eval_set, verbose=50, early_stopping_rounds=early_stopping_rounds)  # モデルの学習
 
-        logger.debug("END", extra={"addinfo": "学習終了"})
         return self.model
 
     def predict(self, pred_path: str | list[str] | np.ndarray | None = None) -> None:
@@ -217,7 +238,7 @@ class SupervisedML(BaseModel):
 
 if __name__ == "__main__":
     import sys
-
+    from config.params import ML_PARAM_DICT
     from config.SetLogger import logger_conf
 
     logger = logger_conf("ML")
@@ -235,14 +256,9 @@ if __name__ == "__main__":
     logger.debug("PARAMETER", extra={"addinfo": f"name={clf_name}, mode={mode}, parameter={parameter}, pca={pca}, test_size={test_size}, random_state={model_random_state}"})
 
     # 学習用パラメータ設定
-    # kneighbors
-    # param_dict = {"n_neighbor": 0}
-    # linearSVC
-    param_dict = {"C": 0.3, "randomstate": 0}
-    # rbfSVC
-    param_dict = {"C": 0.3, "gamma": 3, "cls": "ovo", "randomstate": 0}
-    # XGBoost
-    param_dict = {"colsample_bytree": 0.4, "early_stopping_rounds": 100, "eval_metric": "auc", "learning_rate": 0.02, "max_depth": 4, "missing": -1, "n_estimators": 500, "subsample": 0.8, "params": {}}
+    verbose = False # 途中経過の出力
+    param_dict = ML_PARAM_DICT[clf_name]
+    param_dict["verbose"] = verbose
 
     if len(sys.argv) > 1:
         logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み ({clf_name})"})
