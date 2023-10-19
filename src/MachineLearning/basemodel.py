@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_DIR
+from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_DIR, dict_to_str
 
 
 class BaseModel:
@@ -40,12 +40,16 @@ class BaseModel:
         model.param_dict["train_params"]["random_state"] = random_state
         model.param_dict["train_params"]["test_size"] = test_size
 
-        # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
+        if mode == "all":
+            train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.npz")
+        else:
+            # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
+            train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
+            model.X_test = train_test_data["X_test"]
+            model.y_test = train_test_data["y_test"]
+
         model.X_train = train_test_data["X_train"]
         model.y_train = train_test_data["y_train"]
-        model.X_test = train_test_data["X_test"]
-        model.y_test = train_test_data["y_test"]
 
         return model
 
@@ -88,7 +92,7 @@ class BaseModel:
         self.X_test, self.y_test = self._set_data(test_paths, test_label)
 
         if pca:
-            self._exePCA()
+            self.exePCA()
 
         return self.X_train, self.y_train, self.X_test, self.y_test
 
@@ -101,7 +105,28 @@ class BaseModel:
         # リコネクションがある画像ファイルのパスのリストを取得
         self._save_altImage(self.X_train, ALT_IMAGES)
 
-    def _exePCA(self, N_dim: int = 100, randomstate: int | None = 100) -> None:
+    def get_train_all(self, save: bool = True):
+        self.path_n, self.path_x, self.path_o = self._load_file_path()
+        path_n_all: list = sum(self.path_n, [])
+        path_x_all: list = sum(self.path_x, [])
+        path_o_all: list = sum(self.path_o, [])
+
+        train_paths: list = path_n_all.copy()
+        train_paths.extend(path_x_all)
+        train_paths.extend(path_o_all)
+
+        train_label = [0] * len(path_n_all)
+        train_label.extend([1] * len(path_o_all))
+        train_label.extend([2] * len(path_x_all))
+
+        self.X_train, self.y_train = self._set_data(train_paths, train_label)
+
+        if save:
+            mode = "all"
+            np.savez_compressed(ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{mode}.npz", X_train=self.X_train, y_train=self.y_train)
+        return self.X_train, self.y_train
+
+    def exePCA(self, N_dim: int = 100, randomstate: int | None = 100) -> None:
         self.param_dict["train_params"]["pca"] = True
         pca = PCA(n_components=N_dim, random_state=randomstate)
 
@@ -114,7 +139,7 @@ class BaseModel:
 
     def save_npys(self):
         np.savez_compressed(
-            ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{self.param_dict['mode']}.{self._dict_to_str('train_params')}.npz",
+            ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{self.param_dict['mode']}.{dict_to_str(self.param_dict['train_params'])}.npz",
             X_train=self.X_train,
             y_train=self.y_train,
             X_test=self.X_test,
@@ -252,20 +277,6 @@ class BaseModel:
 
         for file in files:
             self._alt_array_save(file, out_path)
-
-    def _dict_to_str(self, key: str | dict = "train_params") -> str:
-        if isinstance(key, str):
-            if key not in self.param_dict.keys():
-                raise ValueError("Wrong keys")
-            param_list_sorted = sorted(self.param_dict[key].items())
-
-        elif isinstance(key, dict):
-            param_list_sorted = sorted(key.items())
-
-        else:
-            raise ValueError
-
-        return ".".join(map(lambda x: f"{x[0]}={x[1]}", param_list_sorted))
 
 
 if __name__ == "__main__":
