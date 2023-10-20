@@ -188,7 +188,6 @@ class CreateTrain(_Kernel):
         np.save(out_path, result_img)
 
 
-
 def save_split_data_from_csv(dataset: int) -> None:
     logger = getLogger("fusion").getChild("Split_from_csv")
     logger.debug("START", extra={"addinfo": "Make Train"})
