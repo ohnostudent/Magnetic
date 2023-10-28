@@ -25,6 +25,7 @@ ML_RESULT_DIR = ML_DIR + "/result"
 DATASETS = [77, 497, 4949]
 SIDES = ["left", "right"]
 VARIABLE_PARAMETERS = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
+VARIABLE_PARAMETERS_FOR_TRAINING = ["density", "energy", "magfieldx", "magfieldy", "mag_tupledxy", "velocityx", "velocityy"]
 LABELS = {0: "n", 1: "x", 2: "o"}
 TRAIN_SHAPE = (10, 100)  # (X, Y)
 IMG_SHAPE = [1792, 569]

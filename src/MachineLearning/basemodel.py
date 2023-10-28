@@ -19,7 +19,13 @@ class BaseModel:
         self.logger = getLogger("basemodel").getChild("BaseModel")
         self.set_default(parameter)
 
-    def set_default(self, parameter) -> None:
+    def set_default(self, parameter: str) -> None:
+        """初期化処理
+
+        Args:
+            parameter (str): 使用するパラメータ
+
+        """
         self.param_dict: dict = dict()
         self.param_dict["mode"] = None
         self.param_dict["parameter"] = parameter
@@ -30,6 +36,19 @@ class BaseModel:
 
     @classmethod
     def load_npys(cls, mode: str, parameter: str, random_state: int | None = 100, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
+        """
+        データの読み込みを行う関数
+
+        Args:
+            mode (str): 分割手法
+            parameter (str): 使用するパラメータ
+            random_state (int | None, optional): 乱数の seed値. Defaults to 100.
+            test_size (float, optional): 訓練データと検証データの比率. Defaults to 0.3.
+            pca (bool, optional): 次元削減を行うか. Defaults to False.
+
+        Returns:
+            _type_: モデル
+        """
         model = cls(parameter)
         model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
 
@@ -105,7 +124,18 @@ class BaseModel:
         # リコネクションがある画像ファイルのパスのリストを取得
         self._save_altImage(self.X_train, ALT_IMAGES)
 
-    def get_train_all(self, save: bool = True):
+    def get_train_all(self, save: bool = True) -> tuple[np.ndarray, np.ndarray]:
+        """
+        全データの読み込み
+
+        Args:
+            save (bool, optional): 保存. Defaults to True.
+
+        Returns:
+            ndarray: バイナリデータ
+            ndarray: ラベルデータ
+
+        """
         self.path_n, self.path_x, self.path_o = self._load_file_path()
         path_n_all: list = sum(self.path_n, [])
         path_x_all: list = sum(self.path_x, [])
@@ -124,9 +154,17 @@ class BaseModel:
         if save:
             mode = "all"
             np.savez_compressed(ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{mode}.npz", X_train=self.X_train, y_train=self.y_train)
+
         return self.X_train, self.y_train
 
     def exePCA(self, N_dim: int = 100, randomstate: int | None = 100) -> None:
+        """
+        次元削減を行う関数
+
+        Args:
+            N_dim (int, optional): _description_. Defaults to 100.
+            randomstate (int | None, optional): _description_. Defaults to 100.
+        """
         self.param_dict["train_params"]["pca"] = True
         pca = PCA(n_components=N_dim, random_state=randomstate)
 
@@ -138,6 +176,9 @@ class BaseModel:
         print("PCA累積寄与率: {0}".format(sum(pca.explained_variance_ratio_)))
 
     def save_npys(self):
+        """
+        データの保存
+        """
         np.savez_compressed(
             ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{self.param_dict['mode']}.{dict_to_str(self.param_dict['train_params'])}.npz",
             X_train=self.X_train,
@@ -149,9 +190,9 @@ class BaseModel:
     def _load_file_path(self) -> tuple[list[list], list[list], list[list]]:
         path_n, path_x, path_o = list(), list(), list()
         for dataset in DATASETS:
-            path_n.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_n/{self.param_dict['parameter']}/*"))
-            path_o.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_o/{self.param_dict['parameter']}/*"))
-            path_x.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_x/{self.param_dict['parameter']}/*"))
+            path_n.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_n/{self.param_dict['parameter']}/*.npy"))
+            path_o.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_o/{self.param_dict['parameter']}/*.npy"))
+            path_x.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_x/{self.param_dict['parameter']}/*.npy"))
 
         return path_n, path_x, path_o
 
@@ -161,7 +202,6 @@ class BaseModel:
 
         Arg:
             file_path (str) : ファイルパス
-            z (int) :
 
         Returns:
             ndarray : 読み込んだデータをnumpy配列として読み込む
@@ -209,6 +249,10 @@ class BaseModel:
         path_n_all: list = sum(self.path_n, [])
         path_x_all: list = sum(self.path_x, [])
         path_o_all: list = sum(self.path_o, [])
+
+        assert len(path_n_all) != 0
+        assert len(path_x_all) != 0
+        assert len(path_o_all) != 0
 
         train_n, test_n = train_test_split(path_n_all, test_size=test_size, random_state=random_state)
         train_x, test_x = train_test_split(path_x_all, test_size=test_size, random_state=random_state)
@@ -280,7 +324,7 @@ class BaseModel:
 
 
 if __name__ == "__main__":
-    from config.params import VARIABLE_PARAMETERS
+    from config.params import VARIABLE_PARAMETERS_FOR_TRAINING
     from config.SetLogger import logger_conf
 
     logger = logger_conf("basemodel")
@@ -289,11 +333,12 @@ if __name__ == "__main__":
     logger.debug("PARAMETER", extra={"addinfo": f"mode = {mode}"})
 
     bm = BaseModel("density")
-    for parameter in ["density"]:  # VARIABLE_PARAMETERS:
+    for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
+    # for parameter in ["density"]:
         logger.debug("START", extra={"addinfo": f"{parameter}"})
 
         bm.set_default(parameter)
-        X_train, y_train, X_test, y_test = bm.split_train_test("mixsep")
+        X_train, y_train, X_test, y_test = bm.split_train_test(mode)
         bm.save_npys()
 
         logger.debug("END", extra={"addinfo": f"{parameter}"})

@@ -194,6 +194,15 @@ class SupervisedML(BaseModel):
         return self.model
 
     def predict(self, pred_path: str | np.ndarray | None = None) -> None:
+        """
+        予測を行う関数
+
+        Args:
+            pred_path (str | np.ndarray | None, optional): 予測を行うデータ. Defaults to None.
+
+        Raises:
+            ValueError: _description_
+        """
         if pred_path is None:
             self.pred = self.model.predict(self.X_test)
 
@@ -207,6 +216,9 @@ class SupervisedML(BaseModel):
             raise ValueError("引数の型が違います")
 
     def print_scores(self) -> None:
+        """
+        評価データの出力
+        """
         f = open(
             ML_RESULT_DIR + f"/{self.param_dict['model_name']}/{self.param_dict['parameter']}_{self.param_dict['mode']}.txt",
             "a",
