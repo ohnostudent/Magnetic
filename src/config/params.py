@@ -26,7 +26,11 @@ DATASETS = [77, 497, 4949]
 SIDES = ["left", "right"]
 VARIABLE_PARAMETERS = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
 LABELS = {0: "n", 1: "x", 2: "o"}
-IMAGE_SHAPE = (10, 100)  # (X, Y)
+TRAIN_SHAPE = (10, 100)  # (X, Y)
+IMG_SHAPE = [1792, 569]
+NPY_SHAPE = [257, 625]
+CNN_IMAGE_SHAPE = [100, 100]
+
 ML_PARAM_DICT = {
     "KMeans": {
         "algorithm": "lloyd",  # 使用するアルゴリズム

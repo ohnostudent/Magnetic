@@ -12,7 +12,7 @@ import pandas as pd
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import IMAGE_SHAPE, LABELS, ML_DATA_DIR, SIDES, SNAP_PATH
+from config.params import CNN_IMAGE_SHAPE, IMAGE_PATH, IMG_SHAPE, LABELS, ML_DATA_DIR, NPY_SHAPE, SIDES, SNAP_PATH, TRAIN_SHAPE
 
 
 class _Kernel:
@@ -97,6 +97,7 @@ class CreateTrain(_Kernel):
             label (int): 0(n), 1(x), 2(o)
             val_param (str): 対象のパラメータ
         """
+
         self.logger.debug("START", extra={"addinfo": f"val_param={val_param}, side={side}, label={LABELS[label]}"})
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -112,42 +113,88 @@ class CreateTrain(_Kernel):
             _job_range = locs.keys()
 
         npy_base_path = SNAP_PATH + f"/half_{side}/snap{self.dataset}/{val_param}"
+        lic_base_path = IMAGE_PATH + f"/LIC/snap{dataset}/{side}"
+
         for param in range(1, 75):
             for job in _job_range:
-                npy_path = npy_base_path + f"/{job}/{val_param}.{param:02d}.{job}.npy"
+                npy_path = npy_base_path + f"/{job}/{val_param}.{param :02d}.{job}.npy"
+                lic_path = lic_base_path + f"/lic_snap{dataset}.{side}.magfield.{param :02d}.{job}.bmp"
+
                 if not os.path.exists(npy_path):
+                    break
+                if not os.path.exists(lic_path):
                     break
 
                 try:
+                    npy_save_base_path = ML_DATA_DIR + f"/snap_files/snap{self.dataset}/point_{LABELS[label]}/{val_param}"
+                    img_save_base_path = ML_DATA_DIR + f"/cnn/snap{dataset}/point_{label}"
+
+                    npy_img = np.load(npy_path)
+                    bmp_img = cv2.imread(lic_path)
+
                     center = locs[job]["center"]
                     x_range = locs[job]["x_range"]
                     y_range = locs[job]["y_range"]
 
                     for num in center.keys():
-                        img = np.load(npy_path)
-                        img_shape = img.shape
-
                         centerx, centery = center[num]
-                        xlow, xup, ylow, yup = self._range_shape(x_range, y_range, num, img_shape)
-                        separated_im = img[ylow:yup, xlow:xup]  # 切り取り
-                        img_resize = cv2.resize(separated_im, IMAGE_SHAPE, interpolation=cv2.INTER_LANCZOS4)  # サイズ変更 -> (100, 25)
+                        x_range_low, x_range_up = x_range[num]
+                        y_range_low, y_range_up = y_range[num]
 
-                        base_path = (
-                            ML_DATA_DIR + f"/snap_files/snap{self.dataset}/point_{LABELS[label]}/{val_param}" + f"/{val_param}_{self.dataset}_{side}.{param:02d}.{job}_{centerx:03d}.{centery:03d}"
-                        )
-                        self.save_Data(img_resize, base_path)
+                        base_path = npy_save_base_path + f"/{val_param}_{self.dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}"
+                        self._cut_binary(npy_img, x_range_low, x_range_up, y_range_low, y_range_up, base_path)
+
+                        save_path = img_save_base_path + f"/{dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}.bmp"
+                        self._cut_images(bmp_img, x_range_low, x_range_up, y_range_low, y_range_up, save_path)
 
                 except ValueError as e:
                     self.logger.error("ERROR", extra={"addinfo": str(e)})
 
                 except cv2.error as e:
-                    if "!ssize.empty() in function" in str(e):
-                        self.logger.error("ERROR", extra={"addinfo": "切り取り範囲がファイルサイズ外です"})
-
-                    else:
-                        self.logger.error("ERROR", extra={"addinfo": f"{e}"})
+                    self.logger.error("ERROR", extra={"addinfo": f"{e}"})
 
         self.logger.debug("END", extra={"addinfo": f"val_param={val_param}, side={side}, label={LABELS[label]}"})
+
+    def _cut_binary(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str) -> None:
+        separated_im = img[y_range_low : y_range_up, x_range_low : x_range_up]  # 切り取り
+        img_resize = cv2.resize(separated_im, TRAIN_SHAPE, interpolation=cv2.INTER_LANCZOS4)  # サイズ変更 -> (100, 10)
+        self.save_Data(img_resize, save_path)
+
+    def _cut_images(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str) -> None:
+        img_range_low_X = int(x_range_low / NPY_SHAPE[0] * IMG_SHAPE[0])
+        img_range_low_Y = int(y_range_low / NPY_SHAPE[1] * IMG_SHAPE[1])
+        img_range_up_X = int(x_range_up / NPY_SHAPE[0] * IMG_SHAPE[0])
+        img_range_up_Y = int(y_range_up / NPY_SHAPE[1] * IMG_SHAPE[1])
+        rangeX = img_range_up_X - img_range_low_X
+        rangeY = img_range_up_Y - img_range_low_Y
+        range_diff = abs(rangeY - rangeX) // 2
+
+        if rangeX > rangeY:
+            img_range_low_Y -= range_diff
+            img_range_up_Y += range_diff
+        else:
+            img_range_low_X -= range_diff
+            img_range_up_X += range_diff
+
+        if img_range_low_X < 0:
+            img_range_up_X += abs(img_range_low_X)
+            img_range_low_X = 0
+
+        if img_range_up_X > IMG_SHAPE[0]:
+            img_range_low_X -= img_range_up_X - IMG_SHAPE[0]
+            img_range_up_X = IMG_SHAPE[0]
+
+        if img_range_low_Y < 0:
+            img_range_up_Y += abs(img_range_low_Y)
+            img_range_low_Y = 0
+
+        if img_range_up_Y > IMG_SHAPE[1]:
+            img_range_low_Y -= img_range_up_Y - IMG_SHAPE[1]
+            img_range_up_Y = IMG_SHAPE[1]
+
+        img_cut = img[img_range_low_Y : img_range_up_Y, img_range_low_X : img_range_up_X, :]
+        img_cut = cv2.resize(img_cut, CNN_IMAGE_SHAPE)
+        cv2.imwrite(save_path, img_cut)
 
     def _set_job_range(self) -> list:
         if self.dataset == 77:
@@ -158,23 +205,9 @@ class CreateTrain(_Kernel):
             job_range = map(lambda x: f"{x :02d}", range(9, 15))
         return list(job_range)
 
-    def _range_shape(self, x_range, y_range, num, img_shape):
-        xlow, xup = x_range[num]
-        ylow, yup = y_range[num]
-        if xlow < 0:
-            xlow = 0
-        if xup > img_shape[1]:
-            xup = img_shape[1]
-        if ylow < 0:
-            ylow = 0
-        if yup > img_shape[0]:
-            yup = img_shape[0]
-
-        return xlow, xup, ylow, yup
-
     # 複数の変数を混合したデータを作成する
     def loadBinaryData(self, img_path, val_params) -> list:
-        im_list = []
+        im_list = list()
         for val in val_params:
             im = np.load(img_path.replace(val_params[0], val))
             im_list.append(im)
@@ -186,7 +219,6 @@ class CreateTrain(_Kernel):
             os.makedirs(os.path.dirname(out_path))
 
         np.save(out_path, result_img)
-
 
 
 def save_split_data_from_csv(dataset: int) -> None:
@@ -224,7 +256,7 @@ def save_split_data_from_json(dataset: int):
     md = CreateTrain(dataset)
     for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
         for side in SIDES:
-            for label in [0]:  # LABELS.keys():
+            for label in LABELS.keys():
                 md.cut_and_save_from_json(path, side, label, val)
 
     logger.debug("END", extra={"addinfo": f"Cut, path={path}\n"})
@@ -245,7 +277,7 @@ def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
     # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
         logger.debug("START", extra={"addinfo": val_params})
-        for label in [0]:  # LABELS.keys():  # n, x, o
+        for label in LABELS.keys():  # n, x, o
             logger.debug("START", extra={"addinfo": f"label : {LABELS[label]}"})
             npys_path = OUT_DIR + f"/point_{LABELS[label]}"
 

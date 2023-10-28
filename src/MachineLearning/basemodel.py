@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_DIR, dict_to_str
+from config.params import DATASETS, TRAIN_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_DIR, dict_to_str
 
 
 class BaseModel:
@@ -245,7 +245,7 @@ class BaseModel:
         return train_paths, test_paths, train_label, test_label
 
     def _set_data(self, ml_data, labels) -> tuple[np.ndarray, np.ndarray]:
-        X_data = np.zeros((len(ml_data), np.prod(IMAGE_SHAPE)))
+        X_data = np.zeros((len(ml_data), np.prod(TRAIN_SHAPE)))
         label_data = np.array(labels)
 
         for idx, d in enumerate(ml_data):

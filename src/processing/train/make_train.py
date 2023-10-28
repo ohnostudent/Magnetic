@@ -10,7 +10,7 @@ import pandas as pd
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import DATASETS, IMAGE_SHAPE, LABELS, ML_DATA_DIR, SIDES
+from config.params import DATASETS, LABELS, ML_DATA_DIR, NPY_SHAPE, SIDES, TRAIN_SHAPE
 
 
 def _create_json(file_name) -> None:
@@ -33,7 +33,7 @@ def _set_default() -> dict:
         for side in SIDES:
             json_dict[dataset][side] = dict()
 
-            for label in LABELS:
+            for label in LABELS.values():
                 json_dict[dataset][side][label] = dict()
     return json_dict
 
@@ -65,14 +65,92 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
         save_dict["shape"] = dict()
 
         for cnt in range(len(shapes_list["centerx"])):
-            save_dict["center"][cnt] = [shapes_list["centerx"][cnt], shapes_list["centery"][cnt]]
-            save_dict["x_range"][cnt] = [shapes_list["xlow"][cnt], shapes_list["xup"][cnt]]
-            save_dict["y_range"][cnt] = [shapes_list["ylow"][cnt], shapes_list["yup"][cnt]]
-            save_dict["shape"][cnt] = [shapes_list["width"][cnt], shapes_list["height"][cnt]]
+            centerx, centery = [shapes_list["centerx"][cnt], shapes_list["centery"][cnt]]
+            x_range_low, x_range_up = [shapes_list["xlow"][cnt], shapes_list["xup"][cnt]]
+            y_range_low, y_range_up = [shapes_list["ylow"][cnt], shapes_list["yup"][cnt]]
+            shapex, shapey = [shapes_list["width"][cnt], shapes_list["height"][cnt]]
+
+            if shapey in (50, 100, 150):
+                pass
+            elif shapey <= 70:
+                shapey = 50
+                y_range_low = centery - 25
+                y_range_up = centery + 25
+            elif 70 <= shapey <= 125:
+                shapey = 100
+                y_range_low = centery - 50
+                y_range_up = centery + 50
+            elif 125 <= shapey:
+                shapey = 150
+                y_range_low = centery - 75
+                y_range_up = centery + 75
+
+            if shapex in (5, 10, 15, 20, 25, 30, 35):
+                pass
+            elif 0 <= shapex <= 7:
+                shapex = 5
+                x_range_low = centerx - 3
+                x_range_up = centerx + 2
+            elif 8 <= shapex <= 12:
+                shapex = 10
+                x_range_low = centerx - 5
+                x_range_up = centerx + 5
+            elif 13 <= shapex <= 17:
+                shapex = 15
+                x_range_low = centerx - 8
+                x_range_up = centerx + 7
+            elif 18 <= shapex <= 22:
+                shapex = 20
+                x_range_low = centerx - 10
+                x_range_up = centerx + 10
+            elif 23 <= shapex <= 27:
+                shapex = 25
+                x_range_low = centerx - 13
+                x_range_up = centerx + 12
+            elif 32 <= shapex <= 37:
+                shapex = 35
+                x_range_low = centerx - 18
+                x_range_up = centerx + 17
+
+            x_range_low, x_range_up, y_range_low, y_range_up, centerx, centery = _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up)
+
+            # 保存形式
+            save_dict["center"][cnt] = [centerx, centery]
+            save_dict["x_range"][cnt] = [x_range_low, x_range_up]
+            save_dict["y_range"][cnt] = [y_range_low, y_range_up]
+            save_dict["shape"][cnt] = [shapex, shapey]
 
         result_dict[f"{int(job) :02d}"] = save_dict
 
     return result_dict
+
+
+def _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up):
+    if x_range_low < 0:
+        diff = abs(x_range_low)
+        x_range_up += diff
+        centerx += diff
+        x_range_low = 0
+
+    if x_range_up > NPY_SHAPE[0]:
+        diff = x_range_up - NPY_SHAPE[0]
+        x_range_low -= diff
+        centerx -= diff
+        x_range_up = NPY_SHAPE[0]
+
+    if y_range_low < 0:
+        diff = abs(y_range_low)
+        y_range_up += diff
+        centery += diff
+        y_range_low = 0
+
+    if y_range_up > NPY_SHAPE[1]:
+        diff = y_range_up - NPY_SHAPE[1]
+        y_range_low -= diff
+        centery -= diff
+        y_range_up = NPY_SHAPE[1]
+
+    return x_range_low, x_range_up, y_range_low, y_range_up, centerx, centery
 
 
 def _set_n() -> dict:
@@ -80,9 +158,9 @@ def _set_n() -> dict:
     # 4 * 2 = 8 点取る
     x_locs = [30, 60, 90, 120, 150, 180, 210]
     y_locs = [150, 450]
-    shapes = IMAGE_SHAPE
+    shapes = TRAIN_SHAPE
 
-    save_dict = dict()  # 保存用の辞書
+    save_dict: dict[str, dict] = dict()  # 保存用の辞書
     save_dict["center"] = dict()
     save_dict["x_range"] = dict()
     save_dict["y_range"] = dict()
@@ -96,7 +174,7 @@ def _set_n() -> dict:
             save_dict["y_range"][k] = [y_locs[y_idx] - shapes[1] // 2, y_locs[y_idx] + shapes[1] // 2]
             save_dict["shape"][k] = shapes
 
-    return {f"{k :02d}": save_dict for k in range(7, 15)}
+    return {f"{i :02d}": save_dict for i in range(7, 15)}
 
 
 def _set_xo(dataset: int, side: str, label: int) -> dict:
@@ -156,6 +234,7 @@ def _set_xo(dataset: int, side: str, label: int) -> dict:
     # DF を dict に変換
     result_dict = _df_to_dict(df_median)
     del df_median
+
     return result_dict
 
 
@@ -186,6 +265,7 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
     # 保存
     folder = ML_DATA_DIR + f"/LIC_labels/{file_name}.json"
     logger.debug("SAVE", extra={"addinfo": f"{folder} に保存"})
+
     with open(folder, "r", encoding="utf-8") as f:
         data = json.load(f)
 

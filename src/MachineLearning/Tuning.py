@@ -80,8 +80,12 @@ def grid_search_cv(model, clf_name: str, clf_params: dict, param_grid: dict = pa
     return estimator
 
 
-def cross_validation(model, clf_name: str, clf_params: dict, param_grid: dict, grid_search_params: dict, cross_val_params: dict):
-    estimator = grid_search_cv(model, clf_name, clf_params, param_grid, grid_search_params)
+def cross_validation(model, clf_name: str, clf_params: dict, param_grid: dict, grid_search_params: dict, cross_val_params: dict, use_grid: bool = True):
+    if use_grid:
+        estimator = grid_search_cv(model, clf_name, clf_params, param_grid, grid_search_params, cross_val=True)
+    else:
+        estimator = _set_classifier(clf_name)(**clf_params)
+
     cv_scores = cross_val_score(estimator, model.X_train, model.y_train, **cross_val_params)
     print("cv_scores:", cv_scores, "\nmean:", cv_scores.mean())
 
@@ -90,5 +94,4 @@ if __name__ == "__main__":
     model = SupervisedML.load_npys(mode="all", parameter="density")
     clf_name = "rbfSVC"
     clf_params = ML_PARAM_DICT[clf_name]
-
-    cross_validation(model, clf_name, clf_params, param_grid, grid_search_params, cross_val_params)
+    cross_validation(model, clf_name, clf_params, param_grid, grid_search_params, cross_val_params, use_grid=False)
