@@ -1,38 +1,38 @@
-from glob import glob
+# -*- coding: utf-8 -*-
 
-import cv2
+import os
+import sys
+from logging import getLogger
+
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
-import torch.nn.functional as F  # noqa: N812
 import torchvision
 from torch import cuda, nn, optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
-from torchvision.datasets import MNIST
 
-from src.config.params import CNN_IMAGE_SHAPE, ML_DATA_DIR
-from src.MachineLearning.basemodel import BaseModel
+sys.path.append(os.getcwd() + "/src")
+
+from src.config.params import ML_DATA_DIR
 from src.MachineLearning.NetCore import Net
+
 
 BATCH_SIZE = 3025
 
-
 class CnnTrain:
+    logger = getLogger("ML").getChild("CNN")
+
     def __init__(self) -> None:
         pass
 
     def set_train(self):
         data_transform = {"train": transforms.Compose([transforms.RandomHorizontalFlip(), transforms.ToTensor()]), "test": transforms.Compose([transforms.ToTensor()])}
-
-        all_data_set = torchvision.datasets.ImageFolder(root="./ML/data/cnn/", transform=data_transform["train"])
-        # print(all_data_set.classes)
+        all_data_set = torchvision.datasets.ImageFolder(root=ML_DATA_DIR + "/cnn/", transform=data_transform["train"])
 
         # 学習データ、検証データに 7:3 の割合で分割する。
         train_size = int(0.7 * len(all_data_set))
         val_size = len(all_data_set) - train_size
-        train_dataset, val_dataset = torch.utils.data.random_split(all_data_set, [train_size, val_size])
-        # print(len(train_dataset), len(val_dataset))
+        train_dataset, val_dataset = random_split(all_data_set, [train_size, val_size])
 
         self.train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
         self.test_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=1)
@@ -103,7 +103,7 @@ class CnnTrain:
             val_loss_value.append(e_loss)
             val_acc_value.append(e_acc)
 
-            # 検証フェーズ
+            # テストフェーズ
             with torch.no_grad():  # 無駄に勾配計算しないように
                 e_loss, e_acc = self.run_epoch(self.test_loader, train_phase=False)
             test_loss_value.append(e_loss)
@@ -111,7 +111,6 @@ class CnnTrain:
 
         if do_plot:
             self.plot(train_loss_value, train_acc_value, test_loss_value, test_acc_value, EPOCH)
-
 
     def plot(self, train_loss_value, train_acc_value, test_loss_value, test_acc_value, EPOCH):
         plt.figure(figsize=(6, 6))  # グラフ描画用
