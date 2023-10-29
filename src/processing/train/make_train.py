@@ -67,7 +67,7 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
     result_dict = dict()
 
     for job in job_list:
-        shapes_list = df[df["job"] == job].reset_index(drop=True).to_dict()
+        shapes_dict = df[df["job"] == job].reset_index(drop=True).to_dict()
 
         save_dict = dict()
         save_dict["center"] = dict()
@@ -75,55 +75,8 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
         save_dict["y_range"] = dict()
         save_dict["shape"] = dict()
 
-        for cnt in range(len(shapes_list["centerx"])):
-            centerx, centery = [shapes_list["centerx"][cnt], shapes_list["centery"][cnt]]
-            x_range_low, x_range_up = [shapes_list["xlow"][cnt], shapes_list["xup"][cnt]]
-            y_range_low, y_range_up = [shapes_list["ylow"][cnt], shapes_list["yup"][cnt]]
-            shapex, shapey = [shapes_list["width"][cnt], shapes_list["height"][cnt]]
-
-            if shapey in (50, 100, 150):
-                pass
-            elif shapey <= 70:
-                shapey = 50
-                y_range_low = centery - 25
-                y_range_up = centery + 25
-            elif 70 <= shapey <= 125:
-                shapey = 100
-                y_range_low = centery - 50
-                y_range_up = centery + 50
-            elif 125 <= shapey:
-                shapey = 150
-                y_range_low = centery - 75
-                y_range_up = centery + 75
-
-            if shapex in (5, 10, 15, 20, 25, 30, 35):
-                pass
-            elif 0 <= shapex <= 7:
-                shapex = 5
-                x_range_low = centerx - 3
-                x_range_up = centerx + 2
-            elif 8 <= shapex <= 12:
-                shapex = 10
-                x_range_low = centerx - 5
-                x_range_up = centerx + 5
-            elif 13 <= shapex <= 17:
-                shapex = 15
-                x_range_low = centerx - 8
-                x_range_up = centerx + 7
-            elif 18 <= shapex <= 22:
-                shapex = 20
-                x_range_low = centerx - 10
-                x_range_up = centerx + 10
-            elif 23 <= shapex <= 27:
-                shapex = 25
-                x_range_low = centerx - 13
-                x_range_up = centerx + 12
-            elif 32 <= shapex <= 37:
-                shapex = 35
-                x_range_low = centerx - 18
-                x_range_up = centerx + 17
-
-            x_range_low, x_range_up, y_range_low, y_range_up, centerx, centery = _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up)
+        for cnt in range(len(shapes_dict["centerx"])):
+            centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up, shapex, shapey = _get_loc_data(shapes_dict, cnt)
 
             # 保存形式
             save_dict["center"][cnt] = [centerx, centery]
@@ -134,6 +87,57 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
         result_dict[f"{int(job) :02d}"] = save_dict
 
     return result_dict
+
+def _get_loc_data(shapes_dict: dict, cnt: int):
+    centerx, centery = [shapes_dict["centerx"][cnt], shapes_dict["centery"][cnt]]
+    x_range_low, x_range_up = [shapes_dict["xlow"][cnt], shapes_dict["xup"][cnt]]
+    y_range_low, y_range_up = [shapes_dict["ylow"][cnt], shapes_dict["yup"][cnt]]
+    shapex, shapey = [shapes_dict["width"][cnt], shapes_dict["height"][cnt]]
+
+    if shapey in (50, 100, 150):
+        pass
+    elif shapey <= 70:
+        shapey = 50
+        y_range_low = centery - 25
+        y_range_up = centery + 25
+    elif 70 <= shapey <= 125:
+        shapey = 100
+        y_range_low = centery - 50
+        y_range_up = centery + 50
+    elif 125 <= shapey:
+        shapey = 150
+        y_range_low = centery - 75
+        y_range_up = centery + 75
+
+    if shapex in (5, 10, 15, 20, 25, 30, 35):
+        pass
+    elif 0 <= shapex <= 7:
+        shapex = 5
+        x_range_low = centerx - 3
+        x_range_up = centerx + 2
+    elif 8 <= shapex <= 12:
+        shapex = 10
+        x_range_low = centerx - 5
+        x_range_up = centerx + 5
+    elif 13 <= shapex <= 17:
+        shapex = 15
+        x_range_low = centerx - 8
+        x_range_up = centerx + 7
+    elif 18 <= shapex <= 22:
+        shapex = 20
+        x_range_low = centerx - 10
+        x_range_up = centerx + 10
+    elif 23 <= shapex <= 27:
+        shapex = 25
+        x_range_low = centerx - 13
+        x_range_up = centerx + 12
+    elif 32 <= shapex <= 37:
+        shapex = 35
+        x_range_low = centerx - 18
+        x_range_up = centerx + 17
+
+    x_range_low, x_range_up, y_range_low, y_range_up, centerx, centery = _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up)
+    return centerx,centery,x_range_low,x_range_up,y_range_low,y_range_up,shapex,shapey
 
 
 def _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up):
