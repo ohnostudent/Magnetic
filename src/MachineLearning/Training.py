@@ -31,6 +31,14 @@ class SupervisedML(BaseModel):
         super().__init__(parameter)
         self.set_default(parameter)
 
+    def __str__(self) -> str:
+        params = dict_to_str(param_dict["train_params"], sep="\n\t")
+        doc = f"""
+        Params:
+            {params}
+        """
+        return doc
+
     @classmethod
     def load_model(cls, parameter: str, param_dict: dict, mode: str = "mixsep", name: str = "LinearSVC", model_random_state: int = 100, path: str | None = None):  # noqa: ANN206
         model = cls(parameter)

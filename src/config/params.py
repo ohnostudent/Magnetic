@@ -30,7 +30,7 @@ LABELS = {0: "n", 1: "x", 2: "o"}
 TRAIN_SHAPE = (10, 100)  # (X, Y)
 IMG_SHAPE = [1792, 569]
 NPY_SHAPE = [257, 625]
-CNN_IMAGE_SHAPE = [100, 100]
+CNN_IMAGE_SHAPE = [96, 96]
 
 ML_PARAM_DICT = {
     "KMeans": {
@@ -113,6 +113,6 @@ def set_dataset(dataset: str):
     return dataset_int
 
 
-def dict_to_str(param_dict: dict) -> str:
+def dict_to_str(param_dict: dict, sep=".") -> str:
     param_list_sorted = sorted(param_dict.items())
-    return ".".join(map(lambda x: f"{x[0]}={x[1]}", param_list_sorted))
+    return sep.join(map(lambda x: f"{x[0]}={x[1]}", param_list_sorted))

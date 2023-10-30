@@ -35,7 +35,7 @@ class _Kernel:
 
     """
 
-    def kernel_listxy(self, im1, im2) -> np.ndarray:  # xy交互のリストを持った行列を返す。shapeが1次元増えるので使わない
+    def kernel_listxy(self, im1, im2) -> np.ndarray:
         res = np.empty([im1.shape[0], im1.shape[1]])
         res = [[[] for _ in range(im1.shape[1])] for _ in range(im1.shape[0])]
         for x in range(im1.shape[1]):
@@ -43,7 +43,7 @@ class _Kernel:
                 res[y][x] = [im1[y][x], im2[y][x]]
         return np.array(res)
 
-    def kernel_xy(self, im1, im2) -> np.ndarray:  # xy交互の行列を返す。shapeのx方向が2倍になる。
+    def kernel_xy(self, im1, im2) -> np.ndarray:
         res = np.zeros([im1.shape[0], im1.shape[1] * 2])
         for x in range(im1.shape[1]):
             for y in range(im1.shape[0]):
@@ -103,9 +103,6 @@ class CreateTrain(_Kernel):
             data = json.load(f)
 
         locs = data[str(self.dataset)][side][LABELS[label]]
-        if locs == {}:
-            return
-
         if label == 0:
             _job_range = self._set_job_range()
 
@@ -113,24 +110,21 @@ class CreateTrain(_Kernel):
             _job_range = locs.keys()
 
         npy_base_path = SNAP_PATH + f"/half_{side}/snap{self.dataset}/{val_param}"
-        lic_base_path = IMAGE_PATH + f"/LIC/snap{dataset}/{side}"
 
         for param in range(1, 75):
             for job in _job_range:
                 npy_path = npy_base_path + f"/{job}/{val_param}.{param :02d}.{job}.npy"
-                lic_path = lic_base_path + f"/lic_snap{dataset}.{side}.magfield.{param :02d}.{job}.bmp"
 
                 if not os.path.exists(npy_path):
-                    break
-                if not os.path.exists(lic_path):
                     break
 
                 try:
                     npy_save_base_path = ML_DATA_DIR + f"/snap_files/snap{self.dataset}/point_{LABELS[label]}/{val_param}"
-                    img_save_base_path = ML_DATA_DIR + f"/cnn/snap{dataset}/point_{label}"
+
+                    if not os.path.exists(npy_save_base_path):
+                        os.makedirs(npy_save_base_path)
 
                     npy_img = np.load(npy_path)
-                    bmp_img = cv2.imread(lic_path)
 
                     center = locs[job]["center"]
                     x_range = locs[job]["x_range"]
@@ -144,6 +138,61 @@ class CreateTrain(_Kernel):
                         base_path = npy_save_base_path + f"/{val_param}_{self.dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}"
                         self._cut_binary(npy_img, x_range_low, x_range_up, y_range_low, y_range_up, base_path)
 
+                except ValueError as e:
+                    self.logger.error("ERROR", extra={"addinfo": str(e)})
+
+                except cv2.error as e:
+                    self.logger.error("ERROR", extra={"addinfo": f"{e}"})
+
+        self.logger.debug("END", extra={"addinfo": f"val_param={val_param}, side={side}, label={LABELS[label]}"})
+
+    def cut_and_save_from_image(self, path: str, side: str, label: int):
+        """
+        json の座標データを基に、データを切り取る関数
+
+        Args:
+            path (str): 画像パス
+            side (str): left / right
+            label (int): 0(n), 1(x), 2(o)
+        """
+
+        self.logger.debug("START", extra={"addinfo": f"side={side}, label={LABELS[label]}"})
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        locs = data[str(self.dataset)][side][LABELS[label]]
+        if label == 0:
+            _job_range = self._set_job_range()
+
+        else:
+            _job_range = locs.keys()
+
+        lic_base_path = IMAGE_PATH + f"/LIC/snap{dataset}/{side}"
+
+        for param in range(1, 75):
+            for job in _job_range:
+                lic_path = lic_base_path + f"/lic_snap{dataset}.{side}.magfield.{param :02d}.{job}.bmp"
+
+                if not os.path.exists(lic_path):
+                    break
+
+                try:
+                    img_save_base_path = ML_DATA_DIR + f"/cnn/point_{LABELS[label]}/snap{dataset}"
+
+                    if not os.path.exists(img_save_base_path):
+                        os.makedirs(img_save_base_path)
+
+                    bmp_img = cv2.imread(lic_path)
+
+                    center = locs[job]["center"]
+                    x_range = locs[job]["x_range"]
+                    y_range = locs[job]["y_range"]
+
+                    for num in center.keys():
+                        centerx, centery = center[num]
+                        x_range_low, x_range_up = x_range[num]
+                        y_range_low, y_range_up = y_range[num]
+
                         save_path = img_save_base_path + f"/{dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}.bmp"
                         self._cut_images(bmp_img, x_range_low, x_range_up, y_range_low, y_range_up, save_path)
 
@@ -153,10 +202,10 @@ class CreateTrain(_Kernel):
                 except cv2.error as e:
                     self.logger.error("ERROR", extra={"addinfo": f"{e}"})
 
-        self.logger.debug("END", extra={"addinfo": f"val_param={val_param}, side={side}, label={LABELS[label]}"})
+        self.logger.debug("END", extra={"addinfo": f"side={side}, label={LABELS[label]}"})
 
     def _cut_binary(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str) -> None:
-        separated_im = img[y_range_low : y_range_up, x_range_low : x_range_up]  # 切り取り
+        separated_im = img[y_range_low:y_range_up, x_range_low:x_range_up]  # 切り取り
         img_resize = cv2.resize(separated_im, TRAIN_SHAPE, interpolation=cv2.INTER_LANCZOS4)  # サイズ変更 -> (100, 10)
         self.save_Data(img_resize, save_path)
 
@@ -192,7 +241,7 @@ class CreateTrain(_Kernel):
             img_range_low_Y -= img_range_up_Y - IMG_SHAPE[1]
             img_range_up_Y = IMG_SHAPE[1]
 
-        img_cut = img[img_range_low_Y : img_range_up_Y, img_range_low_X : img_range_up_X, :]
+        img_cut = img[img_range_low_Y:img_range_up_Y, img_range_low_X:img_range_up_X, :]
         img_cut = cv2.resize(img_cut, CNN_IMAGE_SHAPE)
         cv2.imwrite(save_path, img_cut)
 
@@ -254,12 +303,11 @@ def save_split_data_from_json(dataset: int):
         raise ValueError("File not found")
 
     md = CreateTrain(dataset)
-    for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
-        for side in SIDES:
-            for label in LABELS.keys():
+    for side in SIDES:
+        for label in LABELS.keys():
+            for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
                 md.cut_and_save_from_json(path, side, label, val)
-
-    logger.debug("END", extra={"addinfo": f"Cut, path={path}\n"})
+            md.cut_and_save_from_image(path, side, label)
 
 
 def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
@@ -307,6 +355,6 @@ if __name__ == "__main__":
 
         # save_split_data_from_csv(dataset)
         save_split_data_from_json(dataset)
-        makeTrainingData(dataset)
+        # makeTrainingData(dataset)
 
         logger.debug("END", extra={"addinfo": f"{dataset}"})
