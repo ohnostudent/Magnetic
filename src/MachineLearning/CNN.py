@@ -6,53 +6,55 @@ from logging import getLogger
 
 import matplotlib.pyplot as plt
 import torch
-import torchvision
-from torch import cuda
+from torch import Generator, cuda, device
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
+from torchvision.datasets import ImageFolder
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import ML_DATA_DIR, ML_RESULT_DIR
+from config.params import ML_DATA_DIR, ML_MODEL_DIR, ML_RESULT_DIR
 from MachineLearning.NetCore import Net
-
-BATCH_SIZE = 3025
 
 
 class CnnTrain:
-    logger = getLogger("ML").getChild("CNN")
+    logger = getLogger("CNN").getChild("Train")
 
     def __init__(self) -> None:
         pass
 
-    def set_train(self):
-        data_transform = {"train": transforms.Compose([transforms.RandomHorizontalFlip(), transforms.ToTensor()]), "test": transforms.Compose([transforms.ToTensor()])}
-        all_data_set = torchvision.datasets.ImageFolder(root=ML_DATA_DIR + "/cnn", transform=data_transform["train"])
+    def set_train(self, seed: int = 42):
+        data_transform = {
+            "train": transforms.Compose([transforms.Grayscale(num_output_channels=1), transforms.RandomHorizontalFlip(), transforms.ToTensor()]),
+            "test": transforms.Compose([transforms.Grayscale(num_output_channels=1), transforms.ToTensor()]),
+        }
+        all_data_set = ImageFolder(root=ML_DATA_DIR + "/cnn", transform=data_transform["train"])
 
         # 学習データ、検証データに 7:3 の割合で分割
-        train_size = int(0.7 * len(all_data_set))
-        val_size = len(all_data_set) - train_size
-        train_dataset, val_dataset = random_split(all_data_set, [train_size, val_size])
+        train_size = 0.5
+        val_size = 0.2
+        test_size = 0.3
+        train_dataset, val_dataset, test_dataset = random_split(all_data_set, [train_size, val_size, test_size], generator=Generator().manual_seed(seed))
 
-        BATCH_SIZE = train_size // 8
+        BATCH_SIZE = 1024
         self.train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
-        self.test_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=1)
-        return self.train_loader, self.test_loader
+        self.val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=1)
+        self.test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=1)
+        return self.train_loader, self.val_loader, self.test_loader
 
     def set_net(self) -> Net:
         net = Net()
-        self.device = torch.device("cuda" if cuda.is_available() else "cpu")
+        self.device = device("cuda" if cuda.is_available() else "cpu")
         self.net = net.to(self.device)
-
         return self.net
 
-    def run_epoch(self, loader, train_phase):
+    def _run_epoch(self, loader, train_phase):
         sum_loss = 0.0  # lossの合計
         sum_correct = 0  # 正解率の合計
         sum_total = 0  # dataの数の合計
 
         for inputs, labels in loader:
-            inputs_gpu, labels_gpu = inputs.to(self.device), labels.to(self.device)
+            inputs_gpu, labels_gpu = inputs.to(self.device), labels.to(self.device)  # GPU にデータを移行
             outputs = self.net(inputs_gpu)  # 推論を実施（順伝播による出力）
             loss = self.net.criterion(outputs, labels_gpu)  # 交差エントロピーによる損失計算（バッチ平均値
 
@@ -62,20 +64,19 @@ class CnnTrain:
                 self.net.optimizer.step()  # パラメータ更新
 
             sum_loss += loss.item()  # lossを足していく
-            _, predicted = outputs.max(1)  # 出力の最大値の添字(予想位置)を取得
+            predicted = torch.argmax(outputs, dim=1)  # 出力の最大値の添字(予想位置)を取得
             sum_total += labels_gpu.size(0)  # labelの数を足していくことでデータの総和を取る
             sum_correct += predicted.eq(labels_gpu.view_as(predicted)).sum().item()  # 予想位置と実際の正解を比べ,正解している数だけ足す
 
         # 1エポック分の評価値を計算
-        dataset_size = len(loader)
-        e_loss = sum_loss * BATCH_SIZE / dataset_size  # 1エポックの平均損失
+        e_loss = sum_loss / len(loader)  # 1エポックの平均損失
         e_acc = float(sum_correct / sum_total)  # 1エポックの正解率
-        self.logger.debug("SCORE", extra={"addinfo": f"({'train' if train_phase else 'val'}) Loss: {e_loss:.4f} Acc: {e_acc:.4f}"})
+        self.logger.debug("SCORE", extra={"addinfo": f"({'train' if train_phase else 'val'}) Loss: {e_loss:.4f} Acc: {e_acc:.4f}, correct: {sum_correct}, total: {sum_total}"})
 
         return e_loss, e_acc
 
-    def run(self, do_plot):
-        cuda.empty_cache()
+    def run(self, epoch_cnt: int = 5, do_plot: bool = True):
+        # cuda.empty_cache()  # GPUのリセット
         train_loss_value = []  # trainingのlossを保持するlist
         train_acc_value = []  # trainingのaccuracyを保持するlist
         val_loss_value = []  # validationのlossを保持するlist
@@ -83,24 +84,26 @@ class CnnTrain:
         test_loss_value = []  # testのlossを保持するlist
         test_acc_value = []  # testのaccuracyを保持するlist
 
-        EPOCH = 100
         self.logger.debug("START", extra={"addinfo": ""})
-        for epoch in range(EPOCH):
-            self.logger.debug("epoch", extra={"addinfo": f"{epoch + 1}"})
+        for epoch in range(epoch_cnt):
+            self.logger.debug("epoch", extra={"addinfo": f"{epoch + 1 :03d}"})
 
-            e_loss, e_acc = self.run_epoch(self.train_loader, train_phase=True)
+            self.net.train(True)
+            e_loss, e_acc = self._run_epoch(self.train_loader, train_phase=True)
             train_loss_value.append(e_loss)
             train_acc_value.append(e_acc)
 
             # 検証フェーズ
+            self.net.train(False)
             with torch.no_grad():  # 無駄に勾配計算しないように
-                e_loss, e_acc = self.run_epoch(self.train_loader, train_phase=False)
+                e_loss, e_acc = self._run_epoch(self.val_loader, train_phase=False)
             val_loss_value.append(e_loss)
             val_acc_value.append(e_acc)
 
             # テストフェーズ
+            self.net.train(False)
             with torch.no_grad():  # 無駄に勾配計算しないように
-                e_loss, e_acc = self.run_epoch(self.test_loader, train_phase=False)
+                e_loss, e_acc = self._run_epoch(self.test_loader, train_phase=False)
             test_loss_value.append(e_loss)
             test_acc_value.append(e_acc)
 
@@ -136,3 +139,51 @@ class CnnTrain:
         plt.tight_layout()
         plt.savefig(ML_RESULT_DIR + "/cnn/loss_acc_image.png")
         plt.show()
+
+    def save_model(self, weight_only: bool = False, save_path: str | None = None):
+        if save_path is None:
+            save_path = ML_MODEL_DIR + "/model/cnn_{mode}_cpu.pth"
+
+        if weight_only:
+            if "{mode}" in save_path:
+                save_path.format(mode="weight")
+            save_model = self.net.state_dict()
+        else:
+            if "{mode}" in save_path:
+                save_path.format(mode="model")
+            save_model = self.net
+
+        torch.save(save_model, save_path)
+
+    @classmethod
+    def load_model(cls, mode: str = "model", path: str | None = None):  # noqa: ANN206
+        if path is None:
+            path = ML_MODEL_DIR + "/model/cnn_cpu.pth"
+
+        model = cls()
+        model.device = device("cuda" if cuda.is_available() else "cpu")
+
+        if mode == "wight":
+            net = Net()
+            net.load_state_dict(torch.load(path, map_location="cpu"))
+        elif mode == "model":
+            net = torch.load(path, map_location="cpu")
+        else:
+            raise ValueError()
+
+        model.net = net.to(model.device)
+        return model
+
+
+if __name__ == "__main__":
+    # from config.params import VARIABLE_PARAMETERS_FOR_TRAINING
+    from config.SetLogger import logger_conf
+
+    logger = logger_conf("CNN")
+    EPOCH = 100
+
+    model = CnnTrain()
+    model.set_net()
+    model.set_train(seed=100)
+    model.run(epoch_cnt=EPOCH, do_plot=False)
+    model.save_model()
