@@ -41,7 +41,7 @@ tab-size = 4
 line-length = 200
 
 # The minimum Python version to target
-target-version = "py310"
+target-version = "py311"
 
 
 [tool.ruff.pylint]
@@ -49,12 +49,12 @@ max-args = 10
 
 
 [tool.black]
-target-version = ['py310']
+target-version = ['py311']
 line-length = 200
 
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 no_strict_optional = true
 ignore_missing_imports = true
 check_untyped_defs = true

@@ -177,7 +177,7 @@ class CreateTrain(_Kernel):
                     break
 
                 try:
-                    img_save_base_path = ML_DATA_DIR + f"/cnn/point_{LABELS[label]}/snap{dataset}"
+                    img_save_base_path = ML_DATA_DIR + f"/cnn/point_{LABELS[label]}"
 
                     if not os.path.exists(img_save_base_path):
                         os.makedirs(img_save_base_path)
@@ -193,7 +193,7 @@ class CreateTrain(_Kernel):
                         x_range_low, x_range_up = x_range[num]
                         y_range_low, y_range_up = y_range[num]
 
-                        save_path = img_save_base_path + f"/{dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}.bmp"
+                        save_path = img_save_base_path + f"/snap{dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}.bmp"
                         self._cut_images(bmp_img, x_range_low, x_range_up, y_range_low, y_range_up, save_path)
 
                 except ValueError as e:
@@ -209,7 +209,7 @@ class CreateTrain(_Kernel):
         img_resize = cv2.resize(separated_im, TRAIN_SHAPE, interpolation=cv2.INTER_LANCZOS4)  # サイズ変更 -> (100, 10)
         self.save_Data(img_resize, save_path)
 
-    def _cut_images(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str) -> None:
+    def _cut_images(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str, reshape_size: int = 15) -> None:
         img_range_low_X = int(x_range_low / NPY_SHAPE[0] * IMG_SHAPE[0])
         img_range_low_Y = int(y_range_low / NPY_SHAPE[1] * IMG_SHAPE[1])
         img_range_up_X = int(x_range_up / NPY_SHAPE[0] * IMG_SHAPE[0])
@@ -241,7 +241,7 @@ class CreateTrain(_Kernel):
             img_range_low_Y -= img_range_up_Y - IMG_SHAPE[1]
             img_range_up_Y = IMG_SHAPE[1]
 
-        img_cut = img[img_range_low_Y:img_range_up_Y, img_range_low_X:img_range_up_X, :]
+        img_cut = img[img_range_low_Y + reshape_size : img_range_up_Y - reshape_size, img_range_low_X + reshape_size : img_range_up_X - reshape_size, :]
         img_cut = cv2.resize(img_cut, CNN_IMAGE_SHAPE)
         cv2.imwrite(save_path, img_cut)
 
@@ -272,13 +272,14 @@ class CreateTrain(_Kernel):
 
 def save_split_data_from_csv(dataset: int) -> None:
     logger = getLogger("fusion").getChild("Split_from_csv")
-    logger.debug("START", extra={"addinfo": "Make Train"})
-
     csv_path = ML_DATA_DIR + f"/LIC_labels/label_snap{dataset}_org.csv"
+    logger.debug("PROCESS", extra={"addinfo": f"Make Train, path={csv_path}"})
+
     if not os.path.exists(csv_path):
         logger.debug("ERROR", extra={"addinfo": "ファイルが見つかりませんでした"})
         raise ValueError("File not found")
 
+    logger.debug("START", extra={"addinfo": f"{dataset}"})
     md = CreateTrain(dataset)
     df = pd.read_csv(csv_path, encoding="utf-8")
     df_snap: pd.DataFrame = df[df["dataset"] == dataset]
@@ -290,24 +291,27 @@ def save_split_data_from_csv(dataset: int) -> None:
             md.cut_and_save_from_csv(val, d)
 
         logger.debug("END", extra={"addinfo": val})
-    logger.debug("END", extra={"addinfo": "Make Train\n"})
+    logger.debug("END", extra={"addinfo": f"{dataset}"})
 
 
 def save_split_data_from_json(dataset: int):
     logger = getLogger("fusion").getChild("Split_from_json")
     path = ML_DATA_DIR + "/LIC_labels/snap_labels.json"
-    logger.debug("START", extra={"addinfo": f"Cut, path={path}"})
+    logger.debug("PROCESS", extra={"addinfo": f"Cut, path={path}"})
 
     if not os.path.exists(path):
         logger.debug("ERROR", extra={"addinfo": "ファイルが見つかりませんでした"})
         raise ValueError("File not found")
 
+    logger.debug("START", extra={"addinfo": f"{dataset}"})
     md = CreateTrain(dataset)
     for side in SIDES:
         for label in LABELS.keys():
-            for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
-                md.cut_and_save_from_json(path, side, label, val)
+            # for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
+            #     md.cut_and_save_from_json(path, side, label, val)
             md.cut_and_save_from_image(path, side, label)
+
+    logger.debug("END", extra={"addinfo": f"{dataset}"})
 
 
 def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
@@ -315,12 +319,12 @@ def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
     logger.debug("START", extra={"addinfo": "Make Training Data"})
 
     md = CreateTrain(dataset)
+    OUT_DIR = ML_DATA_DIR + f"/snap_files/snap{dataset}"
     if props_params is None:
         props_params = [
             (["magfieldx", "magfieldy"], "mag_tupledxy", md.kernel_listxy),
             (["velocityx", "velocityy", "density"], "energy", md.kernel_Energy),
         ]
-    OUT_DIR = ML_DATA_DIR + f"/snap_files/snap{dataset}"
 
     # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
@@ -351,10 +355,6 @@ if __name__ == "__main__":
     logger = logger_conf("fusion")
 
     for dataset in DATASETS:
-        logger.debug("START", extra={"addinfo": f"{dataset}"})
-
         # save_split_data_from_csv(dataset)
         save_split_data_from_json(dataset)
         # makeTrainingData(dataset)
-
-        logger.debug("END", extra={"addinfo": f"{dataset}"})
