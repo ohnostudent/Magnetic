@@ -2,7 +2,7 @@
 
 import os
 
-from flask import Flask, jsonify, request, Response
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -12,7 +12,7 @@ predoc = " "
 
 @app.route("/postdata", methods=["POST"])
 def writedata() -> Response:
-    req = request.json[0] # type: ignore
+    req = request.json[0]  # type: ignore
     response = {"status": "success", "message": ""}
     try:
         with open(req["filepath"], "a") as f:
@@ -23,15 +23,13 @@ def writedata() -> Response:
             #  'locnumx2': 0, 'locnumy2': 0,
             #  'rangenumx': 0, 'rangenumy': 0}
 
-            doc = str(request.json[0]) # type: ignore
+            doc = str(request.json[0])  # type: ignore
             # snappath, dataset, para, job, side, center[x, y], xrange[a, z],  yrange[a, z]
             file_name = os.path.basename(req["snappath"]).split(".")
             dataset, para, job, side = file_name[0].split("_")[1].replace("snap", ""), file_name[3], file_name[4], file_name[1]
-            centerx = req["locnumx"]
-            centery = req["locnumy"]
-            xlow = req["locnumx2"]
+            centerx, centery = req["locnumx"], req["locnumy"]
+            xlow, ylow = req["locnumx2"], req["locnumy2"]
             xup = int(req["locnumx2"]) + int(req["rangenumx"])
-            ylow = req["locnumy2"]
             yup = int(req["locnumy2"]) + int(req["rangenumy"])
             label = req["label"]
             doc = f"{req['snappath']},{dataset},{para},{job},{side},{centerx},{centery},{xlow},{xup},{ylow},{yup},{label}\n"
@@ -62,7 +60,7 @@ def writedata() -> Response:
 
     except Exception as e:
         # return f"failed{req['snappath']}"
-        response["message"] = f"failed{req['snappath']}"
+        response["message"] = f"failed {req['snappath']}"
         response["status"] = str(e)
 
     return jsonify(response)

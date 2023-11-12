@@ -11,9 +11,15 @@ from config.params import IMAGE_PATH, SIDES, SRC_PATH
 
 
 def _sort_paths(path_list: list[str]) -> list[str]:
-    """
-    path_listはglob等で取得したlist。
-    path_listをparam, jobでソートして返す。
+    """ファイルパスのソート
+
+    入力されたリストを param, job の順でソートして返す
+
+    Args:
+        path_list (list[str]): 並び変える前のリスト
+
+    Returns:
+        list[str]: 並び変えたリスト
     """
     pjp: list = list(
         map(
@@ -27,7 +33,14 @@ def _sort_paths(path_list: list[str]) -> list[str]:
     return list(map(lambda x: x[0], pjp_sorted))
 
 
-def createViewer(dataset) -> None:
+def createViewer(dataset: int) -> None:
+    """viewerを作る関数
+
+    template.html に必要な情報を書き込む
+
+    Args:
+        dataset (int): 対象のデータセット
+    """
     for size in SIDES:
         # paths = _sort_paths(paths) # snapの命名規則をもとに時系列順に並び変える。
         paths = glob(IMAGE_PATH + f"/LIC/snap{dataset}/{size}/*.bmp")
@@ -57,9 +70,9 @@ if __name__ == "__main__":
         print()
         sys.exit()
     else:
-        dataset = sys.argv[1]
+        dataset_str = sys.argv[1]
 
     from config.params import set_dataset
 
-    dataset = set_dataset(dataset)
+    dataset = set_dataset(dataset_str)
     createViewer(dataset)

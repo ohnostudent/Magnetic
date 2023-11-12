@@ -17,22 +17,13 @@ from config.params import CNN_IMAGE_SHAPE, IMAGE_PATH, IMG_SHAPE, LABELS, ML_DAT
 
 class _Kernel:
     """
-    visualize.ipynbを参考にkernel作る
-
-        rad = np.arccos(u/np.sqrt(u**2+v**2))
-        color2 = np.array(v) / np.array(u)
-        color2 = color2 - min(color2.flat)
-        color2 = color2/max(color2.flat)
-        speed = np.sqrt(u**2 + v**2)
-        lw = 7*speed / speed.max()
-    ##
-    dens = mf.load(mf.gen_snap_path("density",para,job),z=3)
-    vX = mf.load(mf.gen_snap_path("velocityX",para,job),z=3)
-    vY = mf.load(mf.gen_snap_path("velocityY",para,job),z=3)
-
+    rad = np.arccos(u/np.sqrt(u**2+v**2))
+    color2 = np.array(v) / np.array(u)
+    color2 = color2 - min(color2.flat)
+    color2 = color2/max(color2.flat)
+    speed = np.sqrt(u**2 + v**2)
+    lw = 7*speed / speed.max()
     energy = dens * (vX**2 + vY**2) / 2
-    ##
-
     """
 
     def kernel_listxy(self, im1, im2) -> np.ndarray:
@@ -63,10 +54,15 @@ class CreateTrain(_Kernel):
         self.dataset = dataset
         self.logger = getLogger("fusion").getChild("Create_Train")
 
-    def cut_and_save_from_csv(self, val_param, df) -> None:
+    def cut_and_save_from_csv(self, val_param: str, df: pd.Series) -> None:
         """
         ラベリング時の座標をもとに、元データを切り取る
+
+        Args:
+            val_param (str): 対象の変数
+            df (pd.Series): 切り取った座標データ
         """
+        # パラメータ設定
         para, job, side = df["para"], df["job"], df["side"]
         centerx, xlow, xup = df["centerx"], int(df["xlow"]), int(df["xup"])
         centery, ylow, yup = df["centery"], int(df["ylow"]), int(df["yup"])
@@ -77,19 +73,21 @@ class CreateTrain(_Kernel):
         if ylow <= 0:
             ylow = 0
 
-        npy_path = SNAP_PATH + f"/half_{side}/snap{self.dataset}/{val_param}/{job:02d}/{val_param}.{para:02d}.{job:02d}.npy"
+        # 画像の読み込み
+        npy_path = SNAP_PATH + f"/half_{side}/snap{self.dataset}/{val_param}/{job:02d}/{val_param}.{para:02d}.{job:02d}.npy"  # ファイルパス
         if not os.path.exists(npy_path):
             print(npy_path)
 
-        img = np.load(npy_path)
-        separated_im = img[ylow:yup, xlow:xup]
+        img = np.load(npy_path)  # 画像データの読み込み
+        separated_im = img[ylow:yup, xlow:xup]  # 切り取り
 
+        # 保存
         base_path = ML_DATA_DIR + f"/snap{self.dataset}/point_{LABELS[label]}/{val_param}" + f"/{val_param}_{self.dataset}_{side}.{para:02d}.{job:02d}_{centerx:03d}.{centery:03d}"
         self.save_Data(separated_im, base_path)
 
     def cut_and_save_from_json(self, path: str, side: str, label: int, val_param: str):
         """
-        json の座標データを基に、データを切り取る関数
+        json の座標データを基に、データを切り取る
 
         Args:
             path (str): 画像パス
@@ -99,10 +97,14 @@ class CreateTrain(_Kernel):
         """
 
         self.logger.debug("START", extra={"addinfo": f"val_param={val_param}, side={side}, label={LABELS[label]}"})
+
+        # 座標データの設定
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         locs = data[str(self.dataset)][side][LABELS[label]]
+
+        # ループ範囲
         if label == 0:
             _job_range = self._set_job_range()
 
@@ -126,6 +128,7 @@ class CreateTrain(_Kernel):
 
                     npy_img = np.load(npy_path)
 
+                    # 切り取る座標の辞書
                     center = locs[job]["center"]
                     x_range = locs[job]["x_range"]
                     y_range = locs[job]["y_range"]
@@ -136,7 +139,7 @@ class CreateTrain(_Kernel):
                         y_range_low, y_range_up = y_range[num]
 
                         base_path = npy_save_base_path + f"/{val_param}_{self.dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}"
-                        self._cut_binary(npy_img, x_range_low, x_range_up, y_range_low, y_range_up, base_path)
+                        self.cut_binary(npy_img, x_range_low, x_range_up, y_range_low, y_range_up, base_path)
 
                 except ValueError as e:
                     self.logger.error("ERROR", extra={"addinfo": str(e)})
@@ -148,7 +151,7 @@ class CreateTrain(_Kernel):
 
     def cut_and_save_from_image(self, path: str, side: str, label: int):
         """
-        json の座標データを基に、データを切り取る関数
+        json の座標データを基に、データを切り取る
 
         Args:
             path (str): 画像パス
@@ -194,7 +197,7 @@ class CreateTrain(_Kernel):
                         y_range_low, y_range_up = y_range[num]
 
                         save_path = img_save_base_path + f"/snap{dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}.bmp"
-                        self._cut_images(bmp_img, x_range_low, x_range_up, y_range_low, y_range_up, save_path)
+                        self.cut_images(bmp_img, x_range_low, x_range_up, y_range_low, y_range_up, save_path)
 
                 except ValueError as e:
                     self.logger.error("ERROR", extra={"addinfo": str(e)})
@@ -204,12 +207,35 @@ class CreateTrain(_Kernel):
 
         self.logger.debug("END", extra={"addinfo": f"side={side}, label={LABELS[label]}"})
 
-    def _cut_binary(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str) -> None:
+    def cut_binary(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str) -> None:
+        """
+        binary ファイルから教師用データを切り取る
+
+        Args:
+            img (_type_): _description_
+            x_range_low (int): _description_
+            x_range_up (int): _description_
+            y_range_low (int): _description_
+            y_range_up (int): _description_
+            save_path (str): _description_
+        """
         separated_im = img[y_range_low:y_range_up, x_range_low:x_range_up]  # 切り取り
         img_resize = cv2.resize(separated_im, TRAIN_SHAPE, interpolation=cv2.INTER_LANCZOS4)  # サイズ変更 -> (100, 10)
         self.save_Data(img_resize, save_path)
 
-    def _cut_images(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str, reshape_size: int = 15) -> None:
+    def cut_images(self, img, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str, reshape_size: int = 15) -> None:
+        """
+        CNN用に画像を切り取り、正方形にする
+
+        Args:
+            img (_type_): 画像データ
+            x_range_low (int): _description_
+            x_range_up (int): _description_
+            y_range_low (int): _description_
+            y_range_up (int): _description_
+            save_path (str): 保存パス
+            reshape_size (int, optional): 画像サイズの補正. Defaults to 15.
+        """
         img_range_low_X = int(x_range_low / NPY_SHAPE[0] * IMG_SHAPE[0])
         img_range_low_Y = int(y_range_low / NPY_SHAPE[1] * IMG_SHAPE[1])
         img_range_up_X = int(x_range_up / NPY_SHAPE[0] * IMG_SHAPE[0])
@@ -218,6 +244,7 @@ class CreateTrain(_Kernel):
         rangeY = img_range_up_Y - img_range_low_Y
         range_diff = abs(rangeY - rangeX) // 2
 
+        # 正方形にする
         if rangeX > rangeY:
             img_range_low_Y -= range_diff
             img_range_up_Y += range_diff
@@ -225,6 +252,7 @@ class CreateTrain(_Kernel):
             img_range_low_X -= range_diff
             img_range_up_X += range_diff
 
+        # 座標範囲のリサイズ
         if img_range_low_X < 0:
             img_range_up_X += abs(img_range_low_X)
             img_range_low_X = 0
@@ -241,25 +269,40 @@ class CreateTrain(_Kernel):
             img_range_low_Y -= img_range_up_Y - IMG_SHAPE[1]
             img_range_up_Y = IMG_SHAPE[1]
 
+        # 教師データの切り取り
         img_cut = img[img_range_low_Y + reshape_size : img_range_up_Y - reshape_size, img_range_low_X + reshape_size : img_range_up_X - reshape_size, :]
+        # 正方形のサイズを統一する
         img_cut = cv2.resize(img_cut, CNN_IMAGE_SHAPE)
+        # 保存
         cv2.imwrite(save_path, img_cut)
 
     def _set_job_range(self) -> list:
+        """
+        使用するデータセットによってjob の範囲が異なる
+
+        Returns:
+            list: job list
+        """
         if self.dataset == 77:
             job_range = map(lambda x: f"{x :02d}", range(10, 15))
-        if self.dataset == 497:
+        elif self.dataset == 497:
             job_range = map(lambda x: f"{x :02d}", range(10, 15))
         else:
             job_range = map(lambda x: f"{x :02d}", range(9, 15))
         return list(job_range)
 
-    # 複数の変数を混合したデータを作成する
-    def loadBinaryData(self, img_path, val_params) -> list:
-        im_list = list()
-        for val in val_params:
-            im = np.load(img_path.replace(val_params[0], val))
-            im_list.append(im)
+    def loadBinaryData(self, img_path: str, val_params: str) -> list:
+        """
+        複数の変数データのロード
+
+        Args:
+            img_path (str): 画像パス
+            val_params (str): 使用変数
+
+        Returns:
+            list: 合成データ
+        """
+        im_list = list(map(lambda val: np.load(img_path.replace(val_params[0], val)), val_params))
 
         return im_list
 
@@ -268,6 +311,11 @@ class CreateTrain(_Kernel):
             os.makedirs(os.path.dirname(out_path))
 
         np.save(out_path, result_img)
+
+    def create_training(self, kernel, val_params: str, in_path: str, out_path: str):
+        im_list = self.loadBinaryData(in_path, val_params)  # 混合データのロード
+        result_img = kernel(*im_list)  # データの作成
+        self.save_Data(result_img, out_path)  # データの保存
 
 
 def save_split_data_from_csv(dataset: int) -> None:
@@ -329,19 +377,17 @@ def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
     # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
         logger.debug("START", extra={"addinfo": val_params})
+
         for label in LABELS.keys():  # n, x, o
             logger.debug("START", extra={"addinfo": f"label : {LABELS[label]}"})
             npys_path = OUT_DIR + f"/point_{LABELS[label]}"
 
             for img_path in glob(npys_path + f"/{val_params[0]}/*.npy"):  # ./ML/data/snap_files/snap4949/point_o/magfieldx/magfieldx_4949_left.01.10_003.351.npy'
-                im_list = md.loadBinaryData(img_path, val_params)  # 混合データのロード
-                result_img = kernel(*im_list)  # データの作成
-
                 # 保存先のパスの作成
-                # ./ML/data/snap_files/snap{dataset}//point_{label}/{out_basename}/{out_basename}_{dataset}_{side}.{param}.{job}_{centerx}.{centery}.npy
+                # ./ML/data/snap_files/snap{dataset}/point_{label}/{out_basename}/{out_basename}_{dataset}_{side}.{param}.{job}_{centerx}.{centery}.npy
                 # ./ML/data/snap_files/snap4949/point_o/energy/energy_77_left.01.03_131.543.npy
                 out_path = npys_path + f"/{out_basename}/{os.path.basename(img_path).replace(val_params[0], out_basename)}"
-                md.save_Data(result_img, out_path)  # データの保存
+                md.create_training(kernel, val_params, img_path, out_path)
 
             logger.debug("END", extra={"addinfo": f"label : {LABELS[label]}\n"})
         logger.debug("END", extra={"addinfo": f"{val_params}\n\n"})

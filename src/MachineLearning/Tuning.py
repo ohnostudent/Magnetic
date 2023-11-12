@@ -41,17 +41,26 @@ def _set_classifier(clf_name):
     return clf
 
 
-def plot_learning_curve(clf_name: str, clf_params: dict, model: SupervisedML):
+def plot_learning_curve(model: SupervisedML, clf_name: str, clf_params: dict):
+    """
+    学習曲線を描く
+
+    Args:
+        model (SupervisedML): 学習用データ.
+        clf_name (str): 分類器名.
+        clf_params (dict): 学習用パラメータ.
+    """
     clf = _set_classifier(clf_name)
     estimator = clf(**clf_params)  # 分類器
     train_sizes, train_scores, test_scores, _, _ = learning_curve(estimator=estimator, X=model.X_train, y=model.y_train, train_sizes=np.linspace(0.1, 1.0, 10), cv=3, n_jobs=5)
+
+    # グラフに可視化
+    plt.figure(figsize=(12, 8))
+
     train_mean = np.mean(train_scores, axis=1)
     train_std = np.std(train_scores, axis=1)
     test_mean = np.mean(test_scores, axis=1)
     test_std = np.std(test_scores, axis=1)
-
-    # グラフに可視化
-    plt.figure(figsize=(12, 8))
 
     plt.plot(train_sizes, train_mean, marker="o", label="Train accuracy")
     plt.fill_between(train_sizes, train_mean + train_std, train_mean - train_std, alpha=0.2)
@@ -69,6 +78,20 @@ def plot_learning_curve(clf_name: str, clf_params: dict, model: SupervisedML):
 
 
 def grid_search_cv(model, clf_name: str, clf_params: dict, param_grid: dict = param_grid, grid_search_params: dict = grid_search_params, cross_val: bool = False):
+    """
+    グリッドサーチを行う関数
+
+    Args:
+        model (_type_): 学習用データ
+        clf_name (str): 分類器名
+        clf_params (dict): 学習用パラメータ
+        param_grid (dict, optional): 検証したいパラメータ. Defaults to param_grid.
+        grid_search_params (dict, optional): グリッドサーチ用パラメータ. Defaults to grid_search_params.
+        cross_val (bool, optional): クロスバリデーション用. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
     clf = _set_classifier(clf_name)
     clf = clf(**clf_params)
     estimator = GridSearchCV(clf, param_grid[clf_name], **grid_search_params)

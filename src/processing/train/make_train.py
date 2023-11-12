@@ -32,7 +32,7 @@ def _set_default() -> dict:
         dict: 基盤 json
     """
     # 基盤の作成
-    json_dict = dict()
+    json_dict: dict[int, dict] = dict()
     for dataset in DATASETS:
         json_dict[dataset] = dict()
 
@@ -41,6 +41,7 @@ def _set_default() -> dict:
 
             for label in LABELS.values():
                 json_dict[dataset][side][label] = dict()
+
     return json_dict
 
 
@@ -48,7 +49,7 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
     """DataFrame を json に変換する関数
 
     result example
-    save_list == {
+    save_list = {
         "77": {
             "left": {
                 "n": {
@@ -69,7 +70,7 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
     for job in job_list:
         shapes_dict = df[df["job"] == job].reset_index(drop=True).to_dict()
 
-        save_dict = dict()
+        save_dict: dict[str, dict] = dict()
         save_dict["center"] = dict()
         save_dict["x_range"] = dict()
         save_dict["y_range"] = dict()
@@ -87,6 +88,7 @@ def _df_to_dict(df: pd.DataFrame) -> dict:
         result_dict[f"{int(job) :02d}"] = save_dict
 
     return result_dict
+
 
 def _get_loc_data(shapes_dict: dict, cnt: int):
     centerx, centery = [shapes_dict["centerx"][cnt], shapes_dict["centery"][cnt]]
@@ -137,7 +139,7 @@ def _get_loc_data(shapes_dict: dict, cnt: int):
         x_range_up = centerx + 17
 
     x_range_low, x_range_up, y_range_low, y_range_up, centerx, centery = _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up)
-    return centerx,centery,x_range_low,x_range_up,y_range_low,y_range_up,shapex,shapey
+    return centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up, shapex, shapey
 
 
 def _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_range_up):

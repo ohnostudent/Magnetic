@@ -11,6 +11,14 @@ from Visualization.Visualize.SnapData import SnapData
 
 
 def snap2npy(sp: SnapData, path: str, dataset: int) -> None:
+    """
+    snapファイルを左右に分割する
+
+    Args:
+        sp (SnapData): _description_
+        path (str): _description_
+        dataset (int): _description_
+    """
     data = sp.loadSnapData(path)
     # print(data.shape)
 

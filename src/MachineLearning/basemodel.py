@@ -89,6 +89,22 @@ class BaseModel:
         self.y_test = train_test_data["y_test"]
 
     def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int | None = 100, label: int = 1, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        教師用データとテスト用データを分割する関数
+
+        Args:
+            mode (str): 分割手法
+            test_size (float, optional): テスト用データの割合. Defaults to 0.3.
+            random_state (int | None, optional): 乱数. Defaults to 100.
+            label (int, optional): ラベル. Defaults to 1.
+            pca (bool, optional): 次元削減を行うか否か. Defaults to False.
+
+        Raises:
+            ValueError
+
+        Returns:
+            tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: _description_
+        """
         self.path_n, self.path_x, self.path_o = self._load_file_path()
         self.param_dict["mode"] = mode
         self.param_dict["train_params"]["testsize"] = test_size
@@ -118,6 +134,9 @@ class BaseModel:
     def dilute(self, ALT_IMAGES: str) -> None:
         """
         上下、左右反転の画像を作成し、教師データをかさましする
+
+        Args:
+            ALT_IMAGES (str):  保存先のパス
         """
         # リコネクションがない画像ファイルのパスのリストを取得
         self._save_altImage(self.y_train, ALT_IMAGES)
@@ -188,6 +207,12 @@ class BaseModel:
         )
 
     def _load_file_path(self) -> tuple[list[list], list[list], list[list]]:
+        """
+        使用する全ファイルパスの取得
+
+        Returns:
+            list[list], list[list], list[list]: ファイルパスのリスト
+        """
         path_n, path_x, path_o = list(), list(), list()
         for dataset in DATASETS:
             path_n.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_n/{self.param_dict['parameter']}/*.npy"))
@@ -226,7 +251,7 @@ class BaseModel:
 
         return img_binary.flatten()
 
-    def _split_train_test_sep(self, test_label: int):
+    def _split_train_test_sep(self, test_label: int) -> tuple[list[str], list[str], list[int], list[int]]:
         # TODO test_label -> dataset
         train_label = [0, 1, 2]
         train_label.remove(test_label)
@@ -245,7 +270,7 @@ class BaseModel:
 
         return train_paths, test_paths, train_labels, test_labels
 
-    def _split_train_test_sep_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[int], list[int], list[int], list[int]]:
+    def _split_train_test_sep_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[str], list[str], list[int], list[int]]:
         path_n_all: list = sum(self.path_n, [])
         path_x_all: list = sum(self.path_x, [])
         path_o_all: list = sum(self.path_o, [])
@@ -276,7 +301,7 @@ class BaseModel:
 
         return train_paths, test_paths, train_label, test_label
 
-    def _split_train_test_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[int], list[int], list[int], list[int]]:
+    def _split_train_test_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[str], list[str], list[int], list[int]]:
         path_all = self.path_n
         path_all.extend(self.path_o)
         path_all.extend(self.path_x)
