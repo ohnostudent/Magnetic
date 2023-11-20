@@ -252,21 +252,21 @@ class BaseModel:
         return img_binary.flatten()
 
     def _split_train_test_sep(self, test_label: int) -> tuple[list[str], list[str], list[int], list[int]]:
-        # TODO test_label -> dataset
-        train_label = [0, 1, 2]
-        train_label.remove(test_label)
-        a, b = train_label
+        train_label = {77: 0, 497: 1, 4949: 2}
+        test = train_label[test_label]
+        train_label.pop(test_label)
+        a, b = train_label.values()
 
         train_paths = self.path_n[a] + self.path_x[a] + self.path_o[a] + self.path_n[b] + self.path_x[b] + self.path_o[b]
-        test_paths = self.path_n[test_label] + self.path_x[test_label] + self.path_o[test_label]
+        test_paths = self.path_n[test] + self.path_x[test] + self.path_o[test]
 
         train_labels = [0] * (len(self.path_n[a]) + len(self.path_n[b]))
         train_labels.extend([1] * (len(self.path_x[a]) + len(self.path_x[b])))
         train_labels.extend([2] * (len(self.path_o[a]) + len(self.path_o[b])))
 
-        test_labels = [0] * len(self.path_n[test_label])
-        test_labels.extend([1] * len(self.path_x[test_label]))
-        test_labels.extend([2] * len(self.path_o[test_label]))
+        test_labels = [0] * len(self.path_n[test])
+        test_labels.extend([1] * len(self.path_x[test]))
+        test_labels.extend([2] * len(self.path_o[test]))
 
         return train_paths, test_paths, train_labels, test_labels
 

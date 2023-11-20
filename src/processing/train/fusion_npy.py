@@ -121,7 +121,7 @@ class CreateTrain(_Kernel):
                     break
 
                 try:
-                    npy_save_base_path = ML_DATA_DIR + f"/snap_files/snap{self.dataset}/point_{LABELS[label]}/{val_param}"
+                    npy_save_base_path = ML_DATA_DIR + f"/snap_files/{val_param}/point_{LABELS[label]}"
 
                     if not os.path.exists(npy_save_base_path):
                         os.makedirs(npy_save_base_path)
@@ -138,7 +138,7 @@ class CreateTrain(_Kernel):
                         x_range_low, x_range_up = x_range[num]
                         y_range_low, y_range_up = y_range[num]
 
-                        base_path = npy_save_base_path + f"/{val_param}_{self.dataset}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}"
+                        base_path = npy_save_base_path + f"/snap{self.dataset}_{val_param}_{side}.{param :02d}.{job}_{centerx :03d}.{centery :03d}"
                         self.cut_binary(npy_img, x_range_low, x_range_up, y_range_low, y_range_up, base_path)
 
                 except ValueError as e:
@@ -355,9 +355,9 @@ def save_split_data_from_json(dataset: int):
     md = CreateTrain(dataset)
     for side in SIDES:
         for label in LABELS.keys():
-            # for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
-            #     md.cut_and_save_from_json(path, side, label, val)
-            md.cut_and_save_from_image(path, side, label)
+            for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
+                md.cut_and_save_from_json(path, side, label, val)
+            # md.cut_and_save_from_image(path, side, label)
 
     logger.debug("END", extra={"addinfo": f"{dataset}"})
 
@@ -367,7 +367,7 @@ def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
     logger.debug("START", extra={"addinfo": "Make Training Data"})
 
     md = CreateTrain(dataset)
-    OUT_DIR = ML_DATA_DIR + f"/snap_files/snap{dataset}"
+    OUT_DIR = ML_DATA_DIR + "/snap_files"
     if props_params is None:
         props_params = [
             (["magfieldx", "magfieldy"], "mag_tupledxy", md.kernel_listxy),
@@ -380,13 +380,13 @@ def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
 
         for label in LABELS.keys():  # n, x, o
             logger.debug("START", extra={"addinfo": f"label : {LABELS[label]}"})
-            npys_path = OUT_DIR + f"/point_{LABELS[label]}"
+            npys_path = OUT_DIR + f"/{out_basename}/point_{LABELS[label]}/snap{dataset}"
 
             for img_path in glob(npys_path + f"/{val_params[0]}/*.npy"):  # ./ML/data/snap_files/snap4949/point_o/magfieldx/magfieldx_4949_left.01.10_003.351.npy'
                 # 保存先のパスの作成
                 # ./ML/data/snap_files/snap{dataset}/point_{label}/{out_basename}/{out_basename}_{dataset}_{side}.{param}.{job}_{centerx}.{centery}.npy
                 # ./ML/data/snap_files/snap4949/point_o/energy/energy_77_left.01.03_131.543.npy
-                out_path = npys_path + f"/{out_basename}/{os.path.basename(img_path).replace(val_params[0], out_basename)}"
+                out_path = npys_path + f"/{os.path.basename(img_path).replace(val_params[0], out_basename)}"
                 md.create_training(kernel, val_params, img_path, out_path)
 
             logger.debug("END", extra={"addinfo": f"label : {LABELS[label]}\n"})
