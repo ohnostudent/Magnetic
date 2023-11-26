@@ -164,18 +164,7 @@ class SupervisedML(BaseModel):
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
         return self.model
 
-    def XGBoost(
-        self,
-        colsample_bytree: float = 0.4,
-        early_stopping_rounds: int = 100,
-        eval_metric: str = "auc",
-        learning_rate: float = 0.02,
-        max_depth: int = 4,
-        missing: int = -1,
-        n_estimators: int = 500,
-        subsample: float = 0.8,
-        params: dict | None = None,
-    ) -> XGBClassifier:
+    def XGBoost(self, colsample_bytree: float = 0.4, early_stopping_rounds: int = 100, eval_metric: str = "auc", learning_rate: float = 0.02, max_depth: int = 4, missing: int = -1, n_estimators: int = 500, subsample: float = 0.8, params: dict | None = None, ) -> XGBClassifier:
         self.param_dict["model_name"] = "XGBoost"
         self.param_dict["clf_params"]["n_estimators"] = n_estimators
         self.param_dict["clf_params"]["max_depth"] = max_depth

@@ -215,9 +215,9 @@ class BaseModel:
         """
         path_n, path_x, path_o = list(), list(), list()
         for dataset in DATASETS:
-            path_n.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_n/{self.param_dict['parameter']}/*.npy"))
-            path_o.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_o/{self.param_dict['parameter']}/*.npy"))
-            path_x.append(glob(ML_DATA_DIR + f"/snap_files/snap{dataset}/point_x/{self.param_dict['parameter']}/*.npy"))
+            path_n.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['parameter']}/point_n/snap{dataset}*.npy"))
+            path_o.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['parameter']}/point_o/snap{dataset}*.npy"))
+            path_x.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['parameter']}/point_x/snap{dataset}*.npy"))
 
         return path_n, path_x, path_o
 
