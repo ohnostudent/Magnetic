@@ -32,7 +32,7 @@ class SupervisedML(BaseModel):
         self.set_default(parameter)
 
     def __str__(self) -> str:
-        params = dict_to_str(param_dict["train_params"], sep="\n\t")
+        params = dict_to_str(self.param_dict["train_params"], sep="\n\t")
         doc = f"""
         Params:
             {params}
@@ -182,16 +182,7 @@ class SupervisedML(BaseModel):
 
         self.param_dict["clf_params"]["tree_methods"] = tree_methods
 
-        self.model = XGBClassifier(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            learning_rate=learning_rate,
-            subsample=subsample,
-            colsample_bytree=colsample_bytree,
-            missing=missing,
-            eval_metric=eval_metric,
-            tree_method=tree_methods,
-        )
+        self.model = XGBClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, subsample=subsample, colsample_bytree=colsample_bytree, missing=missing, eval_metric=eval_metric, tree_method=tree_methods)
 
         if params is not None:
             self.model.set_params(**params)

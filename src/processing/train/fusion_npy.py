@@ -12,7 +12,7 @@ import pandas as pd
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import CNN_IMAGE_SHAPE, IMAGE_PATH, IMG_SHAPE, LABELS, ML_DATA_DIR, NPY_SHAPE, SIDES, SNAP_PATH, TRAIN_SHAPE
+from config.params import CNN_IMAGE_SHAPE, IMAGE_PATH, IMG_SHAPE, LABELS, ML_DATA_DIR, NPY_SHAPE, SIDES, SNAP_PATH, TRAIN_SHAPE, VARIABLE_PARAMETERS
 
 
 class _Kernel:
@@ -42,11 +42,14 @@ class _Kernel:
                 res[y][x * 2 + 1] = im2[y][x]
         return res
 
-    def kernel_Energy(self, vx, vy, dens):
+    def kernel_energy(self, vx, vy, dens):
         return dens * (vx**2 + vy**2) / 2
 
-    def kernel_Rad(self, vx, vy):
+    def kernel_rad(self, vx, vy):
         return np.arccos(vx / np.sqrt(vx**2 + vy**2))
+
+    def kernel_stack(self, *im: np.ndarray):
+        return np.stack(im, axis=0)
 
 
 class CreateTrain(_Kernel):
@@ -185,7 +188,7 @@ class CreateTrain(_Kernel):
                     if not os.path.exists(img_save_base_path):
                         os.makedirs(img_save_base_path)
 
-                    bmp_img = cv2.imread(lic_path)
+                    bmp_img = cv2.imread(lic_path) # データの読み込み
 
                     center = locs[job]["center"]
                     x_range = locs[job]["x_range"]
@@ -303,7 +306,6 @@ class CreateTrain(_Kernel):
             list: 合成データ
         """
         im_list = list(map(lambda val: np.load(img_path.replace(val_params[0], val)), val_params))
-
         return im_list
 
     def save_Data(self, result_img, out_path) -> None:
@@ -332,7 +334,7 @@ def save_split_data_from_csv(dataset: int) -> None:
     df = pd.read_csv(csv_path, encoding="utf-8")
     df_snap: pd.DataFrame = df[df["dataset"] == dataset]
 
-    for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
+    for val in VARIABLE_PARAMETERS:
         logger.debug("START", extra={"addinfo": val})
 
         for _, d in df_snap.iterrows():
@@ -355,41 +357,41 @@ def save_split_data_from_json(dataset: int):
     md = CreateTrain(dataset)
     for side in SIDES:
         for label in LABELS.keys():
-            for val in ["magfieldx", "magfieldy", "velocityx", "velocityy", "density"]:
+            for val in VARIABLE_PARAMETERS:
                 md.cut_and_save_from_json(path, side, label, val)
-            # md.cut_and_save_from_image(path, side, label)
+            md.cut_and_save_from_image(path, side, label)
 
     logger.debug("END", extra={"addinfo": f"{dataset}"})
 
 
-def makeTrainingData(dataset: int, props_params: list | None = None) -> None:
-    logger = getLogger("fusion").getChild("Make_Training")
-    logger.debug("START", extra={"addinfo": "Make Training Data"})
+def fusion_npys(dataset: int, props_params: list | None = None) -> None:
+    logger = getLogger("fusion").getChild("Fusion_Training")
+    logger.debug("START", extra={"addinfo": "Fusion Training Data"})
 
     md = CreateTrain(dataset)
-    OUT_DIR = ML_DATA_DIR + "/snap_files"
+    OUT_DIR = ML_DATA_DIR + "/snap_files"  # ./ML/data/snap_files
     if props_params is None:
         props_params = [
-            (["magfieldx", "magfieldy"], "mag_tupledxy", md.kernel_listxy),
-            (["velocityx", "velocityy", "density"], "energy", md.kernel_Energy),
+            (["magfieldx", "magfieldy"], "mag_tupledxy", md.kernel_stack),
+            (["velocityx", "velocityy", "density"], "energy", md.kernel_energy),
         ]
 
-    # /images/0131_not/density/density_49.50.8_9.528
     for val_params, out_basename, kernel in props_params:
         logger.debug("START", extra={"addinfo": val_params})
 
-        for label in LABELS.keys():  # n, x, o
-            logger.debug("START", extra={"addinfo": f"label : {LABELS[label]}"})
-            npys_path = OUT_DIR + f"/{out_basename}/point_{LABELS[label]}/snap{dataset}"
+        for label in LABELS.values():  # n, x, o
+            logger.debug("START", extra={"addinfo": f"label : {label}"})
+            npys_path = OUT_DIR + f"/{val_params[0]}/point_{label}"  # ./ML/data/snap_files/{out_basename}/point_{label}
 
-            for img_path in glob(npys_path + f"/{val_params[0]}/*.npy"):  # ./ML/data/snap_files/snap4949/point_o/magfieldx/magfieldx_4949_left.01.10_003.351.npy'
+            for img_path in glob(npys_path + f"/snap{dataset}_{val_params[0]}_*.npy"):  # ./ML/data/snap_files/density/point_n
                 # 保存先のパスの作成
-                # ./ML/data/snap_files/snap{dataset}/point_{label}/{out_basename}/{out_basename}_{dataset}_{side}.{param}.{job}_{centerx}.{centery}.npy
-                # ./ML/data/snap_files/snap4949/point_o/energy/energy_77_left.01.03_131.543.npy
-                out_path = npys_path + f"/{os.path.basename(img_path).replace(val_params[0], out_basename)}"
+                # ./ML/data/snap_files/{out_basename}/point_{label}/snap{dataset}_{out_basename}_{dataset}_{side}.{param}.{job}_{centerx}.{centery}.npy
+                # ./ML/data/snap_files/density/point_n/snap77_density_left.01.10_030.150.npy
+                out_path = npys_path + f"/{os.path.basename(img_path)}"
+                out_path = out_path.replace(val_params[0], out_basename)
                 md.create_training(kernel, val_params, img_path, out_path)
 
-            logger.debug("END", extra={"addinfo": f"label : {LABELS[label]}\n"})
+            logger.debug("END", extra={"addinfo": f"label : {label}\n"})
         logger.debug("END", extra={"addinfo": f"{val_params}\n\n"})
     logger.debug("END", extra={"addinfo": "Make Training Data\n\n"})
 
@@ -403,4 +405,4 @@ if __name__ == "__main__":
     for dataset in DATASETS:
         # save_split_data_from_csv(dataset)
         save_split_data_from_json(dataset)
-        # makeTrainingData(dataset)
+        fusion_npys(dataset)

@@ -41,14 +41,33 @@ class CnnTrain:
             raise ValueError()
 
         model.net = net.to(model.device)
+        model.logger.debug("Device", extra={"addinfo": f"{model.device}"})
+        model.logger.debug("NET", extra={"addinfo": f"{net}"})
         return model
+
+    def _set_channel(self):
+        if self.mode == "img":
+            channel = 1
+        elif self.mode == "npy":
+            if self.target == "mag_tuple":
+                channel = 2
+            else:
+                channel = 1
+        else:
+            raise ValueError()
+        return channel
 
     def set_net(self, mode: str = "img") -> Net:
         cuda.empty_cache()  # GPUのリセット
         self.mode = mode
-        net = Net(self.mode)
+
+        channel = self._set_channel()
+        net = Net(self.mode, channel=channel)
         self.device = device("cuda" if cuda.is_available() else "cpu")
         self.net = net.to(self.device)
+
+        self.logger.debug("Device", extra={"addinfo": f"{self.device}"})
+        self.logger.debug("NET", extra={"addinfo": f"{net}"})
         return self.net
 
     def set_train(self, seed: int = 42):
@@ -78,26 +97,24 @@ class CnnTrain:
         for epoch in range(epoch_cnt):
             self.logger.debug("epoch", extra={"addinfo": f"{epoch + 1 :03d}"})
 
-            # self.net.train(True)
+            # 学習の実行
             e_loss, e_acc = self._run_epoch(self.train_loader, phase="train")
             train_loss_value.append(e_loss)
             train_acc_value.append(e_acc)
 
-            # 検証フェーズ
-            # self.net.train(False)
+            # 検証
             with torch.no_grad():  # 無駄に勾配計算しないように
                 e_loss, e_acc = self._run_epoch(self.val_loader, phase="validation")
             val_loss_value.append(e_loss)
             val_acc_value.append(e_acc)
 
-            # テストフェーズ
-            # self.net.train(False)
+            # テスト
             with torch.no_grad():  # 無駄に勾配計算しないように
                 e_loss, e_acc = self._run_epoch(self.test_loader, phase="test")
             test_loss_value.append(e_loss)
             test_acc_value.append(e_acc)
 
-        if do_plot:
+        if do_plot: # 結果のグラフ化
             self.logger.debug("PLOT", extra={"addinfo": "グラフ保存"})
             self.plot(train_loss_value, train_acc_value, val_loss_value, val_acc_value, test_loss_value, test_acc_value, EPOCH)
 
@@ -132,14 +149,17 @@ class CnnTrain:
 
     def save_model(self, weight_only: bool = False, save_path: str | None = None):
         if save_path is None:
+            # 保存パスの作成
             mode = "weight" if weight_only else "model"
             save_path = ML_MODEL_DIR + f"/model/cnn_{mode}_{self.device}.pth"
 
-        if weight_only:
+        if weight_only: # 重みのみの保存
             save_model = self.net.state_dict()
         else:
             save_model = self.net
 
+        self.logger.debug("SAVE", extra={"addinfo": f"{save_path}"})
+        # 保存
         torch.save(save_model, save_path)
 
     def _npy_loader(self, path):
@@ -147,18 +167,18 @@ class CnnTrain:
         return sample
 
     def _use_folder(self) -> DatasetFolder | ImageFolder:
-        if self.mode == "npy":
+        if self.mode == "npy": # 元データで学習
             if self.target is None:
                 raise ValueError("target not defined")
             data_transform = transforms.Compose([transforms.ToTensor()])
             all_data_set = DatasetFolder(root=ML_DATA_DIR + f"/snap_files/{self.target}", loader=self._npy_loader, extensions=(".npy",), transform=data_transform)
 
-        elif self.mode == "img":
+        elif self.mode == "img": # 画像データで学習
             data_transform = transforms.Compose([transforms.Grayscale(num_output_channels=1), transforms.ToTensor()])
             all_data_set = ImageFolder(root=ML_DATA_DIR + "/cnn", transform=data_transform)
 
         else:
-            raise ValueError("file not found.")
+            raise ValueError("File not found.")
 
         return all_data_set
 

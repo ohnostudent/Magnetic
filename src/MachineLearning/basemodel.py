@@ -17,7 +17,7 @@ from config.params import DATASETS, TRAIN_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_D
 class BaseModel:
     def __init__(self, parameter) -> None:
         self.logger = getLogger("basemodel").getChild("BaseModel")
-        self.set_default(parameter)
+        self.set_default(parameter) # 初期化
 
     def set_default(self, parameter: str) -> None:
         """初期化処理
@@ -52,7 +52,7 @@ class BaseModel:
         model = cls(parameter)
         model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
 
-        model.set_default(parameter)
+        model.set_default(parameter) # 初期化
         model.param_dict["mode"] = mode
         model.param_dict["parameter"] = parameter
         model.param_dict["train_params"]["pca"] = pca
@@ -105,7 +105,7 @@ class BaseModel:
         Returns:
             tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: _description_
         """
-        self.path_n, self.path_x, self.path_o = self._load_file_path()
+        self.path_n, self.path_x, self.path_o = self._load_file_path() # フォルダパスの取得
         self.param_dict["mode"] = mode
         self.param_dict["train_params"]["testsize"] = test_size
         self.param_dict["train_params"]["randomstate"] = random_state

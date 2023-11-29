@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 
+
 import torch.nn.functional as f
 from torch import nn, optim
 
 
 class Net(nn.Module):
-    def __init__(self, mode :str = "img") -> None:
+    def __init__(self, mode: str = "img", channel: int = 1) -> None:
         super(Net, self).__init__()
 
         # 全結合層
         if mode == "img":
-            self.for_img()
+            self.for_img(channel=1)
 
         elif mode == "npy":
-            self.for_npy()
+            self.for_npy(channel=channel)
 
         else:
             raise ValueError()
@@ -21,10 +22,10 @@ class Net(nn.Module):
         self.configure_criterion()
         self.configure_optimizer()
 
-    def for_img(self):
+    def for_img(self, channel: int = 1):
         self.layer1 = nn.Sequential(
             # 畳み込み層:(入力チャンネル数, フィルタ数、フィルタサイズ)
-            nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
+            nn.Conv2d(in_channels=channel, out_channels=6, kernel_size=3, padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
             nn.ReLU(),
             # Pooling層:（領域のサイズ, ストライド）
             nn.MaxPool2d(2, 2),  # kernel_size=(2,2), stride=2
@@ -55,10 +56,10 @@ class Net(nn.Module):
             nn.Linear(64, 3),
         )
 
-    def for_npy(self):
+    def for_npy(self, channel: int = 1):
         self.layer1 = nn.Sequential(
             # 畳み込み層:(入力チャンネル数, フィルタ数、フィルタサイズ)
-            nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3, padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
+            nn.Conv2d(in_channels=channel, out_channels=6, kernel_size=3, padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
             nn.ReLU(),
             # Pooling層:（領域のサイズ, ストライド）
             nn.MaxPool2d(1, 2),  # kernel_size=(2,2), stride=2
