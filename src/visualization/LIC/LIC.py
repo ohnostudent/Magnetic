@@ -32,7 +32,7 @@ class LicMethod(SnapData):
         """
 
         # .exe の実行
-        result = subprocess.run(props)
+        result = subprocess.run(props, check=True)
         return result
 
     def set_command(self, xfile: str, yfile: str, out_name: str) -> list:

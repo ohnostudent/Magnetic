@@ -63,13 +63,13 @@ def dataProcessing() -> None:
         # bat ファイルの実行
         # 基本的に加工したデータの保存先のフォルダの作成
         logger.debug("MAKE", extra={"addinfo": "ディレクトリの作成"})
-        subprocess.run([BIN_PATH + "/Snaps.bat", str(dataset)])
+        subprocess.run([BIN_PATH + "/Snaps.bat", str(dataset)], check=True)
 
         # ログの保存先
         files = glob(ROOT_DIR + f"/data/ICh.dataset=50.ares=1.0d-{i}.adiffArt=1.0d-{j}.h00.g00.BCv1=0.0/Snapshots/*")
         for file in files:
             # 元データの分割処理の実行
-            subprocess.run([SRC_PATH + "/Processing/separator/separator.exe", f"{file}"])
+            subprocess.run([SRC_PATH + "/Processing/separator/separator.exe", f"{file}"], check=True)
             _, _, _, param, job = map(lambda x: int(x) if x.isnumeric() else x, os.path.basename(file).split("."))
             logger.debug("OPEN", extra={"addinfo": f"File snap{i}{j}.{param:02d}.{job:02d}"})
 
