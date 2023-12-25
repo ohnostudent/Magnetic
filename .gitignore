@@ -13,8 +13,7 @@ snaps/snap*/
 images/
 logs/
 ML/
-
-src_def/
+report/
 
 # 拡張子
 *.bmp
@@ -28,9 +27,11 @@ src_def/
 *.npy
 *.obj
 *.temp
+*.tex
 *.pxd
 *.pyi
 *.pyx
 
 # 各ファイル
 src/Processing/viewer/template/lic_viewer*.html
+.latexmkrc
