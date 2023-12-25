@@ -11,13 +11,13 @@ from sklearn.model_selection import train_test_split
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import DATASETS, TRAIN_SHAPE, LABELS, ML_DATA_DIR, ML_MODEL_DIR, dict_to_str
+from config.params import DATASETS, ML_DATA_DIR, ML_MODEL_DIR, TRAIN_SHAPE, dict_to_str
 
 
 class BaseModel:
-    def __init__(self, parameter) -> None:
+    def __init__(self, parameter: str | None = None) -> None:
         self.logger = getLogger("basemodel").getChild("BaseModel")
-        self.set_default(parameter) # 初期化
+        # self.set_default(parameter) # 初期化
 
     def set_default(self, parameter: str) -> None:
         """初期化処理
@@ -35,7 +35,7 @@ class BaseModel:
         self.param_dict["model_name"] = None
 
     @classmethod
-    def load_npys(cls, mode: str, parameter: str, random_state: int | None = 100, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
+    def load_npys(cls, mode: str, parameter: str, random_state: int | None = 42, label: int | None = None, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
         """
         データの読み込みを行う関数
 
@@ -50,9 +50,10 @@ class BaseModel:
             _type_: モデル
         """
         model = cls(parameter)
+        model.logger.debug("LOAD", extra={"addinfo": "データの読み込み"})
         model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
 
-        model.set_default(parameter) # 初期化
+        model.set_default(parameter)  # 初期化
         model.param_dict["mode"] = mode
         model.param_dict["parameter"] = parameter
         model.param_dict["train_params"]["pca"] = pca
@@ -60,10 +61,15 @@ class BaseModel:
         model.param_dict["train_params"]["test_size"] = test_size
 
         if mode == "all":
-            train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.npz")
+            train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_all.npz")
         else:
+            if mode == "sep":
+                npz_path = ML_MODEL_DIR + f"/npz/{parameter}_sep.label={label}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
+            else:
+                npz_path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
+
             # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
-            train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
+            train_test_data = np.load(npz_path)
             model.X_test = train_test_data["X_test"]
             model.y_test = train_test_data["y_test"]
 
@@ -73,7 +79,7 @@ class BaseModel:
         return model
 
     # TODO overload
-    def _load_npys(self, mode: str, parameter: str, random_state: int | None = 100, test_size: float = 0.3, pca: bool = False):
+    def _load_npys(self, mode: str, parameter: str, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):
         train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
 
         self.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
@@ -88,14 +94,14 @@ class BaseModel:
         self.X_test = train_test_data["X_test"]
         self.y_test = train_test_data["y_test"]
 
-    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int | None = 100, label: int = 1, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int | None = 42, label: int = 1, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         教師用データとテスト用データを分割する関数
 
         Args:
-            mode (str): 分割手法
+            mode (str): 分割手法 (sep, mixsep, mix)
             test_size (float, optional): テスト用データの割合. Defaults to 0.3.
-            random_state (int | None, optional): 乱数. Defaults to 100.
+            random_state (int | None, optional): 乱数. Defaults to 42.
             label (int, optional): ラベル. Defaults to 1.
             pca (bool, optional): 次元削減を行うか否か. Defaults to False.
 
@@ -105,13 +111,14 @@ class BaseModel:
         Returns:
             tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: _description_
         """
-        self.path_n, self.path_x, self.path_o = self._load_file_path() # フォルダパスの取得
+        self.path_n, self.path_x, self.path_o = self._load_file_path()  # フォルダパスの取得
         self.param_dict["mode"] = mode
         self.param_dict["train_params"]["testsize"] = test_size
         self.param_dict["train_params"]["randomstate"] = random_state
 
         match mode:
             case "sep":
+                self.param_dict["train_params"]["label"] = label
                 train_paths, test_paths, train_label, test_label = self._split_train_test_sep(label)
 
             case "mixsep":
@@ -130,18 +137,6 @@ class BaseModel:
             self.exePCA()
 
         return self.X_train, self.y_train, self.X_test, self.y_test
-
-    def dilute(self, ALT_IMAGES: str) -> None:
-        """
-        上下、左右反転の画像を作成し、教師データをかさましする
-
-        Args:
-            ALT_IMAGES (str):  保存先のパス
-        """
-        # リコネクションがない画像ファイルのパスのリストを取得
-        self._save_altImage(self.y_train, ALT_IMAGES)
-        # リコネクションがある画像ファイルのパスのリストを取得
-        self._save_altImage(self.X_train, ALT_IMAGES)
 
     def get_train_all(self, save: bool = True) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -176,7 +171,19 @@ class BaseModel:
 
         return self.X_train, self.y_train
 
-    def exePCA(self, N_dim: int = 100, randomstate: int | None = 100) -> None:
+    def dilute(self, ALT_IMAGES: str) -> None:
+        """
+        上下、左右反転の画像を作成し、教師データをかさましする
+
+        Args:
+            ALT_IMAGES (str):  保存先のパス
+        """
+        # リコネクションがない画像ファイルのパスのリストを取得
+        self._save_altImage(self.y_train, ALT_IMAGES)
+        # リコネクションがある画像ファイルのパスのリストを取得
+        self._save_altImage(self.X_train, ALT_IMAGES)
+
+    def exePCA(self, N_dim: int = 100, randomstate: int | None = 42) -> None:
         """
         次元削減を行う関数
 
@@ -252,25 +259,24 @@ class BaseModel:
         return img_binary.flatten()
 
     def _split_train_test_sep(self, test_label: int) -> tuple[list[str], list[str], list[int], list[int]]:
-        train_label = {77: 0, 497: 1, 4949: 2}
-        test = train_label[test_label]
+        train_label = {0: 77, 1: 497, 2: 4949}
         train_label.pop(test_label)
-        a, b = train_label.values()
+        a, b = train_label.keys()
 
         train_paths = self.path_n[a] + self.path_x[a] + self.path_o[a] + self.path_n[b] + self.path_x[b] + self.path_o[b]
-        test_paths = self.path_n[test] + self.path_x[test] + self.path_o[test]
+        test_paths = self.path_n[test_label] + self.path_x[test_label] + self.path_o[test_label]
 
         train_labels = [0] * (len(self.path_n[a]) + len(self.path_n[b]))
         train_labels.extend([1] * (len(self.path_x[a]) + len(self.path_x[b])))
         train_labels.extend([2] * (len(self.path_o[a]) + len(self.path_o[b])))
 
-        test_labels = [0] * len(self.path_n[test])
-        test_labels.extend([1] * len(self.path_x[test]))
-        test_labels.extend([2] * len(self.path_o[test]))
+        test_labels = [0] * len(self.path_n[test_label])
+        test_labels.extend([1] * len(self.path_x[test_label]))
+        test_labels.extend([2] * len(self.path_o[test_label]))
 
         return train_paths, test_paths, train_labels, test_labels
 
-    def _split_train_test_sep_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[str], list[str], list[int], list[int]]:
+    def _split_train_test_sep_mix(self, test_size: float = 0.3, random_state: int | None = 42) -> tuple[list[str], list[str], list[int], list[int]]:
         path_n_all: list = sum(self.path_n, [])
         path_x_all: list = sum(self.path_x, [])
         path_o_all: list = sum(self.path_o, [])
@@ -301,16 +307,19 @@ class BaseModel:
 
         return train_paths, test_paths, train_label, test_label
 
-    def _split_train_test_mix(self, test_size: float = 0.3, random_state: int | None = 100) -> tuple[list[str], list[str], list[int], list[int]]:
-        path_all = self.path_n
-        path_all.extend(self.path_o)
-        path_all.extend(self.path_x)
+    def _split_train_test_mix(self, test_size: float = 0.3, random_state: int | None = 42) -> tuple[list[str], list[str], list[int], list[int]]:
+        path_n_all: list = sum(self.path_n, [])
+        path_x_all: list = sum(self.path_x, [])
+        path_o_all: list = sum(self.path_o, [])
+        path_all = path_n_all.copy()
+        path_all.extend(path_x_all)
+        path_all.extend(path_o_all)
 
-        labels_all = [0] * len(self.path_n)
-        labels_all.extend([1] * len(self.path_x))
-        labels_all.extend([2] * len(self.path_o))
+        labels_all = [0] * len(path_n_all)
+        labels_all.extend([1] * len(path_x_all))
+        labels_all.extend([2] * len(path_o_all))
 
-        train_paths, test_paths, train_label, test_label = train_test_split(path_all, LABELS, test_size=test_size, random_state=random_state)
+        train_paths, test_paths, train_label, test_label = train_test_split(path_all, labels_all, test_size=test_size, random_state=random_state)
         return train_paths, test_paths, train_label, test_label
 
     def _set_data(self, ml_data, labels) -> tuple[np.ndarray, np.ndarray]:
@@ -353,17 +362,16 @@ if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
     logger = logger_conf("basemodel")
-
-    mode = "mixsep"
+    mode = "sep"  # "sep", "mixsep", "mix"
     logger.debug("PARAMETER", extra={"addinfo": f"mode = {mode}"})
 
-    bm = BaseModel("density")
+    bm = BaseModel()
     for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
-    # for parameter in ["density"]:
         logger.debug("START", extra={"addinfo": f"{parameter}"})
 
         bm.set_default(parameter)
-        X_train, y_train, X_test, y_test = bm.split_train_test(mode)
+        # bm.get_train_all()
+        X_train, y_train, X_test, y_test = bm.split_train_test(mode, label=1)
         bm.save_npys()
 
         logger.debug("END", extra={"addinfo": f"{parameter}"})

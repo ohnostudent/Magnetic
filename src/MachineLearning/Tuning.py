@@ -5,8 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score, roc_curve
-from sklearn.model_selection import GridSearchCV, KFold, cross_val_score, learning_curve, validation_curve
+from sklearn.model_selection import GridSearchCV, KFold, cross_val_score, learning_curve
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
@@ -20,7 +19,7 @@ from MachineLearning.Training import SupervisedML
 
 cv = KFold(n_splits=5, shuffle=True)
 param_grid = {"linearSVC": {"C": [0.001, 0.01, 0.1, 1, 10, 100]}, "rbfSVC": {"gamma": [0.01, 0.1, 1, 10], "C": [0.001, 0.01, 0.1, 1, 10, 100]}}
-grid_search_params = {"scoring": "roc_auc", "cv": 5, "verbose": 3, "n_jobs": -1}
+grid_search_params = {"scoring": "roc_auc", "cv": 5, "verbose": 3, "n_jobs": 3}
 cross_val_params = {"cv": cv, "scoring": "accuracy", "n_jobs": -1}
 
 
@@ -30,9 +29,9 @@ def _set_classifier(clf_name):
             clf = KMeans
         case "KNeighbors":
             clf = KNeighborsClassifier
-        case "LinearSVC":
+        case "linearSVC":
             clf = LinearSVC
-        case "rgfSVC":
+        case "rbfSVC":
             clf = SVC
         case "XGboost":
             clf = XGBClassifier
@@ -110,11 +109,16 @@ def cross_validation(model, clf_name: str, clf_params: dict, param_grid: dict, g
         estimator = _set_classifier(clf_name)(**clf_params)
 
     cv_scores = cross_val_score(estimator, model.X_train, model.y_train, **cross_val_params)
-    print("cv_scores:", cv_scores, "\nmean:", cv_scores.mean())
+    print("cv_scores:", cv_scores)
+    print("mean:", cv_scores.mean())
 
 
 if __name__ == "__main__":
-    model = SupervisedML.load_npys(mode="all", parameter="density")
-    clf_name = "rbfSVC"
+    parameter = "density"
+    mode = "all"
+    clf_name = "linearSVC"  # "kneighbors", "linearSVC", "rbfSVC", "XGBoost"
     clf_params = ML_PARAM_DICT[clf_name]
-    cross_validation(model, clf_name, clf_params, param_grid, grid_search_params, cross_val_params, use_grid=False)
+
+    model = SupervisedML.load_npys(mode=mode, parameter=parameter)
+    grid_search_cv(model, clf_name, clf_params, param_grid, grid_search_params)
+    # cross_validation(model, clf_name, clf_params, param_grid, grid_search_params, cross_val_params, use_grid=True)

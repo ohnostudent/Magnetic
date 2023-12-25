@@ -25,7 +25,7 @@ ML_RESULT_DIR = ML_DIR + "/result"
 DATASETS = [77, 497, 4949]
 SIDES = ["left", "right"]
 VARIABLE_PARAMETERS = ["density", "enstrophy", "magfieldx", "magfieldy", "magfieldz", "pressure", "velocityx", "velocityy", "velocityz"]
-VARIABLE_PARAMETERS_FOR_TRAINING = ["density", "energy", "magfieldx", "magfieldy", "mag_tupledxy", "velocityx", "velocityy"]
+VARIABLE_PARAMETERS_FOR_TRAINING = ["density", "energy", "magfieldx", "magfieldy", "velocityx", "velocityy"]
 LABELS = {0: "n", 1: "x", 2: "o"}
 TRAIN_SHAPE = (10, 100)  # (X, Y)
 IMG_SHAPE = [1792, 569]
@@ -54,7 +54,7 @@ ML_PARAM_DICT = {
         "p": 2,  # Minkowski メトリクスの検出力パラメータ
         "weights": "uniform",  # 重み
     },
-    "LinearSVC": {
+    "linearSVC": {
         "C": 1.0,  # 正則化パラメータ、マージン
         "dual": "auto",  # 双対最適化問題または主最適化問題を解決するアルゴリズム
         "fit_intercept": True,  # 切片を適合させるかどうか
