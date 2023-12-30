@@ -1,20 +1,3 @@
-# ディレクトリ
-.vscode/
-.venv/
-.ruff_cache/
-*__pycache__
-
-data/
-snaps/*
-snaps/half_right/*
-snaps/half_left/*
-snaps/all/*
-snaps/snap*/
-images/
-logs/
-ML/
-report/
-
 # 拡張子
 *.bmp
 *.csv
@@ -35,3 +18,18 @@ report/
 # 各ファイル
 src/Processing/viewer/template/lic_viewer*.html
 .latexmkrc
+
+# ディレクトリ
+*__pycache__
+.mypy_cache/
+.ruff_cache/
+.venv/
+.vscode/
+
+data/
+images/
+logs/
+ML/
+report/
+snaps/
+src/notebooks/

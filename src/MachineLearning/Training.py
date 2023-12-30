@@ -128,6 +128,20 @@ class SupervisedML(BaseModel):
         return self.model
 
     def kneighbors(self, n_neighbors: int | None = 3) -> KNeighborsClassifier:
+        """_summary_
+
+        Args:
+            "algorithm": "auto",  // 最近傍値を計算するアルゴリズム(auto, ball_tree, kd_tree, brute)
+            "leaf_size": 30,  // BallTree または KDTree に渡される葉のサイズ
+            "metric": "minkowski",  // 距離の計算に使用するメトリック
+            "metric_params": null,  // メトリック関数の追加のパラメータ
+            "n_jobs": null,  // 実行する並列ジョブの数
+            "n_neighbors": 5,  // k の数
+            "p": 2,  // Minkowski メトリクスの検出力パラメータ
+            "weights": "uniform"  // 重み
+        Returns:
+            KNeighborsClassifier: _description_
+        """
         self.param_dict["model_name"] = "KNeighbors"
         self.param_dict["clf_params"]["n_neighbors"] = n_neighbors
 
@@ -139,6 +153,23 @@ class SupervisedML(BaseModel):
         return self.model
 
     def linearSVC(self, C: float = 0.3, random_state: int = 42) -> LinearSVC:
+        """_summary_
+
+        Args:
+            "C": 0.39,  // 正則化パラメータ、マージン
+            "dual": "auto",  // 双対最適化問題または主最適化問題を解決するアルゴリズム
+            "fit_intercept": true,  // 切片を適合させるかどうか
+            "intercept_scaling": 1,
+            "loss": "squared_hinge",  // 損失関数(hinge, squared_hinge)
+            "max_iter": 1000,  // 実行される反復の最大数
+            "multi_class": "ovr",  // マルチクラス戦略
+            "penalty": "l2",  // ペナルティ
+            "random_state": null,  // 乱数の seed値
+            "tol": 0.0001,  // 停止基準の許容値
+            "verbose": 5  // 詳細な出力を有効
+        Returns:
+            LinearSVC: _description_
+        """
         self.param_dict["model_name"] = "LinearSVC"
         self.param_dict["clf_params"]["C"] = C
         self.param_dict["clf_params"]["randomstate"] = random_state
@@ -148,6 +179,28 @@ class SupervisedML(BaseModel):
         return self.model
 
     def rbfSVC(self, C: float = 0.3, gamma: float = 3, random_state: int | None = 42, cls: str = "ovo") -> OneVsOneClassifier | OneVsRestClassifier:
+        """_summary_
+
+        Args:
+            "C": 1.0,  // 正則化パラメータ、マージン
+            "cache_size": 200,  // キャッシュサイズ
+            "coef0": 0.0,  // Independent term in kernel function. It is only significant in ‘poly’ and ‘sigmoid’.
+            "decision_function_shape": "ovr",
+            "degree": 3,  // 多項式(poly)カーネルの次数
+            "gamma": "scale",  // カーネルの係数、ガウスカーネル(rbf): 1/(n_features * X.var()) と シグモイドカーネル(sigmoid): 1 /n_features
+            "kernel": "rbf",  // カーネル('linear', 'poly', 'rbf', 'sigmoid', 'precomputed')
+            "max_iter": -1,  // ソルバー内の反復に対するハード制限
+            "probability": false,  // true の場合、予測時に各クラスに属する確率を返す
+            "random_state": null,  // 乱数の seed値
+            "shrinking": true,  // 縮小ヒューリスティックを使用するかどうか
+            "tol": 0.001,  // 停止基準の許容値
+            "verbose": 5  // 詳細な出力を有効
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            OneVsOneClassifier | OneVsRestClassifier: _description_
+        """
         self.param_dict["model_name"] = f"rbfSVC-{cls}"
         self.param_dict["clf_params"]["C"] = C
         self.param_dict["clf_params"]["gamma"] = gamma
@@ -167,6 +220,27 @@ class SupervisedML(BaseModel):
         return self.model
 
     def XGBoost(self, colsample_bytree: float = 0.4, early_stopping_rounds: int = 100, eval_metric: str = "auc", learning_rate: float = 0.02, max_depth: int = 4, missing: int = -1, n_estimators: int = 500, subsample: float = 0.8, params: dict | None = None) -> XGBClassifier:
+        """_summary_
+
+        Args:
+            "colsample_bytree": 0.4,
+            "early_stopping_rounds": null,
+            "eval_metric": null,
+            "gamma": null,
+            "learning_rate": "shrinkage",
+            "max_depth": 4,
+            "missing": null,
+            "n_estimators": 1000,
+            "n_jobs": null,
+            "subsample": null,
+            "tree_method": null,  // 木構造の種類 (hist/gpu_hist)
+            "random_state": null,  // 乱数のseed値
+            "reg_alpha": null,
+            "reg_lambda": null,
+            "verbosity": 5
+        Returns:
+            XGBClassifier: _description_
+        """
         self.param_dict["model_name"] = "XGBoost"
         self.param_dict["clf_params"]["n_estimators"] = n_estimators
         self.param_dict["clf_params"]["max_depth"] = max_depth
@@ -183,7 +257,16 @@ class SupervisedML(BaseModel):
             tree_methods = "hist"
 
         self.param_dict["clf_params"]["tree_methods"] = tree_methods
-        self.model = XGBClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, subsample=subsample, colsample_bytree=colsample_bytree, missing=missing, eval_metric=eval_metric, tree_method=tree_methods)
+        self.model = XGBClassifier(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            colsample_bytree=colsample_bytree,
+            missing=missing,
+            eval_metric=eval_metric,
+            tree_method=tree_methods,
+        )
 
         if params is not None:
             self.model.set_params(**params)
@@ -203,7 +286,7 @@ class SupervisedML(BaseModel):
         Raises:
             ValueError: _description_
         """
-        self.logger.debug("PREDICT", extra={"addinfo": "予測"})
+        self.logger.debug("PREDICT", extra={"addinfo": "予測\n"})
         if pred_path is None:
             self.pred = self.model.predict(self.X_test)
 
@@ -220,9 +303,15 @@ class SupervisedML(BaseModel):
         """
         評価データの出力
         """
-        f = open(ML_RESULT_DIR + f"/{self.param_dict['model_name']}/{self.param_dict['parameter']}_{self.param_dict['mode']}.txt", "a", encoding="utf-8")
+        if mode == "sep":
+            path = ML_RESULT_DIR + f"/{self.param_dict['model_name']}/{self.param_dict['mode']}{self.param_dict['train_params']['label']}_{self.param_dict['parameter']}.txt"
+        else:
+            path = ML_RESULT_DIR + f"/{self.param_dict['model_name']}/{self.param_dict['mode']}_{self.param_dict['parameter']}.txt"
+
+        f = open(path, "a", encoding="utf-8")
         time = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
         print(f"【 {time} 】", file=f)
+        print("変数       : ", self.param_dict["parameter"], self.param_dict["mode"], file=f)
         print("パラメータ : ", dict_to_str(self.param_dict["clf_params"]), "\n", file=f)
         print("trainスコア: ", self.model.score(self.X_train, self.y_train), file=f)
         print("test スコア: ", self.model.score(self.X_test, self.y_test), file=f)
@@ -254,8 +343,9 @@ class SupervisedML(BaseModel):
 
 if __name__ == "__main__":
     import sys
+    import pandas as pd
 
-    from config.params import VARIABLE_PARAMETERS
+    from config.params import VARIABLE_PARAMETERS_FOR_TRAINING
     from config.SetLogger import logger_conf
 
     logger = logger_conf("ML")
@@ -263,8 +353,15 @@ if __name__ == "__main__":
 
     # 学習用パラメータ設定
     ML_PARAM_DICT = {
-        "KMeans": {"n_clusters": 3, "n_init": 10, "max_iter": 300, "tol": 1e-04, "random_state": 42, "verbose": 10},
-        "kneighbors": {"n_clusters": 3, "n_init": 10, "max_iter": 300, "tol": 1e-04, "random_state": 42, "verbose": 10},
+        "kneighbors": {
+            "n_neighbors": 3,
+            "n_init": 10,
+            "max_iter": 300,
+            "algorithm": "auto",  # ball_tree(BallTreeデータ構造), kd_tree(KD木データ構造), brute(brute-force search(総当たり検索)), auto(自動選択(初期値))
+            "tol": 1e-04,
+            "random_state": 42,
+            "verbose": 10,
+        },
         "linearSVC": {"C": 0.39, "random_state": 42},
         "rbfSVC": {
             "C": 1.0,  # 正則化パラメータ、マージン
@@ -295,44 +392,46 @@ if __name__ == "__main__":
         },
     }
 
-    mode = "sep"
-    parameter = "density"
-    # for parameter in VARIABLE_PARAMETERS:
-    clf_name = "linearSVC"  # "kneighbors", "linearSVC", "rbfSVC", "XGBoost"
-    # param_dict = ML_PARAM_DICT[clf_name]
-
     # 教師データ用パラメータ
     label = 1
     pca = False
     test_size = 0.3
     model_random_state = 42
 
-    logger.debug("PARAMETER", extra={"addinfo": f"name={clf_name}, mode={mode}, parameter={parameter}, pca={pca}, test_size={test_size}, random_state={model_random_state}"})
-    # if len(sys.argv) > 1:
-    #     logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み ({clf_name})"})
-    #     model = SupervisedML.load_model(parameter, mode=mode, name=clf_name, model_random_state=model_random_state, param_dict=param_dict)
-    #     print(model)
+    # logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み ({clf_name})"})
+    # model = SupervisedML.load_model(parameter, mode=mode, name=clf_name, model_random_state=model_random_state, param_dict=param_dict)
 
-    # else:
-    model = SupervisedML.load_npys(mode=mode, parameter=parameter, label=label, pca=pca, test_size=test_size, random_state=model_random_state)
+    clf_name = "linearSVC"  # kneighbors, linearSVC, rbfSVC, XGBoost
+    mode = "sep"  # sep, mixsep, mix
 
-    score_list = list()
-    for i in range(35, 46):
-        c = i / 100
-        param_dict = {"C": c, "random_state": 42}
+    for parameter in ["enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]: # ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]
+        logger.debug("PARAMETER", extra={"addinfo": f"name={clf_name}, mode={mode}, parameter={parameter}, pca={pca}, test_size={test_size}, random_state={model_random_state}"})
+        model = SupervisedML.load_npys(mode=mode, parameter=parameter, label=label, pca=pca, test_size=test_size, random_state=model_random_state)
 
-        model.do_learning(clf_name=clf_name, param_dict=param_dict)
-        model.save_model()
-        model.predict()
-        score = model.print_scores()
+        score_list = list()
+        for c in [0.01, 0.1, 1]:
+            param_dict = {"C": c, "random_state": 42}
+            logger.debug("Margin", extra={"addinfo": f"{c}"})
 
-        score_list.append(score)
+            model.do_learning(clf_name=clf_name, param_dict=param_dict)
+            model.save_model()
+            model.predict()
+            score = model.print_scores()
 
-    logger.debug("END", extra={"addinfo": "処理終了"})
+            score_list.append(score)
 
-    import pandas as pd
+        df = pd.DataFrame(score_list, columns=["C", "random", "acc", "f1"])
+        if mode == "sep":
+            csv_path = ML_RESULT_DIR + f"/{clf_name}/{mode}{label}_{parameter}.csv"
+        else:
+            csv_path = ML_RESULT_DIR + f"/{clf_name}/{mode}_{parameter}.csv"
 
-    df = pd.DataFrame(score_list, columns=["C", "random", "acc", "f1"])
-    df_all = pd.read_csv(ML_RESULT_DIR + "/LinearSVC/density_mixsep.csv", encoding="utf-8")
-    df_all = pd.concat([df_all, df])
-    df_all.to_csv(ML_RESULT_DIR + "/LinearSVC/density_mixsep.csv", index=False, encoding="utf-8")
+        if os.path.exists(csv_path):
+            df_all = pd.read_csv(csv_path, encoding="utf-8")
+            df_all = pd.concat([df_all, df])
+            df_all = df_all.sort_values("C").reset_index(drop=True)
+            df_all.to_csv(csv_path, index=False, encoding="utf-8")
+        else:
+            df.to_csv(csv_path, index=False, encoding="utf-8")
+
+    logger.debug("END", extra={"addinfo": "処理終了\n"})

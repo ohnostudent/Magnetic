@@ -22,18 +22,23 @@ int mag = 7;
 
 LineIntegralConv *lic;
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     if (argc <= 3)
-        {  return 0;}
+    {
+        return 0;
+    }
     char *xfile = argv[1];
     char *yfile = argv[2];
     char *picfile = argv[3];
     int gridx, gridy;
-    if (argc == 6) {
+    if (argc == 6)
+    {
         gridx = stoi(string(argv[4]));
         gridy = stoi(string(argv[5]));
     }
-    else{
+    else
+    {
         gridx = 513;
         gridy = 1025;
     }

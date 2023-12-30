@@ -64,6 +64,7 @@ class BaseModel:
             train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_all.npz")
         else:
             if mode == "sep":
+                model.param_dict["train_params"]["label"] = label
                 npz_path = ML_MODEL_DIR + f"/npz/{parameter}_sep.label={label}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
             else:
                 npz_path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
@@ -362,7 +363,7 @@ if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
     logger = logger_conf("basemodel")
-    mode = "sep"  # "sep", "mixsep", "mix"
+    mode = "mixsep"  # "sep", "mixsep", "mix"
     logger.debug("PARAMETER", extra={"addinfo": f"mode = {mode}"})
 
     bm = BaseModel()
@@ -371,7 +372,7 @@ if __name__ == "__main__":
 
         bm.set_default(parameter)
         # bm.get_train_all()
-        X_train, y_train, X_test, y_test = bm.split_train_test(mode, label=1)
+        X_train, y_train, X_test, y_test = bm.split_train_test(mode)
         bm.save_npys()
 
         logger.debug("END", extra={"addinfo": f"{parameter}"})
