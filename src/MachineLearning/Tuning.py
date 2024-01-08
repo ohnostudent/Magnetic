@@ -4,6 +4,7 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+import optuna
 from sklearn.cluster import KMeans
 from sklearn.model_selection import GridSearchCV, KFold, cross_val_score, learning_curve
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier

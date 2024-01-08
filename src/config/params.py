@@ -33,9 +33,6 @@ IMG_SHAPE = [1792, 569]
 NPY_SHAPE = [257, 625]
 CNN_IMAGE_SHAPE = [96, 96]
 
-with open(ROOT_DIR + "/src/config/machine_learning_params.json", encoding="utf-8") as f:
-    ML_PARAM_DICT = json.load(f)
-
 
 def set_dataset(dataset: str):
     if dataset.isnumeric():

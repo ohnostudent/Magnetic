@@ -64,7 +64,7 @@ class BaseModel:
             train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_all.npz")
         else:
             if mode == "sep":
-                model.param_dict["train_params"]["label"] = label
+                model.param_dict["label"] = label
                 npz_path = ML_MODEL_DIR + f"/npz/{parameter}_sep.label={label}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
             else:
                 npz_path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
