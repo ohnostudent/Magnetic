@@ -21,8 +21,9 @@ from MachineLearning.NetCore import Net
 class CnnTrain:
     logger = getLogger("CNN").getChild("Train")
 
-    def __init__(self, target: str | None = None) -> None:
+    def __init__(self, target: str | None = None, mode: str = "mix") -> None:
         self.target = target
+        self.mode = mode
 
     @classmethod
     def load_model(cls, mode: str = "model", path: str | None = None):  # noqa: ANN206
@@ -79,7 +80,7 @@ class CnnTrain:
         test_size = 0.2
         train_dataset, val_dataset, test_dataset = random_split(all_data_set, [train_size, val_size, test_size], generator=Generator().manual_seed(seed))
 
-        BATCH_SIZE = 200
+        BATCH_SIZE = 512
         self.train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
         self.val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
         self.test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
@@ -114,7 +115,7 @@ class CnnTrain:
             test_loss_value.append(e_loss)
             test_acc_value.append(e_acc)
 
-        if do_plot: # 結果のグラフ化
+        if do_plot:  # 結果のグラフ化
             self.logger.debug("PLOT", extra={"addinfo": "グラフ保存"})
             self.plot(train_loss_value, train_acc_value, val_loss_value, val_acc_value, test_loss_value, test_acc_value, EPOCH)
 
@@ -151,9 +152,9 @@ class CnnTrain:
         if save_path is None:
             # 保存パスの作成
             mode = "weight" if weight_only else "model"
-            save_path = ML_MODEL_DIR + f"/model/cnn_{mode}_{self.device}.pth"
+            save_path = ML_MODEL_DIR + f"/model/model_cnn_{self.target}_{self.mode}.save={mode}.device={self.device}.pth"
 
-        if weight_only: # 重みのみの保存
+        if weight_only:  # 重みのみの保存
             save_model = self.net.state_dict()
         else:
             save_model = self.net
@@ -167,13 +168,13 @@ class CnnTrain:
         return sample
 
     def _use_folder(self) -> DatasetFolder | ImageFolder:
-        if self.mode == "npy": # 元データで学習
+        if self.mode == "npy":  # 元データで学習
             if self.target is None:
                 raise ValueError("target not defined")
             data_transform = transforms.Compose([transforms.ToTensor()])
             all_data_set = DatasetFolder(root=ML_DATA_DIR + f"/snap_files/{self.target}", loader=self._npy_loader, extensions=(".npy",), transform=data_transform)
 
-        elif self.mode == "img": # 画像データで学習
+        elif self.mode == "img":  # 画像データで学習
             data_transform = transforms.Compose([transforms.Grayscale(num_output_channels=1), transforms.ToTensor()])
             all_data_set = ImageFolder(root=ML_DATA_DIR + "/cnn", transform=data_transform)
 
@@ -212,17 +213,24 @@ class CnnTrain:
 
 if __name__ == "__main__":
     from config.SetLogger import logger_conf
+    from config.params import VARIABLE_PARAMETERS_FOR_TRAINING
+
 
     logger = logger_conf("CNN")
 
-    target = "density"
-    model = CnnTrain(target=target)
-    model.set_net()
+    method = "model"  # training, model
+    mode = "mix"  # sep, mixsep, mix
+    label = 0
+    parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
 
-    mode = "npy"
-    # mode = "img"
-    model.set_train(seed=100)
+    for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
+        model = CnnTrain(target=parameter)
+        model.set_net()
 
-    EPOCH = 2
-    model.run(epoch_cnt=EPOCH, do_plot=True)
-    model.save_model()
+        mode = "npy"
+        # mode = "img"
+        model.set_train(seed=100)
+
+        EPOCH = 100
+        model.run(epoch_cnt=EPOCH, do_plot=True)
+        model.save_model()

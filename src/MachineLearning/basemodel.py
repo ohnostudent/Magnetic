@@ -95,7 +95,7 @@ class BaseModel:
         self.X_test = train_test_data["X_test"]
         self.y_test = train_test_data["y_test"]
 
-    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int | None = 42, label: int = 1, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int | None = 42, label: int = 0, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         教師用データとテスト用データを分割する関数
 
@@ -363,7 +363,7 @@ if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
     logger = logger_conf("basemodel")
-    mode = "mixsep"  # "sep", "mixsep", "mix"
+    mode = "mix"  # "sep", "mixsep", "mix"
     logger.debug("PARAMETER", extra={"addinfo": f"mode = {mode}"})
 
     bm = BaseModel()
