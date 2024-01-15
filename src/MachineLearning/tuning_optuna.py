@@ -60,7 +60,6 @@ class TuningOptuna:
                     "kernel": "rbf",
                     "tol": 0.001,
                     "random_state": 42,
-                    "n_jobs": -1,
                     "verbose": 0
                 }
 
@@ -119,7 +118,7 @@ class TuningOptuna:
 
     def learning(self):
         self.study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=42))
-        self.study.optimize(lambda x: self._objective(x), n_trials=50)
+        self.study.optimize(lambda x: self._objective(x), n_trials=30)
 
     def save(self):
         # 最適パラメータの表示と保持
@@ -134,11 +133,15 @@ if __name__ == "__main__":
     logger = logger_conf("Tuning_optuna")
     logger.debug("START", extra={"addinfo": "処理開始"})
 
+    from logging import FileHandler
+    from config.params import LOG_DIR
+    optuna.logging.get_logger("optuna").addHandler(FileHandler(LOG_DIR + "/optuna.log"))
+
     tuning_best_param_dict = dict()
     clf_name = "rbfSVC"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
-    mode = "mix"  # sep, mixsep, mix
-    parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
-    label = 0
+    # mode = "mix"  # sep, mixsep, mix
+    # parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
+    # label = 0
 
     tu = TuningOptuna()
     for mode in ["mixsep", "mix", "sep"]:
@@ -161,7 +164,6 @@ if __name__ == "__main__":
                 tu.learning()
                 tu.save()
             tuning_best_param_dict[mode] = tu.best_parameter_dict
-
 
     import json
     with open("./params.json", "w", encoding="utf-8") as f:
