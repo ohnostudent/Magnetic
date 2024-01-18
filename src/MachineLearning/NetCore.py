@@ -6,23 +6,23 @@ from torch import nn, optim
 
 
 class Net(nn.Module):
-    def __init__(self, mode: str = "img", channel: int = 1) -> None:
+    def __init__(self, mode: str = "bmp", channel: int = 1) -> None:
         super(Net, self).__init__()
 
         # 全結合層
-        if mode == "img":
-            self.for_img(channel=1)
+        if mode == "bmp":
+            self._for_img(channel=1)
 
         elif mode == "npy":
-            self.for_npy(channel=channel)
+            self._for_npy(channel=channel)
 
         else:
-            raise ValueError()
+            raise ValueError("invalid extension")
 
-        self.configure_criterion()
-        self.configure_optimizer()
+        self._configure_criterion()
+        self._configure_optimizer()
 
-    def for_img(self, channel: int = 1):
+    def _for_img(self, channel: int = 1):
         self.layer1 = nn.Sequential(
             # 畳み込み層:(入力チャンネル数, フィルタ数、フィルタサイズ)
             nn.Conv2d(in_channels=channel, out_channels=6, kernel_size=3, padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
@@ -56,7 +56,7 @@ class Net(nn.Module):
             nn.Linear(64, 3),
         )
 
-    def for_npy(self, channel: int = 1):
+    def _for_npy(self, channel: int = 1):
         self.layer1 = nn.Sequential(
             # 畳み込み層:(入力チャンネル数, フィルタ数、フィルタサイズ)
             nn.Conv2d(in_channels=channel, out_channels=6, kernel_size=3, padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
@@ -107,13 +107,13 @@ class Net(nn.Module):
 
         return f.softmax(x, dim=1)
 
-    def configure_optimizer(self, WEIGHT_DECAY: float = 0.005, LEARNING_RATE: float = 0.001):
+    def _configure_optimizer(self, WEIGHT_DECAY: float = 0.005, LEARNING_RATE: float = 0.001):
         # 最適化手法を設定
         self.optimizer = optim.Adam(self.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
         # self.optimizer = optim.SGD(self.parameters(), lr=LEARNING_RATE, momentum=0.001, weight_decay=WEIGHT_DECAY)
         return self.optimizer
 
-    def configure_criterion(self):
+    def _configure_criterion(self):
         # 損失関数の設定
         self.criterion = nn.CrossEntropyLoss()
         return self.criterion

@@ -80,12 +80,20 @@ class BaseModel:
         return model
 
     # TODO overload
-    def _load_npys(self, mode: str, parameter: str, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):
-        train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz")
+    def _load_npys(self, mode: str, parameter: str, label: int | None = None, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):
+        if mode == "sep":
+            path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.label={label}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
+        else:
+            path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
+
+        train_test_data = np.load(path)
 
         self.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
         self.param_dict["mode"] = mode
         self.param_dict["parameter"] = parameter
+        if label is not None:
+            self.param_dict["label"] = label
+
         self.param_dict["train_params"]["pca"] = pca
         self.param_dict["train_params"]["random_state"] = random_state
         self.param_dict["train_params"]["test_size"] = test_size
