@@ -7,9 +7,8 @@ from logging import getLogger
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from PIL import Image
-from torch import Generator, cuda, device
+from torch import Generator, cuda, device, no_grad, load as torch_load, save as torch_save, argmax as torch_argmax
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import transforms
 from torchvision.datasets import DatasetFolder, ImageFolder
@@ -84,18 +83,24 @@ class MyDataset(Dataset):
 
 
 class CnnTrain:
-    logger = getLogger("CNN").getChild("Train")
-
     def __init__(self, training_parameter: str, mode: str, label: int | None = None) -> None:
+        """_summary_
+
+        Args:
+            training_parameter (str): _description_
+            mode (str): _description_
+            label (int | None, optional): _description_. Defaults to None.
+        """
+        self.logger = getLogger("CNN").getChild("Train")
+
         self.training_parameter = training_parameter
         self.mode = mode
         if mode == "sep":
-            self.label= label
+            self.label = label
             self.mode_name = mode + str(label)
         else:
             self.mode_name = mode
         logger.debug("PARAMETER", extra={"addinfo": f"parameter={training_parameter}, mode={self.mode_name}"})
-
 
     @classmethod
     def load_model(cls, parameter: str, mode: str, load_mode: str = "model", path: str | None = None):  # noqa: ANN206
@@ -107,9 +112,9 @@ class CnnTrain:
 
         if load_mode == "wight":
             net = Net()
-            net.load_state_dict(torch.load(path, map_location="cpu"))
+            net.load_state_dict(torch_load(path, map_location="cpu"))
         elif load_mode == "model":
-            net = torch.load(path, map_location="cpu")
+            net = torch_load(path, map_location="cpu")
         else:
             raise ValueError()
 
@@ -151,46 +156,45 @@ class CnnTrain:
         else:
             raise ValueError
 
-    def set_train(self, BATCH_SIZE = 512, seed: int = 42):
+    def set_train(self, BATCH_SIZE=512, seed: int = 42):
         train_size = 0.6
         val_size = 0.2
         test_size = 0.2
+        generator = Generator().manual_seed(seed)
         self.configure_transform()
 
         if self.mode == "mix":
-            all_data_set = self._use_folder()
-
             # 学習データ、検証データ、テストデータに 6:2:2 の割合で分割
-            train_dataset, val_dataset, test_dataset = random_split(all_data_set, [train_size, val_size, test_size], generator=Generator().manual_seed(seed))
+            all_data_set = self._use_folder()
+            train_dataset, val_dataset, test_dataset = random_split(all_data_set, [train_size, val_size, test_size], generator=generator)
 
         elif self.mode == "mixsep":
-            train_dataset_0, val_dataset_0, test_dataset_0 = random_split(MyDataset([77], self.training_parameter, self.extension, self.data_transform), [train_size, val_size, test_size], generator=Generator().manual_seed(seed))
-            train_dataset_1, val_dataset_1, test_dataset_1 = random_split(MyDataset([497], self.training_parameter, self.extension, self.data_transform), [train_size, val_size, test_size], generator=Generator().manual_seed(seed))
-            train_dataset_2, val_dataset_2, test_dataset_2 = random_split(MyDataset([4949], self.training_parameter, self.extension, self.data_transform), [train_size, val_size, test_size], generator=Generator().manual_seed(seed))
-            train_dataset: Dataset = train_dataset_0 + train_dataset_1 + train_dataset_2
-            val_dataset: Dataset = val_dataset_0 + val_dataset_1 + val_dataset_2
-            test_dataset: Dataset = test_dataset_0 + test_dataset_1 + test_dataset_2
+            train_dataset_0, val_dataset_0, test_dataset_0 = random_split(MyDataset([77], self.training_parameter, self.extension, self.data_transform), [train_size, val_size, test_size], generator=generator)
+            train_dataset_1, val_dataset_1, test_dataset_1 = random_split(MyDataset([497], self.training_parameter, self.extension, self.data_transform), [train_size, val_size, test_size], generator=generator)
+            train_dataset_2, val_dataset_2, test_dataset_2 = random_split(MyDataset([4949], self.training_parameter, self.extension, self.data_transform), [train_size, val_size, test_size], generator=generator)
+            train_dataset = train_dataset_0 + train_dataset_1 + train_dataset_2
+            val_dataset = val_dataset_0 + val_dataset_1 + val_dataset_2
+            test_dataset = test_dataset_0 + test_dataset_1 + test_dataset_2
 
         elif self.mode == "sep":
             if label == 0:
                 train_list = [497, 4949]
-                val_dataset = [77]
+                val_list = [77]
             elif label == 1:
                 train_list = [77, 4949]
-                val_dataset = [497]
+                val_list = [497]
             elif label == 2:
                 train_list = [77, 497]
-                val_dataset = [4949]
+                val_list = [4949]
             else:
                 raise ValueError("invalid split mode")
 
             train_dataset: Dataset = MyDataset(train_list, self.training_parameter, self.extension, self.data_transform)
-            val_test_dataset: Dataset = MyDataset(val_dataset, self.training_parameter, self.extension, self.data_transform)
-            val_dataset, test_dataset = random_split(val_test_dataset, [0.5, 0.5], generator=Generator().manual_seed(seed))
+            val_test_dataset: Dataset = MyDataset(val_list, self.training_parameter, self.extension, self.data_transform)
+            val_dataset, test_dataset = random_split(val_test_dataset, [0.5, 0.5], generator=generator)
 
         else:
             raise ValueError()
-
 
         self.train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
         self.val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
@@ -215,13 +219,13 @@ class CnnTrain:
             train_acc_value.append(e_acc)
 
             # 検証
-            with torch.no_grad():  # 無駄に勾配計算しないように
+            with no_grad():  # 無駄に勾配計算しないように
                 e_loss, e_acc = self._run_epoch(self.val_loader, phase="validation")
             val_loss_value.append(e_loss)
             val_acc_value.append(e_acc)
 
             # テスト
-            with torch.no_grad():  # 無駄に勾配計算しないように
+            with no_grad():  # 無駄に勾配計算しないように
                 e_loss, e_acc = self._run_epoch(self.test_loader, phase="test")
             test_loss_value.append(e_loss)
             test_acc_value.append(e_acc)
@@ -239,7 +243,7 @@ class CnnTrain:
         ax_acc.plot(range(EPOCH), train_acc_value)
         ax_acc.plot(range(EPOCH), val_acc_value)
         ax_acc.plot(range(EPOCH), test_acc_value, c="#00ff00")
-        ax_acc.set_xlim(-EPOCH//10, EPOCH*1.1)
+        ax_acc.set_xlim(-EPOCH // 10, EPOCH * 1.1)
         ax_acc.set_xlabel("EPOCH")
         ax_acc.set_ylabel("ACCURACY")
         ax_acc.legend(["train acc", "validation acc", "test acc"])
@@ -249,7 +253,7 @@ class CnnTrain:
         ax_loss.plot(range(EPOCH), train_loss_value)
         ax_loss.plot(range(EPOCH), val_loss_value)
         ax_loss.plot(range(EPOCH), test_loss_value, c="#00ff00")
-        ax_loss.set_xlim(-EPOCH//10, EPOCH*1.1)
+        ax_loss.set_xlim(-EPOCH // 10, EPOCH * 1.1)
         ax_loss.set_xlabel("EPOCH")
         ax_loss.set_ylabel("LOSS")
         ax_loss.legend(["train loss", "validation loss", "test loss"])
@@ -260,19 +264,20 @@ class CnnTrain:
         plt.close()
 
     def save_model(self, weight_only: bool = False, save_path: str | None = None):
+        # 保存パスの作成
+        if weight_only:  # 重みのみの保存
+            mode = "weight"
+            save_model = self.net.state_dict()
+        else:
+            mode = "model"
+            save_model = self.net
+
         if save_path is None:
-            # 保存パスの作成
-            if weight_only:  # 重みのみの保存
-                mode = "weight"
-                save_model = self.net.state_dict()
-            else:
-                mode = "model"
-                save_model = self.net
             save_path = ML_MODEL_DIR + f"/model/{self.mode}/model_cnn_{self.extension}_{self.training_parameter}_{self.mode_name}.save={mode}.device={self.device}.pth"
 
         self.logger.debug("SAVE", extra={"addinfo": f"{save_path}"})
         # 保存
-        torch.save(save_model, save_path)
+        torch_save(save_model, save_path)
 
     def _npy_loader(self, path):
         return np.load(path)
@@ -307,7 +312,7 @@ class CnnTrain:
                 self.net.optimizer.step()  # パラメータ更新
 
             sum_loss += loss.item()  # lossを足していく
-            predicted = torch.argmax(outputs, dim=1)  # 出力の最大値の添字(予想位置)を取得
+            predicted = torch_argmax(outputs, dim=1)  # 出力の最大値の添字(予想位置)を取得
             sum_total += labels_gpu.size(0)  # labelの数を足していくことでデータの総和を取るa
             sum_correct += predicted.eq(labels_gpu.view_as(predicted)).sum().item()  # 予想位置と実際の正解を比べ,正解している数だけ足す
 
@@ -321,13 +326,12 @@ class CnnTrain:
 
 
 if __name__ == "__main__":
-    from config.SetLogger import logger_conf
     from config.params import VARIABLE_PARAMETERS_FOR_TRAINING
-
+    from config.SetLogger import logger_conf
 
     logger = logger_conf("CNN")
 
-    # training_parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfiesldy, velocityx, velocityy
+    # training_parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
     mode = "sep"  # sep, mixsep, mix
     label = 1
     extension = "bmp"  # npy, bmp

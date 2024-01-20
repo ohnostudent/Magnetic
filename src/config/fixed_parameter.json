@@ -1,0 +1,32 @@
+{
+  "kNeighbors": {
+    "algorithm": "ball_tree",
+    "metric": "minkowski",
+    "n_jobs": 4,
+    "weights": "uniform"
+  },
+  "LinearSVC": {
+    "dual": "auto",
+    "intercept_scaling": 1,
+    "loss": "squared_hinge",
+    "multi_class": "ovr",
+    "penalty": "l2",
+    "random_state": 42,
+    "tol": 0.0001,
+    "verbose": 0
+  },
+  "rbfSVC": {
+    "kernel": "rbf",
+    "decision_function_shape": "ovr",
+    "random_state": 42,
+    "shrinking": true,
+    "tol": 0.001,
+    "verbose": 0
+  },
+  "XGBoost": {
+    "eval_metric": "auc",
+    "n_estimators": 500,
+    "n_jobs": -1,
+    "random_state": 42
+  }
+}

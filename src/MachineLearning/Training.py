@@ -7,12 +7,12 @@ from datetime import datetime
 from logging import getLogger
 
 import numpy as np
-from sklearn.cluster import KMeans
+# from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC
-# from torch import cuda
+from torch import cuda
 from xgboost import XGBClassifier
 
 sys.path.append(os.getcwd() + "/src")
@@ -22,10 +22,9 @@ from MachineLearning.basemodel import BaseModel
 
 
 class SupervisedML(BaseModel):
-    CUDA = False
-    # CUDA = cuda.is_available()
-    # if CUDA:
-    #     cuda.empty_cache()
+    CUDA = cuda.is_available()
+    if CUDA:
+        cuda.empty_cache()
 
     def __init__(self, parameter: str) -> None:
         super().__init__(parameter)
@@ -52,21 +51,8 @@ class SupervisedML(BaseModel):
 
         if path is None:
             path = ML_MODEL_DIR + f"/model/{mode}/model_{name}_{parameter}_{mode}.{dict_to_str(param_dict)}.sav"
-            # model.param_dict["clf_params"] = param_dict
 
-        match clf_name:
-            case "KMeans":
-                model.PROBA = False
-            case "kNeighbors":
-                model.PROBA = True
-            case "LinearSVC":
-                model.PROBA = False
-            case "rbfSVC":
-                model.PROBA = True
-            case "XGBoost":
-                model.PROBA = True
-            case _:
-                raise ValueError
+        model.PROBA = type(clf_name) in ["kNeighbors", "rbfSVC", "XGBoost"]
 
         model._load_npys(mode=mode, parameter=parameter, random_state=model_random_state, label=label)
         model.model = pickle.load(open(path, "rb"))
@@ -273,17 +259,17 @@ class SupervisedML(BaseModel):
         if pred_path is None:
             self.pred = self.model.predict(self.X_test)
             if self.PROBA:
-                self.pred_proba = self.model.predict_proba(model.X_test)
+                self.pred_proba = self.model.predict_proba(model.X_test) # type: ignore
 
         elif isinstance(pred_path, str):
             self.pred = self.model.predict(np.load(pred_path))
             if self.PROBA:
-                self.pred_proba = self.model.predict_proba(model.X_test)
+                self.pred_proba = self.model.predict_proba(model.X_test) # type: ignore
 
         elif isinstance(pred_path, np.ndarray):
             self.pred = self.model.predict(pred_path)
             if self.PROBA:
-                self.pred_proba = self.model.predict_proba(model.X_test)
+                self.pred_proba = self.model.predict_proba(model.X_test) # type: ignore
 
         else:
             raise ValueError("引数の型が違います")
@@ -304,6 +290,7 @@ class SupervisedML(BaseModel):
         print("パラメータ :\n", dict_to_str(self.model.get_params(), sep="\n"), "\n", file=f)
         print("trainスコア:", self.model.score(self.X_train, self.y_train), file=f)
         print("test スコア:", self.model.score(self.X_test, self.y_test), file=f)
+
         acc_score = accuracy_score(self.y_test, self.pred)
         print("正解率     :", acc_score, file=f)
         if self.PROBA:
@@ -330,18 +317,13 @@ class SupervisedML(BaseModel):
         return self.param_dict
 
     def save_model(self, model_path: str | None = None) -> None:
-        self.logger.debug("SAVE", extra={"addinfo": "学習結果の保存"})
+        self.logger.debug("SAVE", extra={"addinfo": "学習結果の保存\n\n"})
         if model_path is None:
             if self.param_dict["mode"] == "sep":
-                model_path = (
-                    ML_MODEL_DIR
-                    + f"/model/{self.param_dict['mode']}/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}.label={self.param_dict['label']}.{dict_to_str(self.param_dict['clf_params'])}.sav"
-                )
+                model_path = ML_MODEL_DIR + f"/model/{self.param_dict['mode']}/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}.label={self.param_dict['label']}.{dict_to_str(self.param_dict['clf_params'])}.sav"
+
             else:
-                model_path = (
-                    ML_MODEL_DIR
-                    + f"/model/{self.param_dict['mode']}/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}.{dict_to_str(self.param_dict['clf_params'])}.sav"
-                )
+                model_path = ML_MODEL_DIR + f"/model/{self.param_dict['mode']}/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}.{dict_to_str(self.param_dict['clf_params'])}.sav"
 
         with open(model_path, "wb") as f:
             pickle.dump(self.model, f)
@@ -370,11 +352,11 @@ if __name__ == "__main__":
     test_size = 0.3
     model_random_state = 42
 
-    clf_name = "kNeighbors"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
-    mode = "sep"  # sep, mixsep, mix
+    clf_name = "LinearSVC"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
+    mode = "mix"  # sep, mixsep, mix
     # parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
     label = 1
-    method = "model"  # training, model
+    method = "training"  # training, model
 
     if mode == "sep":
         mode_name = mode + str(label)
@@ -391,16 +373,15 @@ if __name__ == "__main__":
             model.do_learning(clf_name=clf_name, param_dict=param_dict)
             model.predict()
             model.print_scores()
-            path = ML_MODEL_DIR + f"/model/{mode}/model_{clf_name}_{parameter}_{mode_name}.optuna.sav"
-            model.save_model(path)
+            # path = ML_MODEL_DIR + f"/model/{mode}/model_{clf_name}_{parameter}_{mode_name}.optuna.sav"
+            model.save_model()
 
     elif method == "model":
         for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
             logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み (name={clf_name}, mode={mode}, parameter={parameter})"})
-            path = ML_MODEL_DIR + f"/model/{mode}/model_{clf_name}_{parameter}_{mode_name}.optuna.sav"
-            model = SupervisedML.load_model(parameter, mode=mode, name=clf_name, model_random_state=model_random_state, path=path)
+            # path = ML_MODEL_DIR + f"/model/{mode}/model_{clf_name}_{parameter}_{mode}.label={label}.n_neighbors={n}.sav"
+            model = SupervisedML.load_model(parameter, mode=mode, name=clf_name, model_random_state=model_random_state, label=label)
             model.predict()
             model.print_scores()
-
 
     logger.debug("END", extra={"addinfo": "処理終了\n"})

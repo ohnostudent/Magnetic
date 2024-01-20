@@ -5,8 +5,8 @@ import sys
 from logging import getLogger
 
 import optuna
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, log_loss, precision_score, recall_score
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC
 from torch import cuda
@@ -14,9 +14,9 @@ from xgboost import XGBClassifier
 
 sys.path.append(os.getcwd() + "/src")
 
-# from config.params import ML_MODEL_DIR, ML_RESULT_DIR, dict_to_str
-from MachineLearning.basemodel import BaseModel
+from config.params import ML_MODEL_DIR
 from config.SetLogger import logger_conf
+from MachineLearning.basemodel import BaseModel
 
 
 class TuningOptuna:
@@ -24,11 +24,16 @@ class TuningOptuna:
         self.logger = getLogger("Tuning_optuna").getChild("Tuning")
         self.best_parameter_dict: dict[str, dict] = {}
 
-    def load(self, mode="mix", parameter="enstrophy", clf_name="", label=1, randomstate=42):
+    def load(self, mode: str = "mix", parameter: str = "enstrophy", clf_name: str = "", label: int = 0, randomstate: int = 42):
         self.mode = mode
+        if mode == "sep":
+            self.label = label
+            self.mode_name = mode + str(label)
+        else:
+            self.mode_name = mode
         self.parameter = parameter
         self.clf_name = clf_name
-        self.clf_methods()
+        self._clf_methods()
 
         if mode == "sep":
             self.label = label
@@ -40,7 +45,7 @@ class TuningOptuna:
 
         return self.model
 
-    def set_params(self, trial):
+    def _set_params(self, trial):
         match self.clf_name:
             case "kNeighbors":
                 tuning_params = {
@@ -54,14 +59,7 @@ class TuningOptuna:
                 }
 
             case "rbfSVC":
-                tuning_params = {
-                    "C": trial.suggest_float("C", 0.01, 500),
-                    "gamma": trial.suggest_float("gamma", 0.01, 10),
-                    "kernel": "rbf",
-                    "tol": 0.001,
-                    "random_state": 42,
-                    "verbose": 0
-                }
+                tuning_params = {"C": trial.suggest_float("C", 0.01, 500), "gamma": trial.suggest_float("gamma", 0.01, 10), "kernel": "rbf", "tol": 0.001, "random_state": 42, "verbose": 0}
 
             case "XGBoost":
                 tuning_params = {
@@ -84,14 +82,14 @@ class TuningOptuna:
 
         return tuning_params
 
-    def clf_methods(self):
+    def _clf_methods(self):
         match self.clf_name:
             case "kNeighbors":
                 self.clf = KNeighborsClassifier
             case "LinearSVC":
                 self.clf = LinearSVC
             case "rbfSVC":
-                self.clf = SVC
+                self.clf = lambda **x: OneVsRestClassifier(SVC(**x))
             case "XGBoost":
                 self.clf = XGBClassifier
                 self.eval_set = [(self.model.X_train, self.model.y_train)]
@@ -100,25 +98,35 @@ class TuningOptuna:
 
         return self.clf
 
-    def _objective(self, trial):
-        tuning_params = self.set_params(trial)
+    def objective(self, trial):
+        tuning_params = self._set_params(trial)
         clf = self.clf(**tuning_params)
 
-        # params = {
-        #     "early_stopping_rounds": 10
-        # }
-        # clf.set_params(**params)
         clf.fit(self.model.X_train, self.model.y_train)
+        pred_test = clf.predict_proba(self.model.X_test)  # type: ignore
+        return roc_auc_score(self.model.y_test, pred_test, multi_class="ovr")
 
-        # 目的関数用にAUCを算出
-        pred_test = clf.predict(self.model.X_test)
+    def load_study(self, study_name: str | None = None):
+        if study_name is None:
+            study_name = f"optuna_{self.clf_name}_{self.parameter}_{self.mode_name}"
+        storage = "sqlite:///" + ML_MODEL_DIR + f"/tuning/{self.mode_name}/optuna_{self.clf_name}_{self.parameter}_{self.mode_name}.sav"
 
-        # 目的関数は(1-AUC)の最小化と定義
-        return accuracy_score(self.model.y_test, pred_test)
+        self.study = optuna.load_study(study_name=study_name, storage=storage)
+        return self.study
 
-    def learning(self):
-        self.study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=42))
-        self.study.optimize(lambda x: self._objective(x), n_trials=30)
+    def create_study(self, study_name: str | None = None):
+        if study_name is None:
+            study_name = f"optuna_{self.clf_name}_{self.parameter}_{self.mode_name}"
+        storage = "sqlite:///" + ML_MODEL_DIR + f"/tuning/{self.mode_name}/optuna_{self.clf_name}_{self.parameter}_{self.mode_name}.sav"
+        sampler = optuna.samplers.TPESampler(seed=42)
+
+        self.study = optuna.create_study(direction="maximize", sampler=sampler, study_name=study_name, storage=storage, load_if_exists=True)
+
+    def do_optimizer(self):
+        self.study.optimize(lambda x: self.objective(x), n_trials=30)  # type: ignore
+
+    def plot(self):
+        optuna.visualization.plot_optimization_history(self.study)
 
     def save(self):
         # 最適パラメータの表示と保持
@@ -134,7 +142,9 @@ if __name__ == "__main__":
     logger.debug("START", extra={"addinfo": "処理開始"})
 
     from logging import FileHandler
+
     from config.params import LOG_DIR
+
     optuna.logging.get_logger("optuna").addHandler(FileHandler(LOG_DIR + "/optuna.log"))
 
     tuning_best_param_dict = dict()
@@ -151,7 +161,8 @@ if __name__ == "__main__":
                 for parameter in ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]:
                     try:
                         tu.load(clf_name=clf_name, mode=mode, parameter=parameter, label=label)
-                        tu.learning()
+                        tu.create_study()
+                        tu.do_optimizer()
                         tu.save()
                     except Exception as e:
                         logger.error("ERROR", extra={"addinfo": f"{e}"})
@@ -159,13 +170,18 @@ if __name__ == "__main__":
 
         else:
             for parameter in ["enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]:
-            # for parameter in ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]:
-                tu.load(clf_name=clf_name, mode=mode, parameter=parameter)
-                tu.learning()
-                tu.save()
+                # for parameter in ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]:
+                try:
+                    tu.load(clf_name=clf_name, mode=mode, parameter=parameter)
+                    tu.create_study()
+                    tu.do_optimizer()
+                    tu.save()
+                except Exception as e:
+                    logger.error("ERROR", extra={"addinfo": f"{e}"})
             tuning_best_param_dict[mode] = tu.best_parameter_dict
 
     import json
+
     with open("./params.json", "w", encoding="utf-8") as f:
         json.dump(tuning_best_param_dict, f)
 
