@@ -53,7 +53,7 @@ sys.path.append(os.getcwd() + "/src")
 - 出力先：`/snaps/snap{i}{j}/*/*`
 
 ```cmd
-./Magnetic> python ./src/Processing/separator.py
+./Magnetic> python ./src/Processing/separator/separatorLoop.py
 ```
 
 <br>
@@ -167,7 +167,7 @@ sys.path.append(os.getcwd() + "/src")
 - 分類器
   - k-Means
   - SVM
-  - 非線形 SVM (rbf) (ovo, ovr)
+  - 非線形 SVM (rbf) (ovr)
   - k-近傍法
   - XGBoost
 
@@ -190,6 +190,8 @@ sys.path.append(os.getcwd() + "/src")
 - `/ML/result`
   <br>
   <br>
+
+
 
 ## ディレクトリ構造
 

@@ -7,7 +7,7 @@ import sys
 from glob import glob
 from logging import getLogger
 
-sys.path.append(os.getcwd())
+sys.path.append(os.getcwd() + "/src")
 
 from config.params import BIN_PATH, ROOT_DIR, SNAP_PATH, SRC_PATH
 
@@ -103,4 +103,4 @@ if __name__ == "__main__":
 
     logger = logger_conf("separator")
 
-    dataProcessing()
+    # dataProcessing()

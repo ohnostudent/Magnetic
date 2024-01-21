@@ -8,7 +8,12 @@ from logging import getLogger
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-from torch import Generator, cuda, device, no_grad, load as torch_load, save as torch_save, argmax as torch_argmax
+from torch import Generator
+from torch import argmax as torch_argmax
+from torch import cuda, device
+from torch import load as torch_load
+from torch import no_grad
+from torch import save as torch_save
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import transforms
 from torchvision.datasets import DatasetFolder, ImageFolder
@@ -138,6 +143,7 @@ class CnnTrain:
     def set_net(self, extension: str = "bmp") -> Net:
         cuda.empty_cache()  # GPUのリセット
         self.extension = extension
+        logger.debug("PARAMETER", extra={"addinfo": f"extension={self.extension}"})
 
         channel = self._set_channel()
         net = Net(self.extension, channel=channel)
@@ -154,7 +160,7 @@ class CnnTrain:
         elif self.extension == "npy":
             self.data_transform = transforms.Compose([transforms.ToTensor()])
         else:
-            raise ValueError
+            raise ValueError()
 
     def set_train(self, BATCH_SIZE=512, seed: int = 42):
         train_size = 0.6
@@ -237,27 +243,29 @@ class CnnTrain:
         self.logger.debug("END", extra={"addinfo": ""})
 
     def plot(self, train_loss_value, train_acc_value, val_loss_value, val_acc_value, test_loss_value, test_acc_value, EPOCH: int = 100):
-        fig, axes = plt.subplots(2, 1, figsize=(12, 6))
+        fig, axes = plt.subplots(2, 1, figsize=(10, 4*2))
 
         ax_acc = axes[0]
         ax_acc.plot(range(EPOCH), train_acc_value)
         ax_acc.plot(range(EPOCH), val_acc_value)
         ax_acc.plot(range(EPOCH), test_acc_value, c="#00ff00")
         ax_acc.set_xlim(-EPOCH // 10, EPOCH * 1.1)
-        ax_acc.set_xlabel("EPOCH")
-        ax_acc.set_ylabel("ACCURACY")
+        ax_acc.set_xlabel("EPOCH", fontsize=12)
+        ax_acc.set_ylabel("ACCURACY", fontsize=12)
+        ax_acc.tick_params(labelsize=14)
         ax_acc.legend(["train acc", "validation acc", "test acc"])
-        ax_acc.set_title("accuracy")
+        ax_acc.set_title("Accuracy", fontsize=15)
 
         ax_loss = axes[1]
         ax_loss.plot(range(EPOCH), train_loss_value)
         ax_loss.plot(range(EPOCH), val_loss_value)
         ax_loss.plot(range(EPOCH), test_loss_value, c="#00ff00")
         ax_loss.set_xlim(-EPOCH // 10, EPOCH * 1.1)
-        ax_loss.set_xlabel("EPOCH")
-        ax_loss.set_ylabel("LOSS")
+        ax_loss.set_xlabel("EPOCH", fontsize=12)
+        ax_loss.set_ylabel("LOSS", fontsize=12)
+        ax_loss.tick_params(labelsize=14)
         ax_loss.legend(["train loss", "validation loss", "test loss"])
-        ax_loss.set_title("loss")
+        ax_loss.set_title("Loss", fontsize=15)
 
         plt.tight_layout()
         plt.savefig(ML_RESULT_DIR + f"/cnn/loss_acc_image.{self.extension}_{self.training_parameter}_{self.mode_name}.png")
@@ -320,7 +328,7 @@ class CnnTrain:
         e_loss = sum_loss / len(loader)  # 1エポックの平均損失cz
         e_acc = float(sum_correct / sum_total)  # 1エポックの正解率
 
-        self.logger.debug(f"{phase}", extra={"addinfo": f"Loss: {e_loss:.4f}, Accuracy: {e_acc:.4f}, correct: {sum_correct}, total: {sum_total}"})
+        self.logger.debug(f"{phase}", extra={"addinfo": f"Loss: {e_loss}, Accuracy: {e_acc}, correct: {sum_correct}, total: {sum_total}, sumLoss: {sum_loss}"})
 
         return e_loss, e_acc
 
@@ -332,16 +340,19 @@ if __name__ == "__main__":
     logger = logger_conf("CNN")
 
     # training_parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
-    mode = "sep"  # sep, mixsep, mix
-    label = 1
-    extension = "bmp"  # npy, bmp
-    EPOCH = 2
+    mode = "mix"  # sep, mixsep, mix
+    if mode == "sep":
+        label = 0
+        mode_name = mode + str(label)
+    else:
+        label = None
+        mode_name = mode
 
+    extension = "bmp"  # npy, bmp
+    EPOCH = 100
     for training_parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
         model = CnnTrain(training_parameter=training_parameter, mode=mode, label=label)
-
         model.set_net(extension=extension)
         model.set_train(seed=42)
-
         model.run(epoch_cnt=EPOCH, do_plot=True)
         model.save_model()

@@ -59,26 +59,26 @@ class Net(nn.Module):
     def _for_npy(self, channel: int = 1):
         self.layer1 = nn.Sequential(
             # 畳み込み層:(入力チャンネル数, フィルタ数、フィルタサイズ)
-            nn.Conv2d(in_channels=channel, out_channels=6, kernel_size=3, padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
+            nn.Conv2d(in_channels=channel, out_channels=6, kernel_size=(3, 3), padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
             nn.ReLU(),
             # Pooling層:（領域のサイズ, ストライド）
-            nn.MaxPool2d(1, 2),  # kernel_size=(2,2), stride=2
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,2), stride=2
             nn.Dropout(p=0.4),
         )
         self.layer2 = nn.Sequential(
-            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3, padding=1, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
+            nn.Conv2d(in_channels=6, out_channels=16, kernel_size=(3, 3), padding=1, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
             nn.ReLU(),
-            nn.MaxPool2d(1, 2),  # kernel_size=(2,2), stride=2
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,2), stride=2
             nn.Dropout(p=0.4),
         )
         self.layer3 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3, padding=0, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
+            nn.Conv2d(in_channels=16, out_channels=64, kernel_size=(3, 3), padding=1, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
             nn.ReLU(),
-            nn.MaxPool2d(1, 2),  # kernel_size=(2,2), stride=2
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,2), stride=2
             nn.Dropout(p=0.4),
         )
         self.fcs = nn.Sequential(
-            nn.Linear(64 * 25 * 10, 1024),  # 100 * 10
+            nn.Linear(64 * 12 * 10, 1024),  # 100 * 10
             nn.ReLU(),
             nn.Dropout(p=0.4),
             nn.Linear(1024, 128),

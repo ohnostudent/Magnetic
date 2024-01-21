@@ -312,6 +312,7 @@ class SupervisedML(BaseModel):
         print("要約       : \n", clf_rep, file=f)
         print("\n\n\n", file=f)
         f.close()
+        self.logger.debug("SCORE", extra={"addinfo": f"acc_score={acc_score}, f1_macro={f1_macro}"})
 
     def get_params(self) -> dict:
         return self.param_dict
@@ -353,20 +354,21 @@ if __name__ == "__main__":
     model_random_state = 42
 
     clf_name = "LinearSVC"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
-    mode = "mix"  # sep, mixsep, mix
+    mode = "mix" #  "mix"  # sep, mixsep, mix
     # parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
-    label = 1
     method = "training"  # training, model
 
     if mode == "sep":
+        label = 0
         mode_name = mode + str(label)
     else:
+        label = None
         mode_name = mode
 
     # 新規モデルの学習
     if method == "training":
-        for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
-            logger.debug("PARAMETER", extra={"addinfo": f"name={clf_name}, mode={mode}, parameter={parameter}, pca={pca}, test_size={test_size}, random_state={model_random_state}"})
+        for parameter in VARIABLE_PARAMETERS_FOR_TRAINING[-2:]:  # ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]
+            logger.debug("PARAMETER", extra={"addinfo": f"name={clf_name}, mode={mode_name}, parameter={parameter}, pca={pca}, test_size={test_size}, random_state={model_random_state}"})
             param_dict = ML_FIXED_PARAM_DICT[clf_name] | ML_TUNING_PARAM_DICT[clf_name][mode_name][parameter]
             model = SupervisedML.load_npys(mode=mode, parameter=parameter, label=label, pca=pca, test_size=test_size, random_state=model_random_state)
 
@@ -378,7 +380,7 @@ if __name__ == "__main__":
 
     elif method == "model":
         for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
-            logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み (name={clf_name}, mode={mode}, parameter={parameter})"})
+            logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み (name={clf_name}, mode={mode_name}, parameter={parameter})"})
             # path = ML_MODEL_DIR + f"/model/{mode}/model_{clf_name}_{parameter}_{mode}.label={label}.n_neighbors={n}.sav"
             model = SupervisedML.load_model(parameter, mode=mode, name=clf_name, model_random_state=model_random_state, label=label)
             model.predict()

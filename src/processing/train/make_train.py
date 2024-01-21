@@ -172,10 +172,9 @@ def _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_ra
 
 def _set_n() -> dict:
     # 切り取る長方形の重心座標のリスト
-    # 4 * 2 = 8 点取る
+    # 7 * 3 = 21 点取る
     x_locs = [30, 60, 90, 120, 150, 180, 210]
-    y_locs = [150, 450]
-    shapes = TRAIN_SHAPE
+    y_locs = [150, 300, 450]
 
     save_dict: dict[str, dict] = dict()  # 保存用の辞書
     save_dict["center"] = dict()
@@ -187,11 +186,11 @@ def _set_n() -> dict:
         for y_idx in range(len(y_locs)):
             k = x_idx * 2 + y_idx
             save_dict["center"][k] = [x_locs[x_idx], y_locs[y_idx]]
-            save_dict["x_range"][k] = [x_locs[x_idx] - shapes[0] // 2 - 1, x_locs[x_idx] + shapes[0] // 2]
-            save_dict["y_range"][k] = [y_locs[y_idx] - shapes[1] // 2, y_locs[y_idx] + shapes[1] // 2]
-            save_dict["shape"][k] = shapes
+            save_dict["x_range"][k] = [x_locs[x_idx] - TRAIN_SHAPE[0] // 2 - 1, x_locs[x_idx] + TRAIN_SHAPE[0] // 2]
+            save_dict["y_range"][k] = [y_locs[y_idx] - TRAIN_SHAPE[1] // 2, y_locs[y_idx] + TRAIN_SHAPE[1] // 2]
+            save_dict["shape"][k] = TRAIN_SHAPE
 
-    return {f"{i :02d}": save_dict for i in range(7, 15)}
+    return {f"{i :02d}": save_dict for i in range(5, 10)}
 
 
 def _set_xo(dataset: int, side: str, label: int) -> dict:
