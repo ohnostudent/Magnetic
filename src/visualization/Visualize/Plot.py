@@ -12,7 +12,7 @@ import seaborn as sns
 sys.path.append(os.getcwd() + "/src")
 
 from config.params import IMAGE_PATH
-from Visualization.Visualize.SnapData import SnapData
+from visualization.visualize.SnapData import SnapData
 
 
 class PlotMethod(SnapData):

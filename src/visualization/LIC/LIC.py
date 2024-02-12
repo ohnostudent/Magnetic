@@ -13,7 +13,7 @@ import numpy as np
 sys.path.append(os.getcwd() + "/src")
 
 from config.params import DATASETS, IMAGE_PATH, SNAP_PATH, SRC_PATH
-from Visualization.Visualize.SnapData import SnapData
+from visualization.visualize.SnapData import SnapData
 
 
 class LicMethod(SnapData):
@@ -52,20 +52,20 @@ class LicMethod(SnapData):
         self.logger.debug("START", extra={"addinfo": "make props"})
 
         # コマンドの作成
-        props = [SRC_PATH + "/Visualization/LIC/LIC.exe", xfile, yfile, out_name]
+        props = [SRC_PATH + "/visualization/LIC/LIC.exe", xfile, yfile, out_name]
         xfile_is_not_exist = not os.path.exists(xfile)
         yfile_is_not_exist = not os.path.exists(yfile)
 
-        if xfile_is_not_exist and yfile_is_not_exist:  # どちらかがない場合
+        if xfile_is_not_exist or yfile_is_not_exist:  # どちらかがない場合
             props += list(map(str, [xfile_is_not_exist, yfile_is_not_exist]))
 
-        elif (xfile[-4:] == ".npy") and (yfile[-4:] == ".npy"):
+        elif (xfile[-4:] == ".npy") and (yfile[-4:] == ".npy"):  # どちらもある場合
             # ファイルのロード
             xdata = np.load(xfile)
             ydata = np.load(yfile)
             props += list(map(str, list(reversed(xdata.shape))))
 
-            # npy1次元のファイルを作って無理やり読み込ます。そして消す。名前はランダムにして
+            # npy1次元のファイルを作って無理やり読み込ます。そして消す。名前はランダム
             xtempfile = self._create_tempfile(xdata, "x")
             ytempfile = self._create_tempfile(ydata, "y")
 
@@ -92,7 +92,7 @@ class LicMethod(SnapData):
         """
         # コマンドを保存するための.tempファイルの作成
         while True:  # 同じファイルを作成しないようにする
-            tempfile_path = SRC_PATH + f"/Visualization/LIC/temp/lic_command_{xy}_reading{random.randint(10000, 99999)}.temp"
+            tempfile_path = SRC_PATH + f"/visualization/LIC/temp/lic_command_{xy}_reading{random.randint(0, 99999) :05d}.temp"
 
             if not os.path.exists(tempfile_path):
                 break
@@ -113,11 +113,7 @@ class LicMethod(SnapData):
             xtempfile (str) : 削除するファイルのパス
             ytempfile (str) : 削除するファイルのパス
 
-        Returns:
-            None
-
         """
-
         # 一時的に作成した .tempファイルの削除
         os.remove(xtempfile)
         os.remove(ytempfile)
@@ -170,7 +166,7 @@ def _main(dataset: int, side: str) -> None:
         logger.debug("ERROR", extra={"addinfo": "このデータセットは使用できません"})
         sys.exit()
 
-    logger.debug("START", extra={"addinfo": f"{dataset}.{side.split('_')[1]} 開始"})
+    logger.debug("START", extra={"addinfo": f"{dataset}.{side} 開始"})
 
     if not os.path.exists(SRC_PATH + "/Visualization/LIC/LIC.exe"):
         raise FileNotFoundError
@@ -178,8 +174,8 @@ def _main(dataset: int, side: str) -> None:
     lic = LicMethod()
 
     # 入出力用path の作成
-    base_out_path = IMAGE_PATH + f"/LIC/snap{dataset}/{side.split('_')[1]}"  # ./images/LIC/snap77/left
-    lic.makedir(f"/LIC/snap{dataset}/{side.split('_')[1]}")
+    base_out_path = IMAGE_PATH + f"/LIC/snap{dataset}/{side}"  # ./images/LIC/snap77/left
+    lic.makedir(f"/LIC/snap{dataset}/{side}")
 
     # バイナリファイルの取得
     binary_paths = glob(SNAP_PATH + f"/{side}/snap{dataset}/magfieldx/*/*.npy")

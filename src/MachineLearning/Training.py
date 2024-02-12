@@ -13,7 +13,6 @@ from logging import getLogger
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC

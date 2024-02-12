@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding utf-8, LF -*-
 
 # 標準モジュールのインポート
 import os

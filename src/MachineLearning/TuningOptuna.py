@@ -1,7 +1,9 @@
 # -*- coding utf-8, LF -*-
 
 """
-学習用
+Optuna (ベイズ最適化)
+
+非線形SVM, XGBoostのパラメータチューニング
 
 """
 
@@ -52,16 +54,16 @@ class TuningOptuna:
         チューニングするパラメータを定義
         """
         match self.clf_name:
-            case "kNeighbors":
-                tuning_params = {
-                    "n_neighbors": trial.suggest_int("n_neighbors", 3, 500),
-                    "p": trial.suggest_float("p", 1, 2),
-                }
+            # case "kNeighbors":
+            #     tuning_params = {
+            #         "n_neighbors": trial.suggest_int("n_neighbors", 3, 500),
+            #         "p": trial.suggest_float("p", 1, 2),
+            #     }
 
-            case "LinearSVC":
-                tuning_params = {
-                    "C": trial.suggest_float("C", 0.001, 500),
-                }
+            # case "LinearSVC":
+            #     tuning_params = {
+            #         "C": trial.suggest_float("C", 0.001, 500),
+            #     }
 
             case "rbfSVC":
                 tuning_params = {"C": trial.suggest_float("C", 0.01, 500), "gamma": trial.suggest_float("gamma", 0.01, 10), "kernel": "rbf", "tol": 0.001, "random_state": 42, "verbose": 0}

@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.getcwd() + "/src")
 
-from Visualization.Visualize.SnapData import SnapData
+from visualization.visualize.SnapData import SnapData
 
 
 def snap2npy(sp: SnapData, path: str, dataset: int) -> None:
