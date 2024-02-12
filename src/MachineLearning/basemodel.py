@@ -15,33 +15,34 @@ from config.params import DATASETS, ML_DATA_DIR, ML_MODEL_DIR, TRAIN_SHAPE, dict
 
 
 class BaseModel:
-    def __init__(self, parameter: str | None = None) -> None:
+    def __init__(self, training_parameter: str | None = None) -> None:
         self.logger = getLogger("basemodel").getChild("BaseModel")
-        # self.set_default(parameter) # 初期化
+        # self.set_default(training_parameter) # 初期化
 
-    def set_default(self, parameter: str) -> None:
+    def set_default(self, training_parameter: str) -> None:
         """初期化処理
 
         Args:
-            parameter (str): 使用するパラメータ
+            training_parameter (str): 使用するパラメータ
 
         """
         self.param_dict: dict = dict()
-        self.param_dict["mode"] = None
-        self.param_dict["parameter"] = parameter
-        self.param_dict["train_params"] = dict()
-        self.param_dict["train_params"]["pca"] = False
-        self.param_dict["clf_params"] = dict()
+        self.param_dict["split_mode"] = None
         self.param_dict["model_name"] = None
+        self.param_dict["training_parameter"] = training_parameter
+        self.param_dict["dataset_params"] = dict()
+        self.param_dict["dataset_params"]["pca"] = False
+        self.param_dict["tuning_params"] = dict()
+        self.param_dict["fixed_params"] = dict()
 
     @classmethod
-    def load_npys(cls, mode: str, parameter: str, random_state: int | None = 42, label: int | None = None, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
+    def load_npys(cls, split_mode: str, training_parameter: str, random_state: int | None = 42, split_mode_label: int | None = None, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
         """
         データの読み込みを行う関数
 
         Args:
-            mode (str): 分割手法
-            parameter (str): 使用するパラメータ
+            split_mode (str): 分割手法
+            training_parameter (str): 使用するパラメータ
             random_state (int | None, optional): 乱数の seed値. Defaults to 100.
             test_size (float, optional): 訓練データと検証データの比率. Defaults to 0.3.
             pca (bool, optional): 次元削減を行うか. Defaults to False.
@@ -49,27 +50,25 @@ class BaseModel:
         Returns:
             _type_: モデル
         """
-        model = cls(parameter)
+        model = cls(training_parameter)
         model.logger.debug("LOAD", extra={"addinfo": "データの読み込み"})
-        model.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
+        model.logger.debug("START", extra={"addinfo": f"training_parameter={training_parameter}, split_mode={split_mode}"})
 
-        model.set_default(parameter)  # 初期化
-        model.param_dict["mode"] = mode
-        model.param_dict["parameter"] = parameter
-        model.param_dict["train_params"]["pca"] = pca
-        model.param_dict["train_params"]["random_state"] = random_state
-        model.param_dict["train_params"]["test_size"] = test_size
+        model.set_default(training_parameter)  # 初期化
+        model.param_dict["training_parameter"] = training_parameter
+        model.param_dict["split_mode"] = split_mode
+        model.param_dict["split_mode_label"] = split_mode_label
+        model.param_dict["dataset_params"]["pca"] = pca
+        model.param_dict["dataset_params"]["test_size"] = test_size
+        model.param_dict["dataset_params"]["random_state"] = random_state
+        model.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
 
-        if mode == "all":
-            train_test_data = np.load(ML_MODEL_DIR + f"/npz/{parameter}_all.npz")
+        if split_mode == "all":
+            train_test_data = np.load(ML_MODEL_DIR + f"/npz/{training_parameter}_all.npz")
         else:
-            if mode == "sep":
-                model.param_dict["label"] = label
-                npz_path = ML_MODEL_DIR + f"/npz/{parameter}_sep.label={label}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
-            else:
-                npz_path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
-
             # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
+            mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
+            npz_path = ML_MODEL_DIR + f"/npz/{training_parameter}_{mode_name}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
             train_test_data = np.load(npz_path)
             model.X_test = train_test_data["X_test"]
             model.y_test = train_test_data["y_test"]
@@ -80,38 +79,48 @@ class BaseModel:
         return model
 
     # TODO overload
-    def _load_npys(self, mode: str, parameter: str, label: int | None = None, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):
-        if mode == "sep":
-            path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.label={label}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
-        else:
-            path = ML_MODEL_DIR + f"/npz/{parameter}_{mode}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
+    def _load_npys(self, split_mode: str, training_parameter: str, split_mode_label: int | None = None, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):
+        """学習用モデルを読み込む
 
+        Args:
+            training_parameter (str): 使用パラメータ
+            split_mode (str): 教師データの分割方法
+            split_mode_label (int | None, optional): テストデータに用いるデータセットの指定(mode=sep の場合のみ). [0(77). 1(497), 2(4949)]. Defaults to None.
+            test_size (float, optional): 教師データ分割の割合. Defaults to 0.3.
+            pca (bool, optional): 次元削減を行うかどうか. Defaults to False.
+            random_state (int | None, optional): 分割に用いる乱数. Defaults to 42.
+        """
+
+        # パラメータの保存
+        self.logger.debug("START", extra={"addinfo": f"parameter={training_parameter}, split_mode={split_mode}"})
+        self.param_dict["split_mode"] = split_mode
+        self.param_dict["parameter"] = training_parameter
+        if split_mode_label is not None:
+            self.param_dict["split_mode_label"] = split_mode_label
+
+        self.param_dict["dataset_params"]["pca"] = pca
+        self.param_dict["dataset_params"]["random_state"] = random_state
+        self.param_dict["dataset_params"]["test_size"] = test_size
+
+        # モデルのロード
+        self.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
+        path = ML_MODEL_DIR + f"/npz/{training_parameter}_{self.split_mode_name}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
         train_test_data = np.load(path)
-
-        self.logger.debug("START", extra={"addinfo": f"parameter={parameter}, mode={mode}"})
-        self.param_dict["mode"] = mode
-        self.param_dict["parameter"] = parameter
-        if label is not None:
-            self.param_dict["label"] = label
-
-        self.param_dict["train_params"]["pca"] = pca
-        self.param_dict["train_params"]["random_state"] = random_state
-        self.param_dict["train_params"]["test_size"] = test_size
-
+        # 学習用データの振り分け
         self.X_train = train_test_data["X_train"]
         self.y_train = train_test_data["y_train"]
         self.X_test = train_test_data["X_test"]
         self.y_test = train_test_data["y_test"]
 
-    def split_train_test(self, mode: str, test_size: float = 0.3, random_state: int | None = 42, label: int = 0, pca: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def split_train_test(self, split_mode: str, test_size: float = 0.3, random_state: int | None = 42, split_mode_label: int = 0, pca: bool = False) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         教師用データとテスト用データを分割する関数
 
         Args:
-            mode (str): 分割手法 (sep, mixsep, mix)
+            split_mode (str): 分割手法 (sep, mixsep, mix)
             test_size (float, optional): テスト用データの割合. Defaults to 0.3.
             random_state (int | None, optional): 乱数. Defaults to 42.
-            label (int, optional): ラベル. Defaults to 1.
+            split_mode_label (int, optional): ラベル. Defaults to 1.
             pca (bool, optional): 次元削減を行うか否か. Defaults to False.
 
         Raises:
@@ -121,33 +130,38 @@ class BaseModel:
             tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: _description_
         """
         self.path_n, self.path_x, self.path_o = self._load_file_path()  # フォルダパスの取得
-        self.param_dict["mode"] = mode
-        self.param_dict["train_params"]["testsize"] = test_size
-        self.param_dict["train_params"]["randomstate"] = random_state
+        self.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
 
-        match mode:
-            case "sep":
-                self.param_dict["train_params"]["label"] = label
-                train_paths, test_paths, train_label, test_label = self._split_train_test_sep(label)
+        self.param_dict["split_mode"] = split_mode
+        self.param_dict["mode_name"] = self.split_mode_name
+        self.param_dict["dataset_params"]["testsize"] = test_size
+        self.param_dict["dataset_params"]["randomstate"] = random_state
 
-            case "mixsep":
-                train_paths, test_paths, train_label, test_label = self._split_train_test_sep_mix(test_size=test_size, random_state=random_state)
+        if split_mode == "all":
+            train_paths, train_label = self._get_train_all()
+            self.X_train, self.y_train = self._set_data(train_paths, train_label)
+            return self.X_train, self.y_train
 
-            case "mix":
+        else:
+            if split_mode == "mix":
                 train_paths, test_paths, train_label, test_label = self._split_train_test_mix(test_size=test_size, random_state=random_state)
+            elif split_mode == "mixsep":
+                train_paths, test_paths, train_label, test_label = self._split_train_test_sep_mix(test_size=test_size, random_state=random_state)
+            elif split_mode == "sep":
+                self.param_dict["dataset_params"]["split_mode_label"] = split_mode_label
+                train_paths, test_paths, train_label, test_label = self._split_train_test_sep(split_mode_label)
+            else:
+                raise ValueError(f"Mode '{split_mode}' is not supported.")
 
-            case _:
-                raise ValueError(f"Mode '{mode}' is not supported.")
+            self.X_train, self.y_train = self._set_data(train_paths, train_label)
+            self.X_test, self.y_test = self._set_data(test_paths, test_label)
 
-        self.X_train, self.y_train = self._set_data(train_paths, train_label)
-        self.X_test, self.y_test = self._set_data(test_paths, test_label)
+            if pca:
+                self.exePCA()
 
-        if pca:
-            self.exePCA()
+            return self.X_train, self.y_train, self.X_test, self.y_test
 
-        return self.X_train, self.y_train, self.X_test, self.y_test
-
-    def get_train_all(self, save: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    def _get_train_all(self) -> tuple[list[str], list[int]]:
         """
         全データの読み込み
 
@@ -171,14 +185,7 @@ class BaseModel:
         train_label = [0] * len(path_n_all)
         train_label.extend([1] * len(path_o_all))
         train_label.extend([2] * len(path_x_all))
-
-        self.X_train, self.y_train = self._set_data(train_paths, train_label)
-
-        if save:
-            mode = "all"
-            np.savez_compressed(ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{mode}.npz", X_train=self.X_train, y_train=self.y_train)
-
-        return self.X_train, self.y_train
+        return train_paths, train_label
 
     def dilute(self, ALT_IMAGES: str) -> None:
         """
@@ -200,7 +207,7 @@ class BaseModel:
             N_dim (int, optional): _description_. Defaults to 100.
             randomstate (int | None, optional): _description_. Defaults to 100.
         """
-        self.param_dict["train_params"]["pca"] = True
+        self.param_dict["dataset_params"]["pca"] = True
         pca = PCA(n_components=N_dim, random_state=randomstate)
 
         self.X_train = pca.fit_transform(self.X_train)
@@ -214,13 +221,18 @@ class BaseModel:
         """
         データの保存
         """
-        np.savez_compressed(
-            ML_MODEL_DIR + f"/npz/{self.param_dict['parameter']}_{self.param_dict['mode']}.{dict_to_str(self.param_dict['train_params'])}.npz",
-            X_train=self.X_train,
-            y_train=self.y_train,
-            X_test=self.X_test,
-            y_test=self.y_test,
-        )
+
+        if self.split_mode_name == "all":
+            np.savez_compressed(ML_MODEL_DIR + f"/npz/{self.param_dict['training_parameter']}_{split_mode}.npz", X_train=self.X_train, y_train=self.y_train)
+
+        else:
+            np.savez_compressed(
+                ML_MODEL_DIR + f"/npz/{self.param_dict['training_parameter']}_{self.param_dict['split_mode']}.{dict_to_str(self.param_dict['dataset_params'])}.npz",
+                X_train=self.X_train,
+                y_train=self.y_train,
+                X_test=self.X_test,
+                y_test=self.y_test,
+            )
 
     def _load_file_path(self) -> tuple[list[list], list[list], list[list]]:
         """
@@ -231,9 +243,9 @@ class BaseModel:
         """
         path_n, path_x, path_o = list(), list(), list()
         for dataset in DATASETS:
-            path_n.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['parameter']}/point_n/snap{dataset}*.npy"))
-            path_o.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['parameter']}/point_o/snap{dataset}*.npy"))
-            path_x.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['parameter']}/point_x/snap{dataset}*.npy"))
+            path_n.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['training_parameter']}/point_n/snap{dataset}*.npy"))
+            path_o.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['training_parameter']}/point_o/snap{dataset}*.npy"))
+            path_x.append(glob(ML_DATA_DIR + f"/snap_files/{self.param_dict['training_parameter']}/point_x/snap{dataset}*.npy"))
 
         return path_n, path_x, path_o
 
@@ -261,7 +273,7 @@ class BaseModel:
 
         else:
             # r : 読み込み, b : バイナリモード
-            with open(file_path, mode="rb") as f:
+            with open(file_path, split_mode="rb") as f:  # type: ignore
                 img_binary = np.fromfile(f, dtype="f", sep="")
                 f.close()
 
@@ -358,7 +370,7 @@ class BaseModel:
         if not os.path.exists(ALT_IMAGES):
             raise ValueError("IMAGES is not correct")
 
-        out_path = ALT_IMAGES + f"/{self.param_dict['parameter']}"
+        out_path = ALT_IMAGES + f"/{self.param_dict['training_parameter']}"
         if not os.path.exists(out_path):
             os.mkdir(out_path)
 
@@ -371,18 +383,18 @@ if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
     logger = logger_conf("basemodel")
-    mode = "mix"  # "sep", "mixsep", "mix"
-    logger.debug("PARAMETER", extra={"addinfo": f"mode = {mode}"})
+    split_mode = "mix"  # "mix", "mixsep", "sep", "all"
+    split_mode_label = 0  # 0, 1, 2
+    logger.debug("PARAMETER", extra={"addinfo": f"split_mode = {split_mode}"})
 
     bm = BaseModel()
-    for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
-        logger.debug("START", extra={"addinfo": f"{parameter}"})
+    for training_parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
+        logger.debug("START", extra={"addinfo": f"{training_parameter}"})
 
-        bm.set_default(parameter)
-        # bm.get_train_all()
-        X_train, y_train, X_test, y_test = bm.split_train_test(mode)
-        bm.save_npys()
+        bm.set_default(training_parameter)
+        bm.split_train_test(split_mode)
+        # bm.save_npys()
 
-        logger.debug("END", extra={"addinfo": f"{parameter}"})
+        logger.debug("END", extra={"addinfo": f"{training_parameter}"})
 
-    logger.debug("END", extra={"addinfo": f"mode = {mode}"})
+    logger.debug("END", extra={"addinfo": f"split_mode = {split_mode}"})

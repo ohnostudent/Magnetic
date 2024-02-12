@@ -3,10 +3,10 @@ setlocal ENABLEDELAYEDEXPANSION
 
 mkdir data images logs snaps
 mkdir ML\data ML\models ML\result
-mkdir ML\data\LIC_labels ML\data\snpa_files
+mkdir ML\data\LIC_labels ML\data\snap_files
 mkdir ML\models\npz ML\models\model
-mkdir ML\result\kneighbors ML\result\linearSVC
-mkdir ML\result\rbfSVC ML\result\XGBoost ML\result\cnn
+mkdir ML\result\kNeighbors ML\result\LinearSVC
+mkdir ML\result\rbfSVC ML\result\XGBoost ML\result\CNN
 
 cd snaps
 

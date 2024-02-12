@@ -20,6 +20,7 @@
     "decision_function_shape": "ovr",
     "random_state": 42,
     "shrinking": true,
+    "probability": true,
     "tol": 0.001,
     "verbose": 0
   },

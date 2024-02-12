@@ -1,4 +1,5 @@
 # -*- coding utf-8, LF -*-
+
 import os
 import sys
 
@@ -15,7 +16,7 @@ from xgboost import XGBClassifier
 
 sys.path.append(os.getcwd() + "/src")
 
-from config.params import ML_PARAM_DICT, dict_to_str
+from config.params import dict_to_str
 from MachineLearning.Training import SupervisedML
 
 cv = KFold(n_splits=5, shuffle=True)

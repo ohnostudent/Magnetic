@@ -1,5 +1,11 @@
 # -*- coding utf-8, LF -*-
 
+"""
+学習用
+
+"""
+
+
 import os
 import sys
 

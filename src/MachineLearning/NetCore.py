@@ -1,8 +1,12 @@
-# -*- coding: utf-8 -*-
-
+# -*- coding utf-8, LF -*-
 
 import torch.nn.functional as f
 from torch import nn, optim
+
+"""
+学習用
+
+"""
 
 
 class Net(nn.Module):
@@ -11,7 +15,7 @@ class Net(nn.Module):
 
         # 全結合層
         if mode == "bmp":
-            self._for_img(channel=1)
+            self._for_img(channel=channel)
 
         elif mode == "npy":
             self._for_npy(channel=channel)
@@ -38,7 +42,7 @@ class Net(nn.Module):
             nn.Dropout(p=0.4),
         )
         self.layer3 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3, padding=0, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
+            nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3, padding=1, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
             nn.ReLU(),
             nn.MaxPool2d(2, 2),  # kernel_size=(2,2), stride=2
             nn.Dropout(p=0.4),
@@ -62,19 +66,19 @@ class Net(nn.Module):
             nn.Conv2d(in_channels=channel, out_channels=6, kernel_size=(3, 3), padding=1, stride=1),  # C_in=3, C_out=6, kernel_size=(5,5)
             nn.ReLU(),
             # Pooling層:（領域のサイズ, ストライド）
-            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,2), stride=2
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,1), stride=2
             nn.Dropout(p=0.4),
         )
         self.layer2 = nn.Sequential(
             nn.Conv2d(in_channels=6, out_channels=16, kernel_size=(3, 3), padding=1, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,2), stride=2
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,1), stride=2
             nn.Dropout(p=0.4),
         )
         self.layer3 = nn.Sequential(
             nn.Conv2d(in_channels=16, out_channels=64, kernel_size=(3, 3), padding=1, stride=1),  # C_in=6, C_out=16, kernel_size=(3,3)
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,2), stride=2
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1)),  # kernel_size=(2,1), stride=2
             nn.Dropout(p=0.4),
         )
         self.fcs = nn.Sequential(

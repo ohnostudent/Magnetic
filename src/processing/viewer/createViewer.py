@@ -24,11 +24,11 @@ def _sort_paths(path_list: list[str]) -> list[str]:
     pjp: list = list(
         map(
             lambda x: list(map(lambda y: int(y) if y.isnumeric() else y, x)),
-            map(lambda path: [path] + os.path.basename(path).split(".")[2:4], path_list),
+            map(lambda path: [path] + os.path.basename(path).split(".")[3:5], path_list),
         )
     )
     # params, job の順にソート
-    pjp_sorted = sorted(pjp, key=lambda x: (x[1], x[2]))
+    pjp_sorted = sorted(pjp, key=lambda x: (x[2], x[1]))
 
     return list(map(lambda x: x[0], pjp_sorted))
 
@@ -67,7 +67,6 @@ def createViewer(dataset: int) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print()
         sys.exit()
     else:
         dataset_str = sys.argv[1]

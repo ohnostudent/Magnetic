@@ -1,15 +1,20 @@
 # -*- coding utf-8, LF -*-
 
+"""
+学習用
+
+"""
+
 import os
 import pickle
 import sys
 from datetime import datetime
 from logging import getLogger
 
+import matplotlib.pyplot as plt
 import numpy as np
-# from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
+
+from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC
 from torch import cuda
@@ -26,10 +31,10 @@ class SupervisedML(BaseModel):
     if CUDA:
         cuda.empty_cache()
 
-    def __init__(self, parameter: str) -> None:
-        super().__init__(parameter)
-        self.logger = getLogger("ML").getChild(parameter)
-        self.set_default(parameter)
+    def __init__(self, training_parameter: str) -> None:
+        super().__init__(training_parameter)
+        self.logger = getLogger("ML").getChild(training_parameter)
+        self.set_default(training_parameter)
 
     def __str__(self) -> str:
         params = dict_to_str(self.param_dict["train_params"], sep="\n\t")
@@ -40,25 +45,25 @@ class SupervisedML(BaseModel):
         return doc
 
     @classmethod
-    def load_model(cls, parameter: str, mode: str = "mixsep", label: int | None = None, name: str = "LinearSVC", model_random_state: int = 42, path: str | None = None):  # noqa: ANN206
-        model = cls(parameter)
-        model.set_default(parameter)
-        model.param_dict["mode"] = mode
-        model.param_dict["parameter"] = parameter
-        model.param_dict["model_name"] = name
-        if label is not None:
-            model.param_dict["label"] = label
+    def load_model(cls, training_parameter: str, split_mode: str, split_mode_label: int | None = None, clf_name: str = "LinearSVC", model_random_state: int = 42, load_path: str | None = None):  # noqa: ANN206
+        model = cls(training_parameter)
+        model.set_default(training_parameter)
+        model.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
+        model.param_dict["split_mode"] = split_mode
+        model.param_dict["training_parameter"] = training_parameter
+        model.param_dict["clf_name"] = clf_name
 
-        if path is None:
-            path = ML_MODEL_DIR + f"/model/{mode}/model_{name}_{parameter}_{mode}.{dict_to_str(param_dict)}.sav"
+        if split_mode_label is not None:
+            model.param_dict["split_mode_label"] = split_mode_label
+        if load_path is None:
+            load_path = ML_MODEL_DIR + f"/model/{split_mode}/model_{clf_name}_{training_parameter}_{split_mode}.sav"
 
-        model.PROBA = type(clf_name) in ["kNeighbors", "rbfSVC", "XGBoost"]
-
-        model._load_npys(mode=mode, parameter=parameter, random_state=model_random_state, label=label)
-        model.model = pickle.load(open(path, "rb"))
+        model.PROBA = clf_name in ["kNeighbors", "rbfSVC", "XGBoost"]
+        model._load_npys(split_mode=split_mode, training_parameter=training_parameter, random_state=model_random_state, split_mode_label=split_mode_label)
+        model.model = pickle.load(open(load_path, "rb"))
         return model
 
-    def do_learning(self, clf_name: str, param_dict: dict):
+    def do_learning(self, clf_name: str, tuning_params, fixed_params: dict):
         """学習を行う関数
 
         Args:
@@ -95,41 +100,30 @@ class SupervisedML(BaseModel):
                 - params (dict | None)  : その他使用するパラメータ. Defaults to None.
         """
         self.logger.debug("START", extra={"addinfo": "学習開始"})
-        self.param_dict["model_name"] = clf_name
+        self.param_dict["clf_name"] = clf_name
+        self.param_dict["tuning_params"] = tuning_params
+        self.param_dict["fixed_params"] = fixed_params
 
         match clf_name:
-            # case "KMeans":
-            #     self.PROBA = False
-            #     self.model = self.KMeans(param_dict)
             case "kNeighbors":
                 self.PROBA = True
-                self.model = self.kNeighbors(param_dict)
+                self.model = self.kNeighbors(tuning_params, fixed_params)
             case "LinearSVC":
                 self.PROBA = False
-                self.model = self.LinearSVC(param_dict)
+                self.model = self.LinearSVC(tuning_params, fixed_params)
             case "rbfSVC":
                 self.PROBA = True
-                self.model = self.rbfSVC(param_dict)
+                self.model = self.rbfSVC(tuning_params, fixed_params)
             case "XGBoost":
                 self.PROBA = True
-                self.model = self.XGBoost(param_dict)
+                self.model = self.XGBoost(tuning_params, fixed_params)
             case _:
                 raise ValueError
 
         self.logger.debug("END", extra={"addinfo": "学習終了"})
         return self.model
 
-    # def KMeans(self, param_dict: dict) -> KMeans:
-    #     self.logger.debug("START", extra={"addinfo": "学習開始"})
-    #     self.param_dict["model_name"] = "LinearSVC"
-    #     self.param_dict["clf_params"] = param_dict
-
-    #     self.model = KMeans(**param_dict)
-    #     self.model.fit(self.X_train)
-
-    #     return self.model
-
-    def kNeighbors(self, param_dict: dict) -> KNeighborsClassifier:
+    def kNeighbors(self, tuning_params: dict, fixed_params: dict) -> KNeighborsClassifier:
         """_summary_
 
         Args:
@@ -144,14 +138,11 @@ class SupervisedML(BaseModel):
         Returns:
             KNeighborsClassifier: _description_
         """
-        self.param_dict["model_name"] = "KNeighbors"
-        self.param_dict["clf_params"] = param_dict
-
-        self.model = KNeighborsClassifier(**param_dict)
+        self.model = KNeighborsClassifier(**tuning_params, **fixed_params)
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
         return self.model
 
-    def LinearSVC(self, param_dict: dict) -> LinearSVC:
+    def LinearSVC(self, tuning_params: dict, fixed_params: dict) -> LinearSVC:
         """_summary_
 
         Args:
@@ -169,14 +160,11 @@ class SupervisedML(BaseModel):
         Returns:
             LinearSVC
         """
-        self.param_dict["model_name"] = "LinearSVC"
-        self.param_dict["clf_params"] = param_dict
-
-        self.model = LinearSVC(**param_dict)  # インスタンスを生成
+        self.model = LinearSVC(**tuning_params, **fixed_params)  # インスタンスを生成
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
         return self.model
 
-    def rbfSVC(self, param_dict: dict) -> OneVsOneClassifier | OneVsRestClassifier:
+    def rbfSVC(self, tuning_params: dict, fixed_params: dict) -> SVC:
         """_summary_
 
         Args:
@@ -195,26 +183,13 @@ class SupervisedML(BaseModel):
             "verbose": 5  // 詳細な出力を有効
 
         Returns:
-            OneVsOneClassifier | OneVsRestClassifier
+            SVC
         """
-        cls = param_dict["decision_function_shape"]
-        self.param_dict["model_name"] = f"rbfSVC-{cls}"
-        self.param_dict["clf_params"] = param_dict
-
-        estimator = SVC(**param_dict)
-        match cls:
-            # インスタンスを生成
-            case "ovo":
-                self.model = OneVsOneClassifier(estimator)
-            case "ovr":
-                self.model = OneVsRestClassifier(estimator)
-            case _:
-                raise ValueError
-
+        self.model = SVC(**tuning_params, **fixed_params)
         self.model.fit(self.X_train, self.y_train)  # モデルの学習
         return self.model
 
-    def XGBoost(self, param_dict: dict, early_stopping_rounds: int = 100) -> XGBClassifier:
+    def XGBoost(self, tuning_params: dict, fixed_params: dict, early_stopping_rounds: int = 100) -> XGBClassifier:
         """parameters
 
         Args:
@@ -226,16 +201,13 @@ class SupervisedML(BaseModel):
         Returns:
             XGBClassifier
         """
-        self.param_dict["model_name"] = "XGBoost"
-        self.param_dict["clf_params"] = param_dict
-
         if self.CUDA:
             tree_method = "gpu_hist"
         else:
             tree_method = "hist"
 
-        self.param_dict["clf_params"]["tree_method"] = tree_method
-        self.model = XGBClassifier(**param_dict)
+        self.param_dict["tuning_params"]["tree_method"] = tree_method
+        self.model = XGBClassifier(**tuning_params, **fixed_params)
 
         # if params is not None:
         self.model.set_params(tree_method=tree_method, early_stopping_rounds=early_stopping_rounds)
@@ -256,37 +228,38 @@ class SupervisedML(BaseModel):
             ValueError: _description_
         """
         self.logger.debug("PREDICT", extra={"addinfo": "予測\n"})
+
+        # 事前に分割したテストデータを使用する場合
         if pred_path is None:
             self.pred = self.model.predict(self.X_test)
             if self.PROBA:
-                self.pred_proba = self.model.predict_proba(model.X_test) # type: ignore
+                self.pred_proba = self.model.predict_proba(self.X_test)  # type: ignore
 
+        # パスを指定する場合
         elif isinstance(pred_path, str):
             self.pred = self.model.predict(np.load(pred_path))
             if self.PROBA:
-                self.pred_proba = self.model.predict_proba(model.X_test) # type: ignore
+                self.pred_proba = self.model.predict_proba(np.load(pred_path))  # type: ignore
 
+        # 読み込んだもので予測する場合
         elif isinstance(pred_path, np.ndarray):
             self.pred = self.model.predict(pred_path)
             if self.PROBA:
-                self.pred_proba = self.model.predict_proba(model.X_test) # type: ignore
+                self.pred_proba = self.model.predict_proba(pred_path)  # type: ignore
 
         else:
-            raise ValueError("引数の型が違います")
+            raise ValueError(f"{type(pred_path)} is not supported.")
 
     def print_scores(self):
         """
         評価データの出力
         """
-        if mode == "sep":
-            path = ML_RESULT_DIR + f"/{self.param_dict['model_name']}/{self.param_dict['mode']}{self.param_dict['label']}_{self.param_dict['parameter']}.txt"
-        else:
-            path = ML_RESULT_DIR + f"/{self.param_dict['model_name']}/{self.param_dict['mode']}_{self.param_dict['parameter']}.txt"
+        save_path = ML_RESULT_DIR + f"/{self.param_dict['clf_name']}/{self.param_dict['split_mode']}_{self.param_dict['training_parameter']}.txt"
 
-        f = open(path, "a", encoding="utf-8")
+        f = open(save_path, "a", encoding="utf-8")
         time = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
         print(f"【 {time} 】", file=f)
-        print("変数       :", self.param_dict["parameter"], self.param_dict["mode"], file=f)
+        print("変数       :", self.param_dict["training_parameter"], self.param_dict["split_mode"], file=f)
         print("パラメータ :\n", dict_to_str(self.model.get_params(), sep="\n"), "\n", file=f)
         print("trainスコア:", self.model.score(self.X_train, self.y_train), file=f)
         print("test スコア:", self.model.score(self.X_test, self.y_test), file=f)
@@ -307,12 +280,27 @@ class SupervisedML(BaseModel):
         f1_micro = f1_score(self.y_test, self.pred, average="micro")
         print("F1値  micro:", f1_micro, file=f)
 
-        print("混合行列   : \n", confusion_matrix(self.y_test, self.pred), file=f)
-        clf_rep = classification_report(self.y_test, self.pred, digits=3)
-        print("要約       : \n", clf_rep, file=f)
+        clf_rep = confusion_matrix(self.y_test, self.pred)
+        self._plot_confusion_matrix(clf_rep)
+        print("混合行列   : \n", clf_rep, file=f)
+
+        print("要約       : \n", classification_report(self.y_test, self.pred, digits=3), file=f)
         print("\n\n\n", file=f)
         f.close()
         self.logger.debug("SCORE", extra={"addinfo": f"acc_score={acc_score}, f1_macro={f1_macro}"})
+
+    def _plot_confusion_matrix(self, clf_rep):
+        """
+        混同行列の可視化
+        """
+        fig, ax = plt.subplots(1, 1)
+        cmp = ConfusionMatrixDisplay(clf_rep)  # type: ignore
+        ax.set_title(f"{self.param_dict['clf_name']}_{self.param_dict['training_parameter']}_{self.split_mode_name}")
+        cmp.plot(cmap=plt.cm.Blues, ax=ax) # type: ignore
+
+        plt.tight_layout()
+        plt.savefig(ML_RESULT_DIR + f"/{self.param_dict['clf_name']}/confusion_matrix.{self.param_dict['clf_name']}_{self.split_mode_name}.png")
+        plt.close()
 
     def get_params(self) -> dict:
         return self.param_dict
@@ -320,11 +308,7 @@ class SupervisedML(BaseModel):
     def save_model(self, model_path: str | None = None) -> None:
         self.logger.debug("SAVE", extra={"addinfo": "学習結果の保存\n\n"})
         if model_path is None:
-            if self.param_dict["mode"] == "sep":
-                model_path = ML_MODEL_DIR + f"/model/{self.param_dict['mode']}/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}.label={self.param_dict['label']}.{dict_to_str(self.param_dict['clf_params'])}.sav"
-
-            else:
-                model_path = ML_MODEL_DIR + f"/model/{self.param_dict['mode']}/model_{self.param_dict['model_name']}_{self.param_dict['parameter']}_{self.param_dict['mode']}.{dict_to_str(self.param_dict['clf_params'])}.sav"
+            model_path = ML_MODEL_DIR + f"/model/{self.param_dict['split_mode']}/model_{self.param_dict['clf_name']}_{self.param_dict['training_parameter']}_{self.param_dict['split_mode']}.{dict_to_str(self.param_dict['tuning_params'])}.sav"
 
         with open(model_path, "wb") as f:
             pickle.dump(self.model, f)
@@ -341,48 +325,49 @@ if __name__ == "__main__":
     logger = logger_conf("ML")
     logger.debug("START", extra={"addinfo": "処理開始"})
 
-    # 学習用パラメータ設定
-    with open(SRC_PATH + "/config/fixed_parameter.json", "r", encoding="utf-8") as f:
-        ML_FIXED_PARAM_DICT = json.load(f)
+    # 基本情報
+    clf_name = "kNeighbors"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
+    # split_mode = input("split_mode : ") # sep, mixsep, mix
+    split_mode = "sep"  # sep, mixsep, mix
+    if split_mode == "sep":
+        split_mode_label = int(input("split_mode_label : "))
+        split_mode_name = split_mode + str(split_mode_label)
+    else:
+        split_mode_label = None
+        split_mode_name = split_mode
 
+    # 学習用パラメータ設定
     with open(SRC_PATH + "/config/tuning_parameter.json", "r", encoding="utf-8") as f:
         ML_TUNING_PARAM_DICT = json.load(f)
+        tuning_parameter = ML_TUNING_PARAM_DICT[clf_name][split_mode_name]
 
-    # 教師データ用パラメータ
+    with open(SRC_PATH + "/config/fixed_parameter.json", "r", encoding="utf-8") as f:
+        ML_FIXED_PARAM_DICT = json.load(f)
+        fixed_params = ML_FIXED_PARAM_DICT[clf_name]
+
     pca = False
     test_size = 0.3
     model_random_state = 42
 
-    clf_name = "LinearSVC"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
-    mode = "mix" #  "mix"  # sep, mixsep, mix
-    # parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
-    method = "training"  # training, model
-
-    if mode == "sep":
-        label = 0
-        mode_name = mode + str(label)
-    else:
-        label = None
-        mode_name = mode
-
     # 新規モデルの学習
+    method = "training"  # training, predict
     if method == "training":
-        for parameter in VARIABLE_PARAMETERS_FOR_TRAINING[-2:]:  # ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]
-            logger.debug("PARAMETER", extra={"addinfo": f"name={clf_name}, mode={mode_name}, parameter={parameter}, pca={pca}, test_size={test_size}, random_state={model_random_state}"})
-            param_dict = ML_FIXED_PARAM_DICT[clf_name] | ML_TUNING_PARAM_DICT[clf_name][mode_name][parameter]
-            model = SupervisedML.load_npys(mode=mode, parameter=parameter, label=label, pca=pca, test_size=test_size, random_state=model_random_state)
-
-            model.do_learning(clf_name=clf_name, param_dict=param_dict)
+        for training_parameter in VARIABLE_PARAMETERS_FOR_TRAINING:  # ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]
+            logger.debug("PARAMETER", extra={"addinfo": f"name={clf_name}, split_mode={split_mode_name}, training_parameter={training_parameter}, pca={pca}, test_size={test_size}, random_state={model_random_state}"})
+            model = SupervisedML.load_npys(split_mode=split_mode, training_parameter=training_parameter, split_mode_label=split_mode_label, pca=pca, test_size=test_size, random_state=model_random_state)
+            tuning_params = tuning_parameter[training_parameter]
+            model.do_learning(clf_name=clf_name, tuning_params=tuning_params, fixed_params=fixed_params)
             model.predict()
             model.print_scores()
-            # path = ML_MODEL_DIR + f"/model/{mode}/model_{clf_name}_{parameter}_{mode_name}.optuna.sav"
+            # path = ML_MODEL_DIR + f"/model/{split_mode}/model_{clf_name}_{training_parameter}_{split_mode_name}.optuna.sav"
             model.save_model()
 
-    elif method == "model":
-        for parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
-            logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み (name={clf_name}, mode={mode_name}, parameter={parameter})"})
-            # path = ML_MODEL_DIR + f"/model/{mode}/model_{clf_name}_{parameter}_{mode}.label={label}.n_neighbors={n}.sav"
-            model = SupervisedML.load_model(parameter, mode=mode, name=clf_name, model_random_state=model_random_state, label=label)
+    elif method == "predict":
+        for training_parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
+            logger.debug("LOAD", extra={"addinfo": f"モデルの読み込み (name={clf_name}, split_mode={split_mode_name}, training_parameter={training_parameter})"})
+            tuning_params = tuning_parameter[training_parameter]
+            # path = ML_MODEL_DIR + f"/model/{split_mode}/model_{clf_name}_{training_parameter}_{split_mode}.split_mode_label={split_mode_label}.C={param_dict['C']}.sav"
+            model = SupervisedML.load_model(training_parameter, split_mode=split_mode, clf_name=clf_name, model_random_state=model_random_state, split_mode_label=split_mode_label)
             model.predict()
             model.print_scores()
 

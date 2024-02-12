@@ -4,9 +4,9 @@
       "density": { "C": 1.00 },
       "energy": { "C": 1.00 },
       "enstrophy": { "C": 1.00 },
-      "pressure": { "C": 1.00 },
       "magfieldx": { "C": 1.00 },
       "magfieldy": { "C": 1.00 },
+      "pressure": { "C": 1.00 },
       "velocityx": { "C": 1.00 },
       "velocityy": { "C": 1.00 }
     },
@@ -14,9 +14,9 @@
       "density": { "C": 1.00 },
       "energy": { "C": 1.00 },
       "enstrophy": { "C": 1.00 },
-      "pressure": { "C": 1.00 },
       "magfieldx": { "C": 1.00 },
       "magfieldy": { "C": 1.00 },
+      "pressure": { "C": 1.00 },
       "velocityx": { "C": 1.00 },
       "velocityy": { "C": 1.00 }
     },
@@ -24,9 +24,9 @@
       "density": { "C": 1.00 },
       "energy": { "C": 1.00 },
       "enstrophy": { "C": 1.00 },
-      "pressure": { "C": 1.00 },
       "magfieldx": { "C": 1.00 },
       "magfieldy": { "C": 1.00 },
+      "pressure": { "C": 1.00 },
       "velocityx": { "C": 1.00 },
       "velocityy": { "C": 1.00 }
     },
@@ -34,9 +34,9 @@
       "density": { "C": 1.00 },
       "energy": { "C": 1.00 },
       "enstrophy": { "C": 1.00 },
-      "pressure": { "C": 1.00 },
       "magfieldx": { "C": 1.00 },
       "magfieldy": { "C": 1.00 },
+      "pressure": { "C": 1.00 },
       "velocityx": { "C": 1.00 },
       "velocityy": { "C": 1.00 }
     },
@@ -44,9 +44,9 @@
       "density": { "C": 1.00 },
       "energy": { "C": 1.00 },
       "enstrophy": { "C": 1.00 },
-      "pressure": { "C": 1.00 },
       "magfieldx": { "C": 1.00 },
       "magfieldy": { "C": 1.00 },
+      "pressure": { "C": 1.00 },
       "velocityx": { "C": 1.00 },
       "velocityy": { "C": 1.00 }
     }
@@ -56,9 +56,9 @@
       "density": { "C": 1.0, "gamma": "scale" },
       "enstrophy": { "C": 1.0, "gamma": "scale" },
       "energy": { "C": 1.0, "gamma": "scale" },
-      "pressure": { "C": 1.0, "gamma": "scale" },
       "magfieldx": { "C": 1.0, "gamma": "scale" },
       "magfieldy": { "C": 1.0, "gamma": "scale" },
+      "pressure": { "C": 1.0, "gamma": "scale" },
       "velocityx": { "C": 1.0, "gamma": "scale" },
       "velocityy": { "C": 1.0, "gamma": "scale" }
     },
@@ -66,9 +66,9 @@
       "density": { "C": 1.0, "gamma": "scale" },
       "enstrophy": { "C": 1.0, "gamma": "scale" },
       "energy": { "C": 1.0, "gamma": "scale" },
-      "pressure": { "C": 1.0, "gamma": "scale" },
       "magfieldx": { "C": 1.0, "gamma": "scale" },
       "magfieldy": { "C": 1.0, "gamma": "scale" },
+      "pressure": { "C": 1.0, "gamma": "scale" },
       "velocityx": { "C": 1.0, "gamma": "scale" },
       "velocityy": { "C": 1.0, "gamma": "scale" }
     },
@@ -76,9 +76,9 @@
       "density": { "C": 1.0, "gamma": "scale" },
       "energy": { "C": 1.0, "gamma": "scale" },
       "enstrophy": { "C": 1.0, "gamma": "scale" },
-      "pressure": { "C": 1.0, "gamma": "scale" },
       "magfieldx": { "C": 1.0, "gamma": "scale" },
       "magfieldy": { "C": 1.0, "gamma": "scale" },
+      "pressure": { "C": 1.0, "gamma": "scale" },
       "velocityx": { "C": 1.0, "gamma": "scale" },
       "velocityy": { "C": 1.0, "gamma": "scale" }
     },
@@ -86,9 +86,9 @@
       "density": { "C": 1.0, "gamma": "scale" },
       "energy": { "C": 1.0, "gamma": "scale" },
       "enstrophy": { "C": 1.0, "gamma": "scale" },
-      "pressure": { "C": 1.0, "gamma": "scale" },
       "magfieldx": { "C": 1.0, "gamma": "scale" },
       "magfieldy": { "C": 1.0, "gamma": "scale" },
+      "pressure": { "C": 1.0, "gamma": "scale" },
       "velocityx": { "C": 1.0, "gamma": "scale" },
       "velocityy": { "C": 1.0, "gamma": "scale" }
     },
@@ -96,9 +96,9 @@
       "density": { "C": 1.0, "gamma": "scale" },
       "energy": { "C": 1.0, "gamma": "scale" },
       "enstrophy": { "C": 1.0, "gamma": "scale" },
-      "pressure": { "C": 1.0, "gamma": "scale" },
       "magfieldx": { "C": 1.0, "gamma": "scale" },
       "magfieldy": { "C": 1.0, "gamma": "scale" },
+      "pressure": { "C": 1.0, "gamma": "scale" },
       "velocityx": { "C": 1.0, "gamma": "scale" },
       "velocityy": { "C": 1.0, "gamma": "scale" }
     }
@@ -106,51 +106,51 @@
   "kNeighbors": {
     "mix": {
       "density": { "n_neighbors": 10 },
-      "enstrophy": { "n_neighbors": 10 },
       "energy": { "n_neighbors": 10 },
-      "pressure": { "n_neighbors": 10 },
+      "enstrophy": { "n_neighbors": 10 },
       "magfieldx": { "n_neighbors": 10 },
       "magfieldy": { "n_neighbors": 10 },
+      "pressure": { "n_neighbors": 10 },
       "velocityx": { "n_neighbors": 10 },
       "velocityy": { "n_neighbors": 10 }
     },
     "mixsep": {
       "density": { "n_neighbors": 10 },
-      "enstrophy": { "n_neighbors": 10 },
       "energy": { "n_neighbors": 10 },
-      "pressure": { "n_neighbors": 10 },
+      "enstrophy": { "n_neighbors": 10 },
       "magfieldx": { "n_neighbors": 10 },
       "magfieldy": { "n_neighbors": 10 },
+      "pressure": { "n_neighbors": 10 },
       "velocityx": { "n_neighbors": 10 },
       "velocityy": { "n_neighbors": 10 }
     },
     "sep0": {
       "density": { "n_neighbors": 10 },
-      "enstrophy": { "n_neighbors": 10 },
       "energy": { "n_neighbors": 10 },
-      "pressure": { "n_neighbors": 10 },
+      "enstrophy": { "n_neighbors": 10 },
       "magfieldx": { "n_neighbors": 10 },
       "magfieldy": { "n_neighbors": 10 },
+      "pressure": { "n_neighbors": 10 },
       "velocityx": { "n_neighbors": 10 },
       "velocityy": { "n_neighbors": 10 }
     },
     "sep1": {
       "density": { "n_neighbors": 10 },
-      "enstrophy": { "n_neighbors": 10 },
       "energy": { "n_neighbors": 10 },
-      "pressure": { "n_neighbors": 10 },
+      "enstrophy": { "n_neighbors": 10 },
       "magfieldx": { "n_neighbors": 10 },
       "magfieldy": { "n_neighbors": 10 },
+      "pressure": { "n_neighbors": 10 },
       "velocityx": { "n_neighbors": 10 },
       "velocityy": { "n_neighbors": 10 }
     },
     "sep2": {
       "density": { "n_neighbors": 10 },
-      "enstrophy": { "n_neighbors": 10 },
       "energy": { "n_neighbors": 10 },
-      "pressure": { "n_neighbors": 10 },
+      "enstrophy": { "n_neighbors": 10 },
       "magfieldx": { "n_neighbors": 10 },
       "magfieldy": { "n_neighbors": 10 },
+      "pressure": { "n_neighbors": 10 },
       "velocityx": { "n_neighbors": 10 },
       "velocityy": { "n_neighbors": 10 }
     }
@@ -187,16 +187,6 @@
         "reg_alpha": 1.0,
         "reg_lambda": 1.0
       },
-      "pressure": {
-        "max_depth": 10,
-        "eta": 0.1,
-        "gamma": 1,
-        "min_child_weight": 5,
-        "subsample": 1.0,
-        "colsample_bytree": 1.0,
-        "reg_alpha": 1.0,
-        "reg_lambda": 1.0
-      },
       "magfieldx": {
         "max_depth": 10,
         "eta": 0.1,
@@ -208,6 +198,16 @@
         "reg_lambda": 1.0
       },
       "magfieldy": {
+        "max_depth": 10,
+        "eta": 0.1,
+        "gamma": 1,
+        "min_child_weight": 5,
+        "subsample": 1.0,
+        "colsample_bytree": 1.0,
+        "reg_alpha": 1.0,
+        "reg_lambda": 1.0
+      },
+      "pressure": {
         "max_depth": 10,
         "eta": 0.1,
         "gamma": 1,
@@ -269,16 +269,6 @@
         "reg_alpha": 1.0,
         "reg_lambda": 1.0
       },
-      "pressure": {
-        "max_depth": 10,
-        "eta": 0.1,
-        "gamma": 1,
-        "min_child_weight": 5,
-        "subsample": 1.0,
-        "colsample_bytree": 1.0,
-        "reg_alpha": 1.0,
-        "reg_lambda": 1.0
-      },
       "magfieldx": {
         "max_depth": 10,
         "eta": 0.1,
@@ -290,6 +280,16 @@
         "reg_lambda": 1.0
       },
       "magfieldy": {
+        "max_depth": 10,
+        "eta": 0.1,
+        "gamma": 1,
+        "min_child_weight": 5,
+        "subsample": 1.0,
+        "colsample_bytree": 1.0,
+        "reg_alpha": 1.0,
+        "reg_lambda": 1.0
+      },
+      "pressure": {
         "max_depth": 10,
         "eta": 0.1,
         "gamma": 1,
@@ -351,16 +351,6 @@
         "reg_alpha": 1.0,
         "reg_lambda": 1.0
       },
-      "pressure": {
-        "max_depth": 10,
-        "eta": 0.1,
-        "gamma": 1,
-        "min_child_weight": 5,
-        "subsample": 1.0,
-        "colsample_bytree": 1.0,
-        "reg_alpha": 1.0,
-        "reg_lambda": 1.0
-      },
       "magfieldx": {
         "max_depth": 10,
         "eta": 0.1,
@@ -372,6 +362,16 @@
         "reg_lambda": 1.0
       },
       "magfieldy": {
+        "max_depth": 10,
+        "eta": 0.1,
+        "gamma": 1,
+        "min_child_weight": 5,
+        "subsample": 1.0,
+        "colsample_bytree": 1.0,
+        "reg_alpha": 1.0,
+        "reg_lambda": 1.0
+      },
+      "pressure": {
         "max_depth": 10,
         "eta": 0.1,
         "gamma": 1,
@@ -433,16 +433,6 @@
         "reg_alpha": 1.0,
         "reg_lambda": 1.0
       },
-      "pressure": {
-        "max_depth": 10,
-        "eta": 0.1,
-        "gamma": 1,
-        "min_child_weight": 5,
-        "subsample": 1.0,
-        "colsample_bytree": 1.0,
-        "reg_alpha": 1.0,
-        "reg_lambda": 1.0
-      },
       "magfieldx": {
         "max_depth": 10,
         "eta": 0.1,
@@ -454,6 +444,16 @@
         "reg_lambda": 1.0
       },
       "magfieldy": {
+        "max_depth": 10,
+        "eta": 0.1,
+        "gamma": 1,
+        "min_child_weight": 5,
+        "subsample": 1.0,
+        "colsample_bytree": 1.0,
+        "reg_alpha": 1.0,
+        "reg_lambda": 1.0
+      },
+      "pressure": {
         "max_depth": 10,
         "eta": 0.1,
         "gamma": 1,
@@ -515,16 +515,6 @@
         "reg_alpha": 1.0,
         "reg_lambda": 1.0
       },
-      "pressure": {
-        "max_depth": 10,
-        "eta": 0.1,
-        "gamma": 1,
-        "min_child_weight": 5,
-        "subsample": 1.0,
-        "colsample_bytree": 1.0,
-        "reg_alpha": 1.0,
-        "reg_lambda": 1.0
-      },
       "magfieldx": {
         "max_depth": 10,
         "eta": 0.1,
@@ -536,6 +526,16 @@
         "reg_lambda": 1.0
       },
       "magfieldy": {
+        "max_depth": 10,
+        "eta": 0.1,
+        "gamma": 1,
+        "min_child_weight": 5,
+        "subsample": 1.0,
+        "colsample_bytree": 1.0,
+        "reg_alpha": 1.0,
+        "reg_lambda": 1.0
+      },
+      "pressure": {
         "max_depth": 10,
         "eta": 0.1,
         "gamma": 1,

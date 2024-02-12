@@ -39,7 +39,7 @@ def _set_default() -> dict:
         for side in SIDES:
             json_dict[dataset][side] = dict()
 
-            for label in LABELS.values():
+            for label in LABELS:
                 json_dict[dataset][side][label] = dict()
 
     return json_dict
@@ -193,7 +193,7 @@ def _set_n() -> dict:
     return {f"{i :02d}": save_dict for i in range(5, 10)}
 
 
-def _set_xo(dataset: int, side: str, label: int) -> dict:
+def _set_xo(dataset: int, side: str, label: str) -> dict:
     """x点, o点の切り取りに関する関数
 
     writer.py を用いて切り取ったx点, o点のcsvデータを jsonに変換する
@@ -211,7 +211,7 @@ def _set_xo(dataset: int, side: str, label: int) -> dict:
     df_snap = df_snap.sort_values(["side", "label", "para", "job", "centerx"]).reset_index(drop=True)
 
     # 加工
-    df_snap = df_snap[(df_snap["dataset"] == dataset) & (df_snap["side"] == side) & (df_snap["label"] == label)]
+    df_snap = df_snap[(df_snap["dataset"] == dataset) & (df_snap["side"] == side) & (df_snap["label"] == LABELS.index(label))]
     df_snap["xlow"] = df_snap["xlow"].map(lambda x: floor(x))  # 小数の切り上げ
     df_snap = df_snap[df_snap["job"] >= 7]  # 6 以下は使わない
 
@@ -254,15 +254,12 @@ def _set_xo(dataset: int, side: str, label: int) -> dict:
     return result_dict
 
 
-def makeTrain(dataset: int, side: str, label: int, test=False):
+def makeTrain(dataset: int, side: str, label: str):
     logger = getLogger("make_train").getChild("Make_json")
     logger.debug("PARAMETER", extra={"addinfo": f"dataset={dataset}, side={side}, label={label}"})
 
     # テスト用
-    if test:
-        file_name = "test"
-    else:
-        file_name = "snap_labels"
+    file_name = "snap_labels"
 
     # ファイルの生成
     if not os.path.exists(ML_DATA_DIR + f"/LIC_labels/{file_name}.json"):
@@ -270,9 +267,9 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
         _create_json(file_name)
 
     # ラベルによって処理が異なる
-    if label == 0:  # 反応なし
+    if label == "n":  # 反応なし
         result_dict = _set_n()
-    elif 0 < label <= 2:  # x点、o点用
+    elif label in ["x", "o"]:  # x点、o点用
         result_dict = _set_xo(dataset, side, label)
     else:  # その他
         logger.debug("ERROR", extra={"addinfo": "label の値が間違っています"})
@@ -289,7 +286,7 @@ def makeTrain(dataset: int, side: str, label: int, test=False):
         _set_default()
 
     with open(folder, "w", encoding="utf-8") as f:
-        data[str(dataset)][side][LABELS[label]] = result_dict
+        data[str(dataset)][side][label] = result_dict
         json.dump(data, f)
 
     logger.debug("SAVE", extra={"addinfo": "完了"})
@@ -307,7 +304,7 @@ if __name__ == "__main__":
 
     for dataset in DATASETS:
         for side in SIDES:
-            for label in LABELS.keys():
-                makeTrain(dataset, side, label, test=test)
+            for label in LABELS:
+                makeTrain(dataset, side, label)
 
     logger.debug("END", extra={"addinfo": "処理終了"})

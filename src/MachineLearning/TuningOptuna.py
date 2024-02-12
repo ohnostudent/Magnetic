@@ -1,21 +1,23 @@
 # -*- coding utf-8, LF -*-
 
+"""
+学習用
+
+"""
+
 import os
 import sys
 from logging import getLogger
 
 import optuna
-from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC, LinearSVC
+from sklearn.metrics import roc_auc_score
+from sklearn.svm import SVC
 from torch import cuda
 from xgboost import XGBClassifier
 
 sys.path.append(os.getcwd() + "/src")
 
 from config.params import ML_MODEL_DIR
-from config.SetLogger import logger_conf
 from MachineLearning.basemodel import BaseModel
 
 
@@ -24,28 +26,31 @@ class TuningOptuna:
         self.logger = getLogger("Tuning_optuna").getChild("Tuning")
         self.best_parameter_dict: dict[str, dict] = {}
 
-    def load(self, mode: str = "mix", parameter: str = "enstrophy", clf_name: str = "", label: int = 0, randomstate: int = 42):
-        self.mode = mode
-        if mode == "sep":
-            self.label = label
-            self.mode_name = mode + str(label)
+    def load(self, split_mode: str = "mix", training_parameter: str = "enstrophy", clf_name: str = "", split_mode_label: int = 0, randomstate: int = 42):
+        self.split_mode = split_mode
+        if split_mode == "sep":
+            self.split_mode_label = split_mode_label
+            self.mode_name = split_mode + str(split_mode_label)
         else:
-            self.mode_name = mode
-        self.parameter = parameter
+            self.mode_name = split_mode
+        self.training_parameter = training_parameter
         self.clf_name = clf_name
         self._clf_methods()
 
-        if mode == "sep":
-            self.label = label
+        if split_mode == "sep":
+            self.split_mode_label = split_mode_label
         else:
-            self.label = None
+            self.split_mode_label = None
 
-        self.logger.debug("SAVE", extra={"addinfo": f"mode={mode}, parameter={parameter}, label={label}"})
-        self.model = BaseModel.load_npys(mode=mode, parameter=parameter, label=label, random_state=randomstate)
+        self.logger.debug("SAVE", extra={"addinfo": f"split_mode={split_mode}, training_parameter={training_parameter}, split_mode_label={split_mode_label}"})
+        self.model = BaseModel.load_npys(split_mode=split_mode, training_parameter=training_parameter, split_mode_label=split_mode_label, random_state=randomstate)
 
         return self.model
 
     def _set_params(self, trial):
+        """
+        チューニングするパラメータを定義
+        """
         match self.clf_name:
             case "kNeighbors":
                 tuning_params = {
@@ -83,13 +88,16 @@ class TuningOptuna:
         return tuning_params
 
     def _clf_methods(self):
+        """
+        チューニングを行う分類器の定義
+        """
         match self.clf_name:
-            case "kNeighbors":
-                self.clf = KNeighborsClassifier
-            case "LinearSVC":
-                self.clf = LinearSVC
+            # case "kNeighbors":
+            #     self.clf = KNeighborsClassifier
+            # case "LinearSVC":
+            #     self.clf = LinearSVC
             case "rbfSVC":
-                self.clf = lambda **x: OneVsRestClassifier(SVC(**x))
+                self.clf = SVC
             case "XGBoost":
                 self.clf = XGBClassifier
                 self.eval_set = [(self.model.X_train, self.model.y_train)]
@@ -108,77 +116,89 @@ class TuningOptuna:
 
     def load_study(self, study_name: str | None = None):
         if study_name is None:
-            study_name = f"optuna_{self.clf_name}_{self.parameter}_{self.mode_name}"
-        storage = "sqlite:///" + ML_MODEL_DIR + f"/tuning/{self.mode_name}/optuna_{self.clf_name}_{self.parameter}_{self.mode_name}.sav"
+            study_name = f"optuna_{self.clf_name}_{self.training_parameter}_{self.mode_name}"
+        storage = "sqlite:///" + ML_MODEL_DIR + f"/tuning/{self.mode_name}/optuna_{self.clf_name}_{self.training_parameter}_{self.mode_name}.sav"
 
+        # roc_score を最大化する
         self.study = optuna.load_study(study_name=study_name, storage=storage)
         return self.study
 
-    def create_study(self, study_name: str | None = None):
-        if study_name is None:
-            study_name = f"optuna_{self.clf_name}_{self.parameter}_{self.mode_name}"
-        storage = "sqlite:///" + ML_MODEL_DIR + f"/tuning/{self.mode_name}/optuna_{self.clf_name}_{self.parameter}_{self.mode_name}.sav"
+    def create_study(self):
+        """
+        定義
+        """
+        # roc_score を最大化する
         sampler = optuna.samplers.TPESampler(seed=42)
-
-        self.study = optuna.create_study(direction="maximize", sampler=sampler, study_name=study_name, storage=storage, load_if_exists=True)
+        self.study = optuna.create_study(direction="maximize", sampler=sampler)
 
     def do_optimizer(self):
+        """
+        チューニングの実行
+        """
         self.study.optimize(lambda x: self.objective(x), n_trials=30)  # type: ignore
 
     def plot(self):
+        """
+        チューニング結果の可視化
+        """
         optuna.visualization.plot_optimization_history(self.study)
 
     def save(self):
+        """
+        チューニング結果の出力
+        """
         # 最適パラメータの表示と保持
         best_params = self.study.best_trial.params
         best_score = self.study.best_trial.value
-        self.best_parameter_dict[self.parameter] = best_params
+        self.best_parameter_dict[self.training_parameter] = best_params
         self.logger.debug("PARAMETER", extra={"addinfo": f"{best_params}"})
 
 
 if __name__ == "__main__":
+    from logging import FileHandler
+
+    from config.params import LOG_DIR, VARIABLE_PARAMETERS_FOR_TRAINING
+    from config.SetLogger import logger_conf
+
     # ベイズ最適化を実行
     logger = logger_conf("Tuning_optuna")
     logger.debug("START", extra={"addinfo": "処理開始"})
-
-    from logging import FileHandler
-
-    from config.params import LOG_DIR
 
     optuna.logging.get_logger("optuna").addHandler(FileHandler(LOG_DIR + "/optuna.log"))
 
     tuning_best_param_dict = dict()
     clf_name = "rbfSVC"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
-    # mode = "mix"  # sep, mixsep, mix
-    # parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
-    # label = 0
+    # split_mode = "mix"  # sep, mixsep, mix
+    # training_parameter = "density"  # density, energy, enstrophy, pressure, magfieldx, magfieldy, velocityx, velocityy
+    # split_mode_label = 0
 
     tu = TuningOptuna()
-    for mode in ["mixsep", "mix", "sep"]:
-        if mode == "sep":
-            for label in range(3):
-                mode_name = mode + str(label)
-                for parameter in ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]:
+    for split_mode in ["mixsep", "mix", "sep"]:
+        if split_mode == "sep":
+            for split_mode_label in range(3):
+                mode_name = split_mode + str(split_mode_label)
+                for training_parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
                     try:
-                        tu.load(clf_name=clf_name, mode=mode, parameter=parameter, label=label)
+                        tu.load(clf_name=clf_name, split_mode=split_mode, training_parameter=training_parameter, split_mode_label=split_mode_label)
                         tu.create_study()
                         tu.do_optimizer()
                         tu.save()
                     except Exception as e:
                         logger.error("ERROR", extra={"addinfo": f"{e}"})
+
                 tuning_best_param_dict[mode_name] = tu.best_parameter_dict
 
         else:
-            for parameter in ["enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]:
-                # for parameter in ["density", "energy", "enstrophy", "pressure", "magfieldx", "magfieldy", "velocityx", "velocityy"]:
+            for training_parameter in VARIABLE_PARAMETERS_FOR_TRAINING:
                 try:
-                    tu.load(clf_name=clf_name, mode=mode, parameter=parameter)
+                    tu.load(clf_name=clf_name, split_mode=split_mode, training_parameter=training_parameter)
                     tu.create_study()
                     tu.do_optimizer()
                     tu.save()
                 except Exception as e:
                     logger.error("ERROR", extra={"addinfo": f"{e}"})
-            tuning_best_param_dict[mode] = tu.best_parameter_dict
+
+            tuning_best_param_dict[split_mode] = tu.best_parameter_dict
 
     import json
 
