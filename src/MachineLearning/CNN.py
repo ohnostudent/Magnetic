@@ -262,8 +262,6 @@ class CnnTrain:
             self.pred_proba.extend([int(i.argmax()) for i in output])
             self.y_test.extend([int(i) for i in labels_gpu])
 
-        self.print_scores()
-
     def print_scores(self) -> None:
         """
         評価データの出力

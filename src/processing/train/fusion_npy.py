@@ -257,7 +257,7 @@ class CreateTrain(_Kernel):
         """
         separated_im = data[y_range_low:y_range_up, x_range_low:x_range_up]  # 切り取り
         img_resize = cv2.resize(separated_im, TRAIN_SHAPE, interpolation=cv2.INTER_LANCZOS4)  # サイズ変更 -> (100, 10)
-        self.save_Data(img_resize, save_path)
+        self._save_Data(img_resize, save_path)
 
     def cut_images(self, img: np.ndarray, x_range_low: int, x_range_up: int, y_range_low: int, y_range_up: int, save_path: str, reshape_size: int = 15) -> None:
         """
@@ -341,7 +341,7 @@ class CreateTrain(_Kernel):
         im_list = list(map(lambda val: np.load(img_path.replace(val_params[0], val)), val_params))
         return im_list
 
-    def _save_Data(self, out_path: str, result_data) -> None:
+    def _save_Data(self, result_data, out_path: str) -> None:
         """データ保存用のメソッド
 
         Args:
@@ -366,7 +366,7 @@ class CreateTrain(_Kernel):
         """
         im_list = self.loadBinaryData(in_path, val_params)  # 混合データのロード
         kernel_data = kernel(*im_list)  # データの作成
-        self._save_Data(out_path, kernel_data)  # データの保存
+        self._save_Data(kernel_data, out_path)  # データの保存
 
 
 def save_split_data_from_csv(dataset: int) -> None:
