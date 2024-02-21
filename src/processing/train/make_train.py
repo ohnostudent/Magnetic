@@ -13,18 +13,18 @@ sys.path.append(os.getcwd() + "/src")
 from config.params import DATASETS, LABELS, ML_DATA_DIR, NPY_SHAPE, SIDES, TRAIN_SHAPE
 
 
-def _create_json(file_name) -> None:
+def create_json(file_name) -> None:
     """基盤の作成を行う関数
     Args:
         file_name (str): 保存するファイルの名前
     """
-    json_dict = _set_default()
+    json_dict = set_default()
     # 保存
     with open(ML_DATA_DIR + f"/LIC_labels/{file_name}.json", "w", encoding="utf-8") as f:
         json.dump(json_dict, f)
 
 
-def _set_default() -> dict:
+def set_default() -> dict:
     """
     保存用 json基盤作成
 
@@ -170,7 +170,7 @@ def _reshape_center(centerx, centery, x_range_low, x_range_up, y_range_low, y_ra
     return x_range_low, x_range_up, y_range_low, y_range_up, centerx, centery
 
 
-def _set_n() -> dict:
+def set_n() -> dict:
     # 切り取る長方形の重心座標のリスト
     # 7 * 3 = 21 点取る
     x_locs = [30, 60, 90, 120, 150, 180, 210]
@@ -193,7 +193,7 @@ def _set_n() -> dict:
     return {f"{i :02d}": save_dict for i in range(5, 10)}
 
 
-def _set_xo(dataset: int, side: str, label: str) -> dict:
+def set_xo(dataset: int, side: str, label: str) -> dict:
     """x点, o点の切り取りに関する関数
 
     writer.py を用いて切り取ったx点, o点のcsvデータを jsonに変換する
@@ -207,7 +207,7 @@ def _set_xo(dataset: int, side: str, label: str) -> dict:
         dict : 切り取り点に関するjson
     """
     # データのロード
-    df_snap = pd.read_csv(ML_DATA_DIR + f"/LIC_labels/label_snap{dataset}_org.csv")
+    df_snap = pd.read_csv(ML_DATA_DIR + "/LIC_labels/label_snap.csv")
     df_snap = df_snap.sort_values(["side", "label", "para", "job", "centerx"]).reset_index(drop=True)
 
     # 加工
@@ -264,13 +264,13 @@ def makeTrain(dataset: int, side: str, label: str):
     # ファイルの生成
     if not os.path.exists(ML_DATA_DIR + f"/LIC_labels/{file_name}.json"):
         logger.debug("CHECK", extra={"addinfo": "ファイル作成"})
-        _create_json(file_name)
+        create_json(file_name)
 
     # ラベルによって処理が異なる
     if label == "n":  # 反応なし
-        result_dict = _set_n()
+        result_dict = set_n()
     elif label in ["x", "o"]:  # x点、o点用
-        result_dict = _set_xo(dataset, side, label)
+        result_dict = set_xo(dataset, side, label)
     else:  # その他
         logger.debug("ERROR", extra={"addinfo": "label の値が間違っています"})
         raise ValueError
@@ -283,7 +283,7 @@ def makeTrain(dataset: int, side: str, label: str):
         data = json.load(f)
 
     if data == {}:
-        _set_default()
+        data = set_default()
 
     with open(folder, "w", encoding="utf-8") as f:
         data[str(dataset)][side][label] = result_dict

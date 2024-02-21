@@ -16,7 +16,7 @@
 *.pyx
 
 # 各ファイル
-src/Processing/viewer/template/lic_viewer*.html
+src/Processing/viewer/templates/lic_viewer*.html
 .latexmkrc
 
 # ディレクトリ
