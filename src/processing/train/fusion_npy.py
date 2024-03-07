@@ -404,11 +404,11 @@ def save_split_data_from_json(dataset: int):
 
     logger.debug("START", extra={"addinfo": f"{dataset}"})
     md = CreateTrain(dataset)
-    for side in SIDES:
-        for label in LABELS:
+    for label in LABELS:
+        for side in SIDES:
             for val in VARIABLE_PARAMETERS:
                 md.cut_and_save_from_json(path, side, label, val)
-            md.cut_and_save_from_image(path, side, label)
+            # md.cut_and_save_from_image(path, side, label)
 
     logger.debug("END", extra={"addinfo": f"{dataset}"})
 

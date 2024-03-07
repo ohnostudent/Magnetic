@@ -36,7 +36,7 @@ class BaseModel:
         self.param_dict["fixed_params"] = dict()
 
     @classmethod
-    def load_npys(cls, split_mode: str, training_parameter: str, random_state: int | None = 42, split_mode_label: int | None = None, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
+    def load_npys(cls, training_parameter: str, split_mode: str, split_mode_label: int | None = None, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):  # noqa: ANN206
         """
         データの読み込みを行う関数
 
@@ -55,20 +55,20 @@ class BaseModel:
         model.logger.debug("START", extra={"addinfo": f"training_parameter={training_parameter}, split_mode={split_mode}"})
 
         model.set_default(training_parameter)  # 初期化
+        model.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
         model.param_dict["training_parameter"] = training_parameter
-        model.param_dict["split_mode"] = split_mode
+        model.param_dict["split_mode"] = model.split_mode_name
         model.param_dict["split_mode_label"] = split_mode_label
         model.param_dict["dataset_params"]["pca"] = pca
         model.param_dict["dataset_params"]["test_size"] = test_size
         model.param_dict["dataset_params"]["random_state"] = random_state
-        model.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
 
         if split_mode == "all":
             train_test_data = np.load(ML_MODEL_DIR + f"/npz/{training_parameter}_all.npz")
         else:
             # ./ML/models/npz/density_mixsep.random_state=100.test_size=0.3.npz
-            mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
-            npz_path = ML_MODEL_DIR + f"/npz/{training_parameter}_{mode_name}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
+            split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
+            npz_path = ML_MODEL_DIR + f"/npz/{training_parameter}_{split_mode_name}.pca={pca}.randomstate={random_state}.testsize={test_size}.npz"
             train_test_data = np.load(npz_path)
             model.X_test = train_test_data["X_test"]
             model.y_test = train_test_data["y_test"]
@@ -79,7 +79,7 @@ class BaseModel:
         return model
 
     # TODO overload
-    def _load_npys(self, split_mode: str, training_parameter: str, split_mode_label: int | None = None, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):
+    def _load_npys(self, training_parameter: str, split_mode: str, split_mode_label: int | None = None, random_state: int | None = 42, test_size: float = 0.3, pca: bool = False):
         """学習用モデルを読み込む
 
         Args:
@@ -112,7 +112,7 @@ class BaseModel:
         self.X_test = train_test_data["X_test"]
         self.y_test = train_test_data["y_test"]
 
-    def split_train_test(self, split_mode: str, test_size: float = 0.3, random_state: int | None = 42, split_mode_label: int = 0, pca: bool = False) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def split_train_test(self, split_mode: str, split_mode_label: int | None = None, test_size: float = 0.3, random_state: int | None = 42, pca: bool = False) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         教師用データとテスト用データを分割する関数
 
@@ -133,7 +133,7 @@ class BaseModel:
         self.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
 
         self.param_dict["split_mode"] = split_mode
-        self.param_dict["mode_name"] = self.split_mode_name
+        self.param_dict["split_mode_name"] = self.split_mode_name
         self.param_dict["dataset_params"]["testsize"] = test_size
         self.param_dict["dataset_params"]["randomstate"] = random_state
 
@@ -148,7 +148,9 @@ class BaseModel:
             elif split_mode == "mixsep":
                 train_paths, test_paths, train_label, test_label = self._split_train_test_sep_mix(test_size=test_size, random_state=random_state)
             elif split_mode == "sep":
-                self.param_dict["dataset_params"]["split_mode_label"] = split_mode_label
+                self.param_dict["split_mode_label"] = split_mode_label
+                if split_mode_label is None:
+                    raise ValueError("Please set split_mode_label")
                 train_paths, test_paths, train_label, test_label = self._split_train_test_sep(split_mode_label)
             else:
                 raise ValueError(f"Mode '{split_mode}' is not supported.")
@@ -227,7 +229,7 @@ class BaseModel:
 
         else:
             np.savez_compressed(
-                ML_MODEL_DIR + f"/npz/{self.param_dict['training_parameter']}_{self.param_dict['split_mode']}.{dict_to_str(self.param_dict['dataset_params'])}.npz",
+                ML_MODEL_DIR + f"/npz/{self.param_dict['training_parameter']}_{self.param_dict['split_mode_name']}.{dict_to_str(self.param_dict['dataset_params'])}.npz",
                 X_train=self.X_train,
                 y_train=self.y_train,
                 X_test=self.X_test,
@@ -383,8 +385,13 @@ if __name__ == "__main__":
     from config.SetLogger import logger_conf
 
     logger = logger_conf("basemodel")
-    split_mode = "mix"  # "mix", "mixsep", "sep", "all"
-    split_mode_label = 0  # 0, 1, 2
+    split_mode = input("split_mode : ")  # sep, mixsep, mix
+    if split_mode == "sep":
+        split_mode_label = int(input("split_mode_label : "))
+        split_mode_name = split_mode + str(split_mode_label)
+    else:
+        split_mode_label = None
+        split_mode_name = split_mode
     logger.debug("PARAMETER", extra={"addinfo": f"split_mode = {split_mode}"})
 
     bm = BaseModel()
@@ -392,8 +399,8 @@ if __name__ == "__main__":
         logger.debug("START", extra={"addinfo": f"{training_parameter}"})
 
         bm.set_default(training_parameter)
-        bm.split_train_test(split_mode)
-        # bm.save_npys()
+        bm.split_train_test(split_mode, split_mode_label)
+        bm.save_npys()
 
         logger.debug("END", extra={"addinfo": f"{training_parameter}"})
 

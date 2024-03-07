@@ -48,7 +48,7 @@ class SupervisedML(BaseModel):
         model = cls(training_parameter)
         model.set_default(training_parameter)
         model.split_mode_name = split_mode + str(split_mode_label) if split_mode == "sep" else split_mode
-        model.param_dict["split_mode"] = split_mode
+        model.param_dict["split_mode"] = split_mode_name
         model.param_dict["training_parameter"] = training_parameter
         model.param_dict["clf_name"] = clf_name
 
@@ -295,7 +295,7 @@ class SupervisedML(BaseModel):
         fig, ax = plt.subplots(1, 1)
         cmp = ConfusionMatrixDisplay(clf_rep)  # type: ignore
         ax.set_title(f"{self.param_dict['clf_name']}_{self.param_dict['training_parameter']}_{self.split_mode_name}")
-        cmp.plot(cmap=plt.cm.Blues, ax=ax) # type: ignore
+        cmp.plot(cmap=plt.cm.Blues, ax=ax)  # type: ignore
 
         plt.tight_layout()
         plt.savefig(ML_RESULT_DIR + f"/{self.param_dict['clf_name']}/confusion_matrix.{self.param_dict['clf_name']}_{self.split_mode_name}.png")
@@ -308,6 +308,9 @@ class SupervisedML(BaseModel):
         self.logger.debug("SAVE", extra={"addinfo": "学習結果の保存\n\n"})
         if model_path is None:
             model_path = ML_MODEL_DIR + f"/model/{self.param_dict['split_mode']}/model_{self.param_dict['clf_name']}_{self.param_dict['training_parameter']}_{self.param_dict['split_mode']}.{dict_to_str(self.param_dict['tuning_params'])}.sav"
+
+        if os.path.exists(os.path.dirname(model_path)):
+            os.mkdir(os.path.dirname(model_path))
 
         with open(model_path, "wb") as f:
             pickle.dump(self.model, f)
@@ -325,7 +328,7 @@ if __name__ == "__main__":
     logger.debug("START", extra={"addinfo": "処理開始"})
 
     # 基本情報
-    clf_name = "kNeighbors"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
+    clf_name = "LinearSVC"  # kNeighbors, LinearSVC, rbfSVC, XGBoost
     # split_mode = input("split_mode : ") # sep, mixsep, mix
     split_mode = "sep"  # sep, mixsep, mix
     if split_mode == "sep":

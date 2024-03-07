@@ -25,7 +25,9 @@ sys.path.append(os.getcwd() + "/src")
 
    ```
    pip install -r requirements.txt
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
    ```
+   PyTorch インストールURL : https://pytorch.org/
 
 2. `/cmd/mkdir.bat` を実行する
 
@@ -207,6 +209,8 @@ Magnetic/
     ├ ML/ 教師データ
     |   ├ data/ 教師データの作成先
     |   ├ models/ 学習モデルの保存先
+    |   |   ├ model/ 学習モデル
+    |   |   └ result/ 教師データ
     |   └ result/ 学習結果の保存先
     ├ snaps/  パラメータ毎に分解したデータ
     |   ├ snap77/
@@ -233,12 +237,12 @@ Magnetic/
     ├ src/
     |   ├─config/ 設定ファイル
     |   ├─MachineLearning/ 機械学習系
-    |   ├─Processing/　データの前処理系のプログラム
+    |   ├─processing/　データの前処理系のプログラム
     |   │  ├─separator/
     |   │  ├─train/
     |   │  └─viewer/
     |   │     └─template
-    |   └─Visualization/ 可視化用プログラム
+    |   └─visualization/ 可視化用プログラム
     |      ├─AVS/
     |      ├─LIC/
     |      ├─StreamLines/
